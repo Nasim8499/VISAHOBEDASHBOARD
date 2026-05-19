@@ -1,7 +1,8 @@
 import { PageContainer } from "@/components/layout/Page";
 import { businesses, brandBuilderSteps, deliverables, employees, activity } from "@/data/mock";
 import { useParams, Link } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import ClientDetailSkeleton from "@/components/skeletons/ClientDetailSkeleton";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import {
