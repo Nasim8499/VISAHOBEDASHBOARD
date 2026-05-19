@@ -1,11 +1,20 @@
+import { useEffect, useState } from "react";
 import { PageContainer, PageHeader } from "@/components/layout/Page";
 import { businesses } from "@/data/mock";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { Link } from "react-router-dom";
 import { Filter, Plus, Search } from "lucide-react";
+import ClientsListSkeleton from "@/components/skeletons/ClientsListSkeleton";
+import { motion } from "framer-motion";
 
 export default function Clients() {
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    const t = setTimeout(() => setLoading(false), 400);
+    return () => clearTimeout(t);
+  }, []);
+  if (loading) return <ClientsListSkeleton />;
   return (
     <PageContainer>
       <PageHeader
