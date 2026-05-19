@@ -80,60 +80,49 @@ function AnimatedRoutes() {
   return (
     <>
       <AnimatePresence>{showSplash && <SplashScreen key="splash" />}</AnimatePresence>
-      <AnimatePresence mode="wait" initial={false}>
-        <motion.div
-          key={location.pathname}
-          variants={variants}
-          initial="initial"
-          animate="animate"
-          exit="exit"
-          transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+      <Routes location={location}>
+        <Route path="/auth" element={<Auth />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+
+        <Route
+          element={
+            <ProtectedRoute>
+              <AppLayout />
+            </ProtectedRoute>
+          }
         >
-          <Routes location={location}>
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/" element={<RouteBoundary name="dashboard"><HomeRedirect /></RouteBoundary>} />
+          <Route path="/clients" element={<ProtectedRoute allow={["super_admin", "employee"]}><RouteBoundary name="clients"><Clients /></RouteBoundary></ProtectedRoute>} />
+          <Route path="/clients/new" element={<ProtectedRoute allow={["super_admin", "employee"]}><RouteBoundary name="clients-new"><NewBusinessWizard /></RouteBoundary></ProtectedRoute>} />
+          <Route path="/workspace/:id" element={<ProtectedRoute allow={["super_admin", "employee"]}><RouteBoundary name="workspace"><WorkspaceDetail /></RouteBoundary></ProtectedRoute>} />
+          <Route path="/projects" element={<ProtectedRoute allow={["super_admin", "employee"]}><Projects /></ProtectedRoute>} />
+          <Route path="/tasks" element={<ProtectedRoute allow={["super_admin", "employee"]}><Tasks /></ProtectedRoute>} />
+          <Route path="/calendar" element={<Meetings />} />
+          <Route path="/approvals" element={<Approvals />} />
+          <Route path="/brand-builder" element={<ProtectedRoute allow={["super_admin", "employee"]}><BrandBuilder /></ProtectedRoute>} />
+          <Route path="/logo-maker" element={<ProtectedRoute allow={["super_admin", "employee"]}><LogoMaker /></ProtectedRoute>} />
+          <Route path="/website-builder" element={<ProtectedRoute allow={["super_admin", "employee"]}><WebsiteBuilder /></ProtectedRoute>} />
+          <Route path="/post-designer" element={<ProtectedRoute allow={["super_admin", "employee"]}><PostDesigner /></ProtectedRoute>} />
+          <Route path="/templates" element={<ProtectedRoute allow={["super_admin", "employee"]}><Templates /></ProtectedRoute>} />
+          <Route path="/brand-kit" element={<BrandKit />} />
+          <Route path="/documents" element={<Documents />} />
+          <Route path="/files" element={<Documents />} />
+          <Route path="/chat" element={<Chat />} />
+          <Route path="/meetings" element={<Meetings />} />
+          <Route path="/automation" element={<ProtectedRoute allow={["super_admin", "employee"]}><Automation /></ProtectedRoute>} />
+          <Route path="/ai" element={<ProtectedRoute allow={["super_admin", "employee"]}><AIAssistant /></ProtectedRoute>} />
+          <Route path="/reports" element={<ProtectedRoute allow={["super_admin"]}><Reports /></ProtectedRoute>} />
+          <Route path="/team" element={<ProtectedRoute allow={["super_admin"]}><Team /></ProtectedRoute>} />
+          <Route path="/activity" element={<ProtectedRoute allow={["super_admin", "employee"]}><ActivityLogs /></ProtectedRoute>} />
+          <Route path="/billing" element={<ProtectedRoute allow={["super_admin"]}><Billing /></ProtectedRoute>} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/portal" element={<ClientPortal />} />
+          <Route path="/portal/:id" element={<ClientPortal />} />
+          <Route path="/more" element={<More />} />
+        </Route>
 
-            <Route
-              element={
-                <ProtectedRoute>
-                  <AppLayout />
-                </ProtectedRoute>
-              }
-            >
-              <Route path="/" element={<RouteBoundary name="dashboard"><HomeRedirect /></RouteBoundary>} />
-              <Route path="/clients" element={<ProtectedRoute allow={["super_admin", "employee"]}><RouteBoundary name="clients"><Clients /></RouteBoundary></ProtectedRoute>} />
-              <Route path="/clients/new" element={<ProtectedRoute allow={["super_admin", "employee"]}><RouteBoundary name="clients-new"><NewBusinessWizard /></RouteBoundary></ProtectedRoute>} />
-              <Route path="/workspace/:id" element={<ProtectedRoute allow={["super_admin", "employee"]}><RouteBoundary name="workspace"><WorkspaceDetail /></RouteBoundary></ProtectedRoute>} />
-              <Route path="/projects" element={<ProtectedRoute allow={["super_admin", "employee"]}><Projects /></ProtectedRoute>} />
-              <Route path="/tasks" element={<ProtectedRoute allow={["super_admin", "employee"]}><Tasks /></ProtectedRoute>} />
-              <Route path="/calendar" element={<Meetings />} />
-              <Route path="/approvals" element={<Approvals />} />
-              <Route path="/brand-builder" element={<ProtectedRoute allow={["super_admin", "employee"]}><BrandBuilder /></ProtectedRoute>} />
-              <Route path="/logo-maker" element={<ProtectedRoute allow={["super_admin", "employee"]}><LogoMaker /></ProtectedRoute>} />
-              <Route path="/website-builder" element={<ProtectedRoute allow={["super_admin", "employee"]}><WebsiteBuilder /></ProtectedRoute>} />
-              <Route path="/post-designer" element={<ProtectedRoute allow={["super_admin", "employee"]}><PostDesigner /></ProtectedRoute>} />
-              <Route path="/templates" element={<ProtectedRoute allow={["super_admin", "employee"]}><Templates /></ProtectedRoute>} />
-              <Route path="/brand-kit" element={<BrandKit />} />
-              <Route path="/documents" element={<Documents />} />
-              <Route path="/files" element={<Documents />} />
-              <Route path="/chat" element={<Chat />} />
-              <Route path="/meetings" element={<Meetings />} />
-              <Route path="/automation" element={<ProtectedRoute allow={["super_admin", "employee"]}><Automation /></ProtectedRoute>} />
-              <Route path="/ai" element={<ProtectedRoute allow={["super_admin", "employee"]}><AIAssistant /></ProtectedRoute>} />
-              <Route path="/reports" element={<ProtectedRoute allow={["super_admin"]}><Reports /></ProtectedRoute>} />
-              <Route path="/team" element={<ProtectedRoute allow={["super_admin"]}><Team /></ProtectedRoute>} />
-              <Route path="/activity" element={<ProtectedRoute allow={["super_admin", "employee"]}><ActivityLogs /></ProtectedRoute>} />
-              <Route path="/billing" element={<ProtectedRoute allow={["super_admin"]}><Billing /></ProtectedRoute>} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="/portal" element={<ClientPortal />} />
-              <Route path="/portal/:id" element={<ClientPortal />} />
-              <Route path="/more" element={<More />} />
-            </Route>
-
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </motion.div>
-      </AnimatePresence>
+        <Route path="*" element={<NotFound />} />
+      </Routes>
     </>
   );
 }
