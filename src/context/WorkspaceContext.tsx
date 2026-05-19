@@ -23,14 +23,19 @@ export interface BusinessRow {
   palette: string[];
 }
 
+export interface Workspace extends BusinessRow {
+  manager: string;
+  managerAvatar: string;
+  lastActivity: string;
+}
+
 interface Ctx {
-  workspace: any;
+  workspace: Workspace;
   setWorkspaceId: (id: string) => void;
   all: BusinessRow[];
   loading: boolean;
   refresh: () => Promise<void>;
 }
-
 
 const WorkspaceCtx = createContext<Ctx | null>(null);
 const LS_KEY = "visahobe.activeWorkspace";
@@ -95,9 +100,13 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       manager_name: "VisaHOBe",
       palette: ["#003B73", "#177BBB", "#E63946", "#F1573D", "#F8FAFC"],
     };
-    const workspace = {
+    const workspace: Workspace = {
       ...base,
-      manager: base.manager_name,
+      color: base.color || "#003B73",
+      palette: base.palette?.length ? base.palette : ["#003B73", "#177BBB", "#E63946", "#F1573D", "#F8FAFC"],
+      logo: base.logo || "🏢",
+      name: base.name || "No workspace yet",
+      manager: base.manager_name || "VisaHOBe",
       managerAvatar: (base.manager_name || "VH")
         .split(" ")
         .map((p) => p[0])
@@ -105,7 +114,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         .slice(0, 2)
         .toUpperCase(),
       lastActivity: "Updated recently",
-    } as any;
+    };
     return { workspace, setWorkspaceId, all, loading, refresh: load };
   }, [all, id, loading, load]);
 
