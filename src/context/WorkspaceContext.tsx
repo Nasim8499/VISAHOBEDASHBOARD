@@ -24,12 +24,13 @@ export interface BusinessRow {
 }
 
 interface Ctx {
-  workspace: BusinessRow | null;
+  workspace: any;
   setWorkspaceId: (id: string) => void;
   all: BusinessRow[];
   loading: boolean;
   refresh: () => Promise<void>;
 }
+
 
 const WorkspaceCtx = createContext<Ctx | null>(null);
 const LS_KEY = "visahobe.activeWorkspace";
