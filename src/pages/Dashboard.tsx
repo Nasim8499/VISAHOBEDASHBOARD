@@ -31,7 +31,13 @@ const kpis = [
 ];
 
 export default function Dashboard() {
-  const { workspace } = useWorkspace();
+  const { workspace, all, loading } = useWorkspace();
+
+  if (!loading && all.length === 0) {
+    return <EmptyDashboard />;
+  }
+
+
 
   return (
     <PageContainer>
