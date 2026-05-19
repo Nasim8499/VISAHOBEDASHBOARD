@@ -1,21 +1,24 @@
 import { PageContainer, PageHeader } from "@/components/layout/Page";
 import { businesses } from "@/data/mock";
-import { Download, FileText, Folder, Share2, UploadCloud } from "lucide-react";
+import { Download, Eye, FileText, Folder, Share2, UploadCloud } from "lucide-react";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { useState } from "react";
+import { PrintPreviewModal } from "@/components/print/PrintPreviewModal";
 
 const categories = ["Client Info", "Legal", "Branding", "Marketing", "Website", "Invoice", "Final Delivery"];
 
 const files = [
-  { name: "Brand Strategy.pdf", cat: "Branding", size: "2.1 MB", status: "Approved" },
-  { name: "Logo Concepts v3.pdf", cat: "Branding", size: "4.8 MB", status: "Pending" },
-  { name: "Invoice #2031.pdf", cat: "Invoice", size: "180 KB", status: "Verified" },
-  { name: "Menu Photos.zip", cat: "Marketing", size: "32 MB", status: "Verified" },
-  { name: "Trademark.pdf", cat: "Legal", size: "1.2 MB", status: "Approved" },
+  { name: "Brand Strategy.pdf", cat: "Branding", size: "2.1 MB", status: "Approved", ref: "DOC-1001" },
+  { name: "Logo Concepts v3.pdf", cat: "Branding", size: "4.8 MB", status: "Pending", ref: "DOC-1002" },
+  { name: "Invoice #2031.pdf", cat: "Invoice", size: "180 KB", status: "Verified", ref: "INV-2031" },
+  { name: "Menu Photos.zip", cat: "Marketing", size: "32 MB", status: "Verified", ref: "DOC-1003" },
+  { name: "Trademark.pdf", cat: "Legal", size: "1.2 MB", status: "Approved", ref: "DOC-1004" },
 ];
 
 export default function Documents() {
   const [active, setActive] = useState(businesses[0].id);
+  const [previewFile, setPreviewFile] = useState<typeof files[number] | null>(null);
+  const activeBusiness = businesses.find((b) => b.id === active) ?? businesses[0];
 
   return (
     <PageContainer>
