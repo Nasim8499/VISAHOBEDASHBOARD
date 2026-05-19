@@ -95,7 +95,20 @@ export default function Documents() {
                     <td className="px-4 py-3"><StatusBadge status={f.status} /></td>
                     <td className="px-4 py-3">
                       <div className="flex justify-end gap-1.5">
-                        <button className="grid size-8 place-items-center rounded-lg border border-border hover:bg-muted"><Download className="size-3.5" /></button>
+                        <button
+                          onClick={() => setPreviewFile(f)}
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-1.5 text-xs font-medium hover:bg-muted"
+                          title="A4 print preview"
+                        >
+                          <Eye className="size-3.5" /> Preview
+                        </button>
+                        <button
+                          onClick={() => setPreviewFile(f)}
+                          className="grid size-8 place-items-center rounded-lg border border-border hover:bg-muted"
+                          title="Download as A4 PDF"
+                        >
+                          <Download className="size-3.5" />
+                        </button>
                         <button className="grid size-8 place-items-center rounded-lg border border-border hover:bg-muted"><Share2 className="size-3.5" /></button>
                       </div>
                     </td>
@@ -106,6 +119,20 @@ export default function Documents() {
           </div>
         </div>
       </div>
+
+      <PrintPreviewModal
+        open={!!previewFile}
+        onClose={() => setPreviewFile(null)}
+        title={previewFile?.name ?? ""}
+        reference={previewFile?.ref ?? ""}
+        workspaceName={activeBusiness.name}
+        workspaceLogo={(activeBusiness as any).logo}
+        preparedFor={activeBusiness.name}
+        preparedBy="VisaHOBe Operations"
+        category={previewFile?.cat}
+        size={previewFile?.size}
+        status={previewFile?.status}
+      />
     </PageContainer>
   );
 }
