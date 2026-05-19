@@ -107,7 +107,7 @@ export default function Clients() {
                 </Link>
               </div>
             </div>
-          </div>
+          </motion.div>
         ))}
       </div>
     </PageContainer>
