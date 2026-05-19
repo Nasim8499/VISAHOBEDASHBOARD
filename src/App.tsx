@@ -1,10 +1,14 @@
+import { useEffect, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
+import { BrowserRouter, Route, Routes, Navigate, useLocation } from "react-router-dom";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import RouteBoundary from "@/components/RouteBoundary";
+import SplashScreen from "@/components/SplashScreen";
 import AppLayout from "./components/layout/AppLayout";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
@@ -44,14 +48,48 @@ function HomeRedirect() {
   return <Dashboard />;
 }
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AuthProvider>
-          <Routes>
+function AnimatedRoutes() {
+  const location = useLocation();
+  const { loading } = useAuth();
+  const reduce = useReducedMotion();
+  const [showSplash, setShowSplash] = useState(true);
+
+  useEffect(() => {
+    // Minimum 900ms so the splash doesn't flash
+    const min = setTimeout(() => {
+      if (!loading) setShowSplash(false);
+    }, 900);
+    return () => clearTimeout(min);
+  }, [loading]);
+
+  useEffect(() => {
+    if (!loading) {
+      const t = setTimeout(() => setShowSplash(false), 900);
+      return () => clearTimeout(t);
+    }
+  }, [loading]);
+
+  const variants = reduce
+    ? { initial: { opacity: 1 }, animate: { opacity: 1 }, exit: { opacity: 1 } }
+    : {
+        initial: { opacity: 0, y: 8 },
+        animate: { opacity: 1, y: 0 },
+        exit: { opacity: 0, y: -6 },
+      };
+
+  return (
+    <>
+      <AnimatePresence>{showSplash && <SplashScreen key="splash" />}</AnimatePresence>
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div
+          key={location.pathname}
+          variants={variants}
+          initial="initial"
+          animate="animate"
+          exit="exit"
+          transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <Routes location={location}>
             <Route path="/auth" element={<Auth />} />
             <Route path="/reset-password" element={<ResetPassword />} />
 
@@ -62,10 +100,10 @@ const App = () => (
                 </ProtectedRoute>
               }
             >
-              <Route path="/" element={<HomeRedirect />} />
-              <Route path="/clients" element={<ProtectedRoute allow={["super_admin", "employee"]}><Clients /></ProtectedRoute>} />
-              <Route path="/clients/new" element={<ProtectedRoute allow={["super_admin", "employee"]}><NewBusinessWizard /></ProtectedRoute>} />
-              <Route path="/workspace/:id" element={<ProtectedRoute allow={["super_admin", "employee"]}><WorkspaceDetail /></ProtectedRoute>} />
+              <Route path="/" element={<RouteBoundary name="dashboard"><HomeRedirect /></RouteBoundary>} />
+              <Route path="/clients" element={<ProtectedRoute allow={["super_admin", "employee"]}><RouteBoundary name="clients"><Clients /></RouteBoundary></ProtectedRoute>} />
+              <Route path="/clients/new" element={<ProtectedRoute allow={["super_admin", "employee"]}><RouteBoundary name="clients-new"><NewBusinessWizard /></RouteBoundary></ProtectedRoute>} />
+              <Route path="/workspace/:id" element={<ProtectedRoute allow={["super_admin", "employee"]}><RouteBoundary name="workspace"><WorkspaceDetail /></RouteBoundary></ProtectedRoute>} />
               <Route path="/projects" element={<ProtectedRoute allow={["super_admin", "employee"]}><Projects /></ProtectedRoute>} />
               <Route path="/tasks" element={<ProtectedRoute allow={["super_admin", "employee"]}><Tasks /></ProtectedRoute>} />
               <Route path="/calendar" element={<Meetings />} />
@@ -94,6 +132,20 @@ const App = () => (
 
             <Route path="*" element={<NotFound />} />
           </Routes>
+        </motion.div>
+      </AnimatePresence>
+    </>
+  );
+}
+
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
+        <AuthProvider>
+          <AnimatedRoutes />
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

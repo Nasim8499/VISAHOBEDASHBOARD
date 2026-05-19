@@ -1,7 +1,8 @@
 import { PageContainer } from "@/components/layout/Page";
 import { businesses, brandBuilderSteps, deliverables, employees, activity } from "@/data/mock";
 import { useParams, Link } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import ClientDetailSkeleton from "@/components/skeletons/ClientDetailSkeleton";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import {
@@ -31,6 +32,12 @@ export default function WorkspaceDetail() {
   const { id } = useParams();
   const ws = businesses.find((b) => b.id === id) || businesses[0];
   const [tab, setTab] = useState("Overview");
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    const t = setTimeout(() => setLoading(false), 350);
+    return () => clearTimeout(t);
+  }, [id]);
+  if (loading) return <ClientDetailSkeleton />;
 
   return (
     <PageContainer>

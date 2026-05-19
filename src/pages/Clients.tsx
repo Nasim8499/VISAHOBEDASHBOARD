@@ -1,11 +1,20 @@
+import { useEffect, useState } from "react";
 import { PageContainer, PageHeader } from "@/components/layout/Page";
 import { businesses } from "@/data/mock";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { Link } from "react-router-dom";
 import { Filter, Plus, Search } from "lucide-react";
+import ClientsListSkeleton from "@/components/skeletons/ClientsListSkeleton";
+import { motion } from "framer-motion";
 
 export default function Clients() {
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    const t = setTimeout(() => setLoading(false), 400);
+    return () => clearTimeout(t);
+  }, []);
+  if (loading) return <ClientsListSkeleton />;
   return (
     <PageContainer>
       <PageHeader
@@ -47,10 +56,14 @@ export default function Clients() {
 
       {/* Cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {businesses.map((b) => (
-          <div
+        {businesses.map((b, i) => (
+          <motion.div
             key={b.id}
-            className="group overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition hover:-translate-y-0.5 hover:shadow-elegant"
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.04, duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+            whileHover={{ y: -3 }}
+            className="group overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition hover:shadow-elegant"
           >
             <div className="relative h-36">
               <img src={b.cover} alt={b.name} className="size-full object-cover" loading="lazy" />
@@ -94,7 +107,7 @@ export default function Clients() {
                 </Link>
               </div>
             </div>
-          </div>
+          </motion.div>
         ))}
       </div>
     </PageContainer>

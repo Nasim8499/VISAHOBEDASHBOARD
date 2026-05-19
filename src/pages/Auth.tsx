@@ -84,9 +84,9 @@ export default function Auth() {
 
       <div className="grid place-items-center bg-background p-6">
         <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35 }}
+          initial={{ opacity: 0, y: 24, scale: 0.97 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ type: "spring", stiffness: 220, damping: 24, mass: 0.9 }}
           className="w-full max-w-sm"
         >
           <div className="mb-8">
@@ -104,13 +104,15 @@ export default function Auth() {
             <Field icon={User2} label="Username" value={username} onChange={setUsername} required autoFocus />
             <Field icon={Lock} label="Password" type="password" value={password} onChange={setPassword} required minLength={6} />
 
-            <button
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               disabled={busy}
               className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-blue px-4 py-3 text-sm font-semibold text-white shadow-elegant transition hover:shadow-glow disabled:opacity-60"
             >
               {busy ? "Please wait…" : "Sign in"}
               <ArrowRight className="size-4" />
-            </button>
+            </motion.button>
           </form>
 
           <div className="mt-6 flex items-start gap-2 rounded-xl border border-border bg-muted/40 p-3 text-[11px] text-muted-foreground">
