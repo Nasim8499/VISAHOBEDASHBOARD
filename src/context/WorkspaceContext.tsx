@@ -23,14 +23,19 @@ export interface BusinessRow {
   palette: string[];
 }
 
+export interface Workspace extends BusinessRow {
+  manager: string;
+  managerAvatar: string;
+  lastActivity: string;
+}
+
 interface Ctx {
-  workspace: any;
+  workspace: Workspace;
   setWorkspaceId: (id: string) => void;
   all: BusinessRow[];
   loading: boolean;
   refresh: () => Promise<void>;
 }
-
 
 const WorkspaceCtx = createContext<Ctx | null>(null);
 const LS_KEY = "visahobe.activeWorkspace";
