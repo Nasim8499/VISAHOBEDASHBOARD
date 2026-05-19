@@ -72,16 +72,24 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(LS_KEY, next);
   };
 
-  const value = useMemo<Ctx>(
-    () => ({
-      workspace: all.find((b) => b.id === id) || all[0] || null,
-      setWorkspaceId,
-      all,
-      loading,
-      refresh: load,
-    }),
-    [all, id, loading, load]
-  );
+  const value = useMemo<Ctx>(() => {
+    const raw = all.find((b) => b.id === id) || all[0] || null;
+    // Back-compat aliases for pages that used the old mock shape
+    const workspace = raw
+      ? ({
+          ...raw,
+          manager: raw.manager_name,
+          managerAvatar: (raw.manager_name || "VH")
+            .split(" ")
+            .map((p) => p[0])
+            .join("")
+            .slice(0, 2)
+            .toUpperCase(),
+          lastActivity: "Updated recently",
+        } as any)
+      : null;
+    return { workspace, setWorkspaceId, all, loading, refresh: load };
+  }, [all, id, loading, load]);
 
   return <WorkspaceCtx.Provider value={value}>{children}</WorkspaceCtx.Provider>;
 }
