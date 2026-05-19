@@ -126,12 +126,13 @@ export default function Documents() {
         title={previewFile?.name ?? ""}
         reference={previewFile?.ref ?? ""}
         workspaceName={activeBusiness.name}
-        workspaceLogo={(activeBusiness as any).logo}
+        workspaceLogo={activeBusiness.logo}
         preparedFor={activeBusiness.name}
-        preparedBy="VisaHOBe Operations"
+        preparedBy={activeBusiness.manager}
         category={previewFile?.cat}
         size={previewFile?.size}
         status={previewFile?.status}
+        workspace={activeBusiness}
       />
     </PageContainer>
   );
