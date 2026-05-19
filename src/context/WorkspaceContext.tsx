@@ -65,10 +65,11 @@ export const EMPTY_WORKSPACE: Workspace = normalizeWorkspace(EMPTY_BUSINESS);
 export function normalizeWorkspace(input: Partial<BusinessRow> | null | undefined): Workspace {
   const base = input || {};
   const missing: string[] = [];
+  const CRITICAL = new Set(["id", "name", "color", "logo", "manager_name"]);
   const pick = <K extends keyof BusinessRow>(k: K, fallback: BusinessRow[K]): BusinessRow[K] => {
     const v = base[k];
-    if (v === undefined || v === null || v === "") {
-      if (input) missing.push(String(k));
+    if (v === undefined || v === null || (CRITICAL.has(String(k)) && v === "")) {
+      if (input && CRITICAL.has(String(k))) missing.push(String(k));
       return fallback;
     }
     return v as BusinessRow[K];
