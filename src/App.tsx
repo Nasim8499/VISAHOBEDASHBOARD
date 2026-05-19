@@ -51,16 +51,7 @@ function HomeRedirect() {
 function AnimatedRoutes() {
   const location = useLocation();
   const { loading } = useAuth();
-  const reduce = useReducedMotion();
   const [showSplash, setShowSplash] = useState(true);
-
-  useEffect(() => {
-    // Minimum 900ms so the splash doesn't flash
-    const min = setTimeout(() => {
-      if (!loading) setShowSplash(false);
-    }, 900);
-    return () => clearTimeout(min);
-  }, [loading]);
 
   useEffect(() => {
     if (!loading) {
@@ -69,13 +60,6 @@ function AnimatedRoutes() {
     }
   }, [loading]);
 
-  const variants = reduce
-    ? { initial: { opacity: 1 }, animate: { opacity: 1 }, exit: { opacity: 1 } }
-    : {
-        initial: { opacity: 0, y: 8 },
-        animate: { opacity: 1, y: 0 },
-        exit: { opacity: 0, y: -6 },
-      };
 
   return (
     <>
