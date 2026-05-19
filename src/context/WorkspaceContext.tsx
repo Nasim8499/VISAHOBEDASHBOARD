@@ -74,20 +74,37 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<Ctx>(() => {
     const raw = all.find((b) => b.id === id) || all[0] || null;
-    // Back-compat aliases for pages that used the old mock shape
-    const workspace = raw
-      ? ({
-          ...raw,
-          manager: raw.manager_name,
-          managerAvatar: (raw.manager_name || "VH")
-            .split(" ")
-            .map((p) => p[0])
-            .join("")
-            .slice(0, 2)
-            .toUpperCase(),
-          lastActivity: "Updated recently",
-        } as any)
-      : null;
+    const base: BusinessRow = raw || {
+      id: "none",
+      slug: null,
+      name: "No workspace yet",
+      category: "—",
+      city: "",
+      country: "",
+      logo: "🏢",
+      cover: "",
+      color: "#003B73",
+      slogan: "Create a client business to get started.",
+      font: "Inter",
+      status: "active",
+      stage: "Discovery",
+      deadline: null,
+      budget: "",
+      progress: 0,
+      manager_name: "VisaHOBe",
+      palette: ["#003B73", "#177BBB", "#E63946", "#F1573D", "#F8FAFC"],
+    };
+    const workspace = {
+      ...base,
+      manager: base.manager_name,
+      managerAvatar: (base.manager_name || "VH")
+        .split(" ")
+        .map((p) => p[0])
+        .join("")
+        .slice(0, 2)
+        .toUpperCase(),
+      lastActivity: "Updated recently",
+    } as any;
     return { workspace, setWorkspaceId, all, loading, refresh: load };
   }, [all, id, loading, load]);
 
