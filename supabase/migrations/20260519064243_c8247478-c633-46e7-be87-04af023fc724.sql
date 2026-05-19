@@ -1,0 +1,1 @@
+revoke all on function public.touch_updated_at() from authenticated;
