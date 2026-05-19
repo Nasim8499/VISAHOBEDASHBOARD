@@ -32,6 +32,12 @@ export default function WorkspaceDetail() {
   const { id } = useParams();
   const ws = businesses.find((b) => b.id === id) || businesses[0];
   const [tab, setTab] = useState("Overview");
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    const t = setTimeout(() => setLoading(false), 350);
+    return () => clearTimeout(t);
+  }, [id]);
+  if (loading) return <ClientDetailSkeleton />;
 
   return (
     <PageContainer>
