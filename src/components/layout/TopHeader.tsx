@@ -1,10 +1,21 @@
 import { Bell, HelpCircle, Mail, Menu, Search, Check } from "lucide-react";
 import { useState } from "react";
 import { useWorkspace } from "@/context/WorkspaceContext";
+import { assertWorkspaceField } from "@/utils/logger";
+
+const DEFAULT_COLOR = "#003B73";
+const DEFAULT_LOGO = "🏢";
 
 export function TopHeader({ onOpenSidebar }: { onOpenSidebar: () => void }) {
   const { workspace, setWorkspaceId, all } = useWorkspace();
   const [open, setOpen] = useState(false);
+
+  assertWorkspaceField("TopHeader", workspace as any, ["color", "logo", "name"]);
+  const wsColor = workspace?.color || DEFAULT_COLOR;
+  const wsLogo = workspace?.logo || DEFAULT_LOGO;
+  const wsName = workspace?.name || "No workspace";
+  const wsId = workspace?.id;
+
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-border bg-background/80 px-4 backdrop-blur lg:px-8">
@@ -22,14 +33,15 @@ export function TopHeader({ onOpenSidebar }: { onOpenSidebar: () => void }) {
         >
           <div
             className="grid size-8 place-items-center rounded-lg text-white text-sm font-semibold"
-            style={{ background: workspace.color }}
+            style={{ background: wsColor }}
           >
-            {workspace.logo}
+            {wsLogo}
           </div>
           <div className="hidden sm:block leading-tight">
             <div className="text-xs text-muted-foreground">Workspace</div>
-            <div className="text-sm font-semibold">{workspace.name}</div>
+            <div className="text-sm font-semibold">{wsName}</div>
           </div>
+
           <svg className="ml-1 size-3.5 text-muted-foreground" viewBox="0 0 20 20" fill="currentColor">
             <path d="M5 8l5 5 5-5H5z" />
           </svg>
@@ -50,9 +62,9 @@ export function TopHeader({ onOpenSidebar }: { onOpenSidebar: () => void }) {
               >
                 <span
                   className="grid size-9 place-items-center rounded-lg text-white"
-                  style={{ background: b.color }}
+                  style={{ background: b.color || DEFAULT_COLOR }}
                 >
-                  {b.logo}
+                  {b.logo || DEFAULT_LOGO}
                 </span>
                 <span className="flex-1">
                   <span className="block text-sm font-medium">{b.name}</span>
@@ -60,7 +72,8 @@ export function TopHeader({ onOpenSidebar }: { onOpenSidebar: () => void }) {
                     {b.category} · {b.city}
                   </span>
                 </span>
-                {b.id === workspace.id && <Check className="size-4 text-accent" />}
+                {b.id === wsId && <Check className="size-4 text-accent" />}
+
               </button>
             ))}
           </div>
