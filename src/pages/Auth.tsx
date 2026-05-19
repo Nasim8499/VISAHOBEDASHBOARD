@@ -84,9 +84,9 @@ export default function Auth() {
 
       <div className="grid place-items-center bg-background p-6">
         <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35 }}
+          initial={{ opacity: 0, y: 24, scale: 0.97 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ type: "spring", stiffness: 220, damping: 24, mass: 0.9 }}
           className="w-full max-w-sm"
         >
           <div className="mb-8">
