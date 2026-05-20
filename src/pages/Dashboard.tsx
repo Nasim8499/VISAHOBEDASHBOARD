@@ -23,12 +23,114 @@ import {
 import { Link } from "react-router-dom";
 
 const kpis = [
-  { label: "Total Clients", value: "24", delta: "+3", icon: Building2, tone: "bg-gradient-blue" },
-  { label: "Active Projects", value: "12", delta: "+2", icon: FolderKanban, tone: "bg-gradient-red" },
-  { label: "In Progress", value: "38", delta: "+8", icon: Clock3, tone: "bg-primary" },
-  { label: "Completed", value: "146", delta: "+12", icon: CheckCircle2, tone: "bg-success" },
-  { label: "Revenue · Month", value: "$184k", delta: "+18%", icon: DollarSign, tone: "bg-accent" },
+  {
+    label: "Total Clients",
+    value: "24",
+    delta: "+3",
+    icon: Building2,
+    tone: "bg-gradient-blue",
+    trend: [6, 8, 7, 10, 12, 14, 13, 16, 18, 20, 22, 24],
+    sub: "12 mo growth",
+  },
+  {
+    label: "Active Projects",
+    value: "12",
+    delta: "+2",
+    icon: FolderKanban,
+    tone: "bg-gradient-red",
+    trend: [4, 5, 7, 6, 8, 9, 8, 10, 11, 10, 12, 12],
+    sub: "vs last week",
+  },
+  {
+    label: "In Progress",
+    value: "38",
+    delta: "+8",
+    icon: Clock3,
+    tone: "bg-primary",
+    trend: [22, 24, 21, 26, 28, 30, 29, 31, 33, 34, 36, 38],
+    sub: "tasks moving",
+  },
+  {
+    label: "Completed",
+    value: "146",
+    delta: "+12",
+    icon: CheckCircle2,
+    tone: "bg-success",
+    trend: [80, 88, 95, 102, 110, 116, 122, 128, 132, 138, 142, 146],
+    sub: "all-time",
+  },
+  {
+    label: "Revenue · Month",
+    value: "$184k",
+    delta: "+18%",
+    icon: DollarSign,
+    tone: "bg-accent",
+    trend: [90, 102, 96, 118, 124, 132, 140, 148, 156, 162, 174, 184],
+    sub: "MRR trend",
+    bars: true,
+  },
 ];
+
+function Sparkline({ data, bars = false }: { data: number[]; bars?: boolean }) {
+  const W = 100;
+  const H = 32;
+  const min = Math.min(...data);
+  const max = Math.max(...data);
+  const range = max - min || 1;
+  const step = W / (data.length - 1);
+  const pts = data.map((v, i) => [i * step, H - ((v - min) / range) * (H - 4) - 2] as const);
+
+  if (bars) {
+    const bw = W / data.length - 1.5;
+    return (
+      <svg viewBox={`0 0 ${W} ${H}`} className="h-8 w-full" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="sparkBar" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stopColor="currentColor" stopOpacity="0.95" />
+            <stop offset="100%" stopColor="currentColor" stopOpacity="0.3" />
+          </linearGradient>
+        </defs>
+        {data.map((v, i) => {
+          const h = ((v - min) / range) * (H - 4) + 3;
+          return (
+            <rect
+              key={i}
+              x={i * (W / data.length) + 0.75}
+              y={H - h}
+              width={bw}
+              height={h}
+              rx={1.2}
+              fill="url(#sparkBar)"
+            />
+          );
+        })}
+      </svg>
+    );
+  }
+
+  const d = pts.map((p, i) => `${i ? "L" : "M"}${p[0]},${p[1]}`).join(" ");
+  const area = `${d} L${W},${H} L0,${H} Z`;
+  const last = pts[pts.length - 1];
+
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} className="h-8 w-full" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="sparkFill" x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%" stopColor="currentColor" stopOpacity="0.35" />
+          <stop offset="100%" stopColor="currentColor" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <path d={area} fill="url(#sparkFill)" />
+      <path d={d} fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx={last[0]} cy={last[1]} r="2.2" fill="currentColor" />
+      <circle cx={last[0]} cy={last[1]} r="4.5" fill="currentColor" opacity="0.18">
+        <animate attributeName="r" values="3;6;3" dur="2.4s" repeatCount="indefinite" />
+        <animate attributeName="opacity" values="0.25;0;0.25" dur="2.4s" repeatCount="indefinite" />
+      </circle>
+    </svg>
+  );
+}
+
 
 function EmptyDashboard() {
   return (
@@ -142,21 +244,33 @@ export default function Dashboard() {
         {kpis.map((k) => (
           <div
             key={k.label}
-            className="group rounded-2xl border border-border bg-card p-4 shadow-sm transition hover:shadow-elegant"
+            className="group relative overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-elegant"
           >
-            <div className="flex items-start justify-between">
-              <span className={`grid size-9 place-items-center rounded-xl ${k.tone} text-white`}>
+            {/* corner glow */}
+            <div
+              aria-hidden
+              className={`pointer-events-none absolute -right-8 -top-8 size-24 rounded-full ${k.tone} opacity-10 blur-2xl transition group-hover:opacity-20`}
+            />
+            <div className="relative flex items-start justify-between">
+              <span className={`grid size-9 place-items-center rounded-xl ${k.tone} text-white shadow-sm`}>
                 <k.icon className="size-4" />
               </span>
               <span className="rounded-full bg-success/10 px-2 py-0.5 text-[11px] font-semibold text-success">
                 {k.delta}
               </span>
             </div>
-            <div className="mt-3 text-2xl font-bold">{k.value}</div>
-            <div className="text-xs text-muted-foreground">{k.label}</div>
+            <div className="relative mt-3 text-2xl font-bold tracking-tight">{k.value}</div>
+            <div className="relative text-xs text-muted-foreground">{k.label}</div>
+            <div className="relative mt-3 text-primary">
+              <Sparkline data={k.trend} bars={k.bars} />
+            </div>
+            <div className="relative mt-1 text-[10px] uppercase tracking-wider text-muted-foreground/70">
+              {k.sub}
+            </div>
           </div>
         ))}
       </div>
+
 
       <div className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-3">
         {/* Main column */}
