@@ -19,6 +19,7 @@ import {
   ChevronRight,
   Calendar,
   Rocket,
+  Palette,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
