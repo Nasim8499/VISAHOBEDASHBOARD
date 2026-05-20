@@ -5,7 +5,7 @@ import html2canvas from "html2canvas";
 import { toast } from "sonner";
 import { DocLang, DOC_LANGS, tr } from "@/lib/i18n-docs";
 import { PrintSheet, PrintSheetProps } from "./PrintSheet";
-import { X, Download, Globe, Loader2, RefreshCw, AlertTriangle, Ruler, Info } from "lucide-react";
+import { X, Download, Globe, Loader2, RefreshCw, AlertTriangle, Ruler, Info, FileJson } from "lucide-react";
 
 interface Props extends Omit<PrintSheetProps, "lang"> {
   open: boolean;
@@ -20,17 +20,32 @@ const MIN_SLICE_RATIO = 0.35;
 
 type DebugInfo = {
   pxPerMm: number;
-  pageHpx: number;        // available body region per page in CSS px (relative to sheet)
-  bodyTop: number;        // body offset from sheet top in CSS px
-  bodyHeight: number;     // body height in CSS px
-  breaks: number[];       // y offsets (relative to sheet) where a page ends
-  moved: { top: number; height: number; label: string }[]; // blocks that forced a retreat
+  pageHpx: number;
+  bodyTop: number;
+  bodyHeight: number;
+  breaks: number[];
+  moved: { top: number; height: number; label: string }[];
 };
 
 type ExportNotice = {
   kind: "error" | "warning";
   message: string;
   assets?: string[];
+};
+
+type ExportLog = {
+  generatedAt: string;
+  reference: string;
+  language: DocLang;
+  page: { widthMm: number; heightMm: number; gapMm: number };
+  pxPerMm: number;
+  bodyCanvasHeightPx: number;
+  availableBodyHeightMm: number;
+  pageBreaksPx: number[];
+  avoidedRanges: { startPx: number; endPx: number; label: string; kind: string }[];
+  movedBlocks: { pageIndex: number; naturalEndPx: number; retreatedToPx: number; label: string; kind: string }[];
+  pages: { index: number; startPx: number; endPx: number; heightPx: number }[];
+  placeholders: string[];
 };
 
 export function PrintPreviewModal({ open, onClose, defaultLang = "en", ...sheet }: Props) {
@@ -40,9 +55,45 @@ export function PrintPreviewModal({ open, onClose, defaultLang = "en", ...sheet 
   const [renderKey, setRenderKey] = useState(0);
   const [debug, setDebug] = useState(false);
   const [debugInfo, setDebugInfo] = useState<DebugInfo | null>(null);
+  const [lastLog, setLastLog] = useState<ExportLog | null>(null);
+  const [previewPlaceholders, setPreviewPlaceholders] = useState<string[]>([]);
   const sheetRef = useRef<HTMLDivElement>(null);
 
-  // Recompute pagination overlay whenever inputs change.
+  // Preview-side image fallback: detect blocked images on render and swap them
+  // in-place with branded placeholders so what the user sees matches the PDF.
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    const id = window.setTimeout(async () => {
+      const el = sheetRef.current;
+      if (!el) return;
+      const failing = await detectUnloadableImages(el);
+      if (cancelled || !failing.length) return;
+      el.querySelectorAll<HTMLImageElement>("img").forEach((img) => {
+        if (!failing.includes(img.src)) return;
+        if (img.dataset.placeholderApplied === "1") return;
+        img.dataset.originalSrc = img.src;
+        img.dataset.placeholderApplied = "1";
+        img.srcset = "";
+        img.src = brandedPlaceholder(sheet.workspaceName || "•");
+        img.title = `Placeholder · original asset blocked (${img.dataset.originalSrc})`;
+      });
+      setPreviewPlaceholders(failing);
+      if (!notice) {
+        setNotice({
+          kind: "warning",
+          message:
+            "Some images couldn't be loaded due to CORS / CSP restrictions and have been replaced with branded placeholders in the preview. The exported PDF will match what you see here.",
+          assets: failing,
+        });
+      }
+    }, 120);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(id);
+    };
+  }, [open, renderKey, sheet.workspaceName, lang, sheet.reference]);
+
   useEffect(() => {
     if (!open || !debug) {
       if (!debug) setDebugInfo(null);
@@ -50,7 +101,7 @@ export function PrintPreviewModal({ open, onClose, defaultLang = "en", ...sheet 
     }
     const id = window.setTimeout(() => setDebugInfo(computeDebug(sheetRef.current)), 80);
     return () => window.clearTimeout(id);
-  }, [open, debug, lang, renderKey, sheet.category, sheet.reference, sheet.title]);
+  }, [open, debug, lang, renderKey, sheet.category, sheet.reference, sheet.title, previewPlaceholders.length]);
 
   if (!open) return null;
 
@@ -60,9 +111,8 @@ export function PrintPreviewModal({ open, onClose, defaultLang = "en", ...sheet 
       return;
     }
     setBusy(true);
-    setNotice(null);
+    setNotice((n) => (n?.kind === "warning" ? n : null));
     const loadingToast = toast.loading("Generating PDF…");
-    const restoreFns: Array<() => void> = [];
     try {
       if ((document as any).fonts?.ready) {
         try { await (document as any).fonts.ready; } catch { /* noop */ }
@@ -74,28 +124,12 @@ export function PrintPreviewModal({ open, onClose, defaultLang = "en", ...sheet 
       const footerEl = sheetEl.querySelector<HTMLElement>("[data-print-footer]");
       if (!headerEl || !bodyEl || !footerEl) throw new Error("Print sheet is missing required regions.");
 
-      // Pre-flight: detect cross-origin images that will taint the canvas, and
-      // automatically swap them with a branded placeholder so the export still
-      // succeeds. The failing URLs are surfaced in the warning card below.
+      // Re-detect in case content changed since last preview pass; placeholders
+      // are already applied in the DOM (so the canvas captures them).
       const failingAssets = await detectUnloadableImages(sheetEl);
-      if (failingAssets.length) {
-        sheetEl.querySelectorAll<HTMLImageElement>("img").forEach((img) => {
-          if (!failingAssets.includes(img.src)) return;
-          const original = { src: img.src, srcset: img.srcset };
-          img.srcset = "";
-          img.src = brandedPlaceholder(sheet.workspaceName || "•");
-          restoreFns.push(() => {
-            img.src = original.src;
-            img.srcset = original.srcset;
-          });
-        });
-        setNotice({
-          kind: "warning",
-          message:
-            "Some images couldn't be loaded due to CORS / CSP restrictions and were replaced with branded placeholders so your PDF could still export.",
-          assets: failingAssets,
-        });
-      }
+      const placeholdersUsed = Array.from(
+        new Set([...previewPlaceholders, ...failingAssets])
+      );
 
       const baseOpts = { scale: 2, backgroundColor: "#ffffff", useCORS: true, allowTaint: false, logging: false };
       const [headerCanvas, bodyCanvas, footerCanvas] = await Promise.all([
@@ -110,9 +144,6 @@ export function PrintPreviewModal({ open, onClose, defaultLang = "en", ...sheet 
       const availableBodyHmm = PAGE_H_MM - headerHmm - footerHmm - GAP_MM * 2;
       if (availableBodyHmm < 40) throw new Error("Page header/footer leave too little room for body content.");
 
-      // Compute avoid-break ranges from the body DOM, in body-canvas px. Includes
-      // explicit data-avoid-break nodes, plus every <tr> inside the body so tables
-      // never split mid-row.
       const bodyRect = bodyEl.getBoundingClientRect();
       const ranges = collectAvoidRanges(bodyEl, bodyRect, bodyCanvas.height);
 
@@ -123,13 +154,24 @@ export function PrintPreviewModal({ open, onClose, defaultLang = "en", ...sheet 
       let pageIndex = 0;
       const minSlicePx = Math.floor(pageHpxBody * MIN_SLICE_RATIO);
 
+      const logBreaks: number[] = [];
+      const logMoved: ExportLog["movedBlocks"] = [];
+      const logPages: ExportLog["pages"] = [];
+
       while (cursorPx < bodyCanvas.height) {
         let endPx = Math.min(cursorPx + pageHpxBody, bodyCanvas.height);
+        const naturalEnd = endPx;
 
-        // Retreat for any avoid-block that the natural break would cut.
         const conflict = findInnermostConflict(ranges, cursorPx, endPx);
         if (conflict && conflict.startPx - cursorPx >= minSlicePx) {
           endPx = Math.floor(conflict.startPx);
+          logMoved.push({
+            pageIndex,
+            naturalEndPx: Math.round(naturalEnd),
+            retreatedToPx: Math.round(endPx),
+            label: conflict.label,
+            kind: conflict.kind,
+          });
         }
 
         const sliceH = endPx - cursorPx;
@@ -157,12 +199,37 @@ export function PrintPreviewModal({ open, onClose, defaultLang = "en", ...sheet 
         if (pageIndex > 0) pdf.addPage();
         pdf.addImage(img, "JPEG", 0, 0, PAGE_W_MM, PAGE_H_MM);
 
+        logPages.push({ index: pageIndex, startPx: Math.round(cursorPx), endPx: Math.round(endPx), heightPx: Math.round(sliceH) });
+        logBreaks.push(Math.round(endPx));
+
         cursorPx = endPx;
         pageIndex += 1;
         if (pageIndex > 50) break;
       }
 
       pdf.save(`${sheet.reference || "document"}-${lang}.pdf`);
+
+      const log: ExportLog = {
+        generatedAt: new Date().toISOString(),
+        reference: sheet.reference,
+        language: lang,
+        page: { widthMm: PAGE_W_MM, heightMm: PAGE_H_MM, gapMm: GAP_MM },
+        pxPerMm,
+        bodyCanvasHeightPx: bodyCanvas.height,
+        availableBodyHeightMm: availableBodyHmm,
+        pageBreaksPx: logBreaks,
+        avoidedRanges: ranges.map((r) => ({
+          startPx: Math.round(r.startPx),
+          endPx: Math.round(r.endPx),
+          label: r.label,
+          kind: r.kind,
+        })),
+        movedBlocks: logMoved,
+        pages: logPages,
+        placeholders: placeholdersUsed,
+      };
+      setLastLog(log);
+
       toast.success(`PDF ready · ${pageIndex} page${pageIndex === 1 ? "" : "s"}`, { id: loadingToast });
     } catch (err: any) {
       console.error("PDF export failed", err);
@@ -174,7 +241,6 @@ export function PrintPreviewModal({ open, onClose, defaultLang = "en", ...sheet 
         duration: 8000,
       });
     } finally {
-      restoreFns.forEach((fn) => fn());
       setBusy(false);
       if (debug) setDebugInfo(computeDebug(sheetRef.current));
     }
@@ -184,6 +250,20 @@ export function PrintPreviewModal({ open, onClose, defaultLang = "en", ...sheet 
     setNotice(null);
     setRenderKey((k) => k + 1);
     setTimeout(download, 60);
+  };
+
+  const downloadLog = () => {
+    if (!lastLog) return;
+    const blob = new Blob([JSON.stringify(lastLog, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${sheet.reference || "document"}-${lang}-pagination.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    toast.success("Pagination log downloaded");
   };
 
   return createPortal(
@@ -207,6 +287,15 @@ export function PrintPreviewModal({ open, onClose, defaultLang = "en", ...sheet 
               title="Toggle pagination debug overlay"
             >
               <Ruler className="size-3.5" /> Debug
+            </button>
+
+            <button
+              onClick={downloadLog}
+              disabled={busy || !lastLog}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-background px-2.5 py-1.5 text-xs font-semibold text-muted-foreground transition hover:bg-muted disabled:opacity-50"
+              title={lastLog ? "Download pagination JSON log" : "Export a PDF first to generate a log"}
+            >
+              <FileJson className="size-3.5" /> Log
             </button>
 
             <div className="flex items-center gap-1 rounded-xl border border-border bg-background p-1">
@@ -261,7 +350,7 @@ export function PrintPreviewModal({ open, onClose, defaultLang = "en", ...sheet 
               )}
               <div className="flex-1 space-y-1">
                 <div className="font-semibold">
-                  {notice.kind === "error" ? "PDF export failed" : "Exported with placeholders"}
+                  {notice.kind === "error" ? "PDF export failed" : "Showing branded placeholders"}
                 </div>
                 <div className="opacity-90">{notice.message}</div>
                 {notice.assets?.length ? (
@@ -317,25 +406,13 @@ export function PrintPreviewModal({ open, onClose, defaultLang = "en", ...sheet 
 function DebugOverlay({ info }: { info: DebugInfo }) {
   return (
     <div className="pointer-events-none absolute inset-0 z-20">
-      {/* Page boundary markers */}
       {info.breaks.map((y, i) => (
-        <div
-          key={`b-${i}`}
-          className="absolute left-0 right-0"
-          style={{ top: y }}
-        >
+        <div key={`b-${i}`} className="absolute left-0 right-0" style={{ top: y }}>
           <div style={{ borderTop: "2px dashed #ef4444", opacity: 0.9 }} />
           <div
             style={{
-              position: "absolute",
-              right: 4,
-              top: -18,
-              background: "#ef4444",
-              color: "#fff",
-              fontSize: 10,
-              padding: "2px 6px",
-              borderRadius: 4,
-              fontWeight: 700,
+              position: "absolute", right: 4, top: -18, background: "#ef4444", color: "#fff",
+              fontSize: 10, padding: "2px 6px", borderRadius: 4, fontWeight: 700,
               fontFamily: "ui-sans-serif, system-ui",
             }}
           >
@@ -343,30 +420,20 @@ function DebugOverlay({ info }: { info: DebugInfo }) {
           </div>
         </div>
       ))}
-      {/* Blocks that were retreated to avoid splitting */}
       {info.moved.map((m, i) => (
         <div
           key={`m-${i}`}
           className="absolute left-0 right-0"
           style={{
-            top: m.top,
-            height: m.height,
+            top: m.top, height: m.height,
             background: "rgba(234, 179, 8, 0.18)",
-            outline: "1.5px dashed #d97706",
-            outlineOffset: -2,
+            outline: "1.5px dashed #d97706", outlineOffset: -2,
           }}
         >
           <div
             style={{
-              position: "absolute",
-              left: 4,
-              top: 4,
-              background: "#d97706",
-              color: "#fff",
-              fontSize: 10,
-              padding: "2px 6px",
-              borderRadius: 4,
-              fontWeight: 700,
+              position: "absolute", left: 4, top: 4, background: "#d97706", color: "#fff",
+              fontSize: 10, padding: "2px 6px", borderRadius: 4, fontWeight: 700,
               fontFamily: "ui-sans-serif, system-ui",
             }}
           >
@@ -417,7 +484,6 @@ function computeDebug(sheetEl: HTMLDivElement | null): DebugInfo | null {
     breaks.push(end + bodyTop);
     cursor = end;
   }
-  // Drop the final break that sits at the very end of content (it's not a page split).
   if (breaks.length && breaks[breaks.length - 1] >= bodyTop + bodyHeight - 1) breaks.pop();
 
   return { pxPerMm, pageHpx, bodyTop, bodyHeight, breaks, moved };
@@ -425,44 +491,54 @@ function computeDebug(sheetEl: HTMLDivElement | null): DebugInfo | null {
 
 /* ----------------- pagination helpers ----------------- */
 
-type Range = { startPx: number; endPx: number };
-type CssRange = { start: number; end: number; label: string };
+type Range = { startPx: number; endPx: number; label: string; kind: string };
+type CssRange = { start: number; end: number; label: string; kind: string };
 
+// Collect every "atomic" block that must not split mid-page. Includes:
+//   - explicit [data-avoid-break] blocks
+//   - every <tr> at any nesting level (real <tbody>/<thead>/<tfoot> rows, including nested tables)
+//   - <thead> + <tfoot> as a whole (so a table header never orphans at page bottom)
 function collectAvoidRanges(bodyEl: HTMLElement, bodyRect: DOMRect, bodyCanvasHeight: number): Range[] {
   const scale = bodyCanvasHeight / bodyRect.height;
   const list: Range[] = [];
-  const push = (el: Element) => {
+  const push = (el: Element, kind: string, label?: string) => {
     const r = (el as HTMLElement).getBoundingClientRect();
     list.push({
       startPx: (r.top - bodyRect.top) * scale,
       endPx: (r.bottom - bodyRect.top) * scale,
+      kind,
+      label: label || labelFor(el as HTMLElement) || kind,
     });
   };
-  bodyEl.querySelectorAll("[data-avoid-break]").forEach(push);
-  // Row-level rule: tables never split mid-row.
-  bodyEl.querySelectorAll("tr").forEach(push);
+  bodyEl.querySelectorAll<HTMLElement>("[data-avoid-break]").forEach((el) => push(el, "avoid-block"));
+  bodyEl.querySelectorAll<HTMLTableRowElement>("tr").forEach((tr) => {
+    const section = tr.closest("thead") ? "thead row" : tr.closest("tfoot") ? "tfoot row" : "tbody row";
+    push(tr, section);
+  });
+  bodyEl.querySelectorAll<HTMLElement>("thead, tfoot").forEach((sec) =>
+    push(sec, sec.tagName.toLowerCase())
+  );
   list.sort((a, b) => a.startPx - b.startPx);
   return list;
 }
 
 function collectAvoidRangesCss(bodyEl: HTMLElement, bodyRect: DOMRect): CssRange[] {
   const list: CssRange[] = [];
-  bodyEl.querySelectorAll<HTMLElement>("[data-avoid-break]").forEach((el) => {
-    const r = el.getBoundingClientRect();
+  const push = (el: Element, kind: string, label?: string) => {
+    const r = (el as HTMLElement).getBoundingClientRect();
     list.push({
       start: r.top - bodyRect.top,
       end: r.bottom - bodyRect.top,
-      label: labelFor(el),
+      kind,
+      label: label || labelFor(el as HTMLElement) || kind,
     });
+  };
+  bodyEl.querySelectorAll<HTMLElement>("[data-avoid-break]").forEach((el) => push(el, "avoid-block"));
+  bodyEl.querySelectorAll<HTMLTableRowElement>("tr").forEach((tr) => {
+    const section = tr.closest("thead") ? "thead row" : tr.closest("tfoot") ? "tfoot row" : "tbody row";
+    push(tr, section);
   });
-  bodyEl.querySelectorAll<HTMLElement>("tr").forEach((el) => {
-    const r = el.getBoundingClientRect();
-    list.push({
-      start: r.top - bodyRect.top,
-      end: r.bottom - bodyRect.top,
-      label: "table row",
-    });
-  });
+  bodyEl.querySelectorAll<HTMLElement>("thead, tfoot").forEach((sec) => push(sec, sec.tagName.toLowerCase()));
   list.sort((a, b) => a.start - b.start);
   return list;
 }
@@ -473,9 +549,10 @@ function labelFor(el: HTMLElement): string {
   return txt.length > 36 ? txt.slice(0, 35) + "…" : txt;
 }
 
+// Innermost conflict = the latest-starting block the natural break would split.
+// For nested tables, inner rows have larger `start`, so we retreat to the
+// inner row's start — preserving every row at every nesting level.
 function findInnermostConflict(ranges: Range[], cursor: number, end: number): Range | null {
-  // Pick the conflict whose start is closest to `end` (i.e. the innermost / latest block
-  // that the natural break still cuts). This keeps as much content on the page as possible.
   let best: Range | null = null;
   for (const r of ranges) {
     if (r.startPx > cursor && r.startPx < end && r.endPx > end) {
@@ -532,6 +609,8 @@ async function detectUnloadableImages(root: HTMLElement): Promise<string[]> {
     imgs.map(
       (img) =>
         new Promise<void>((resolve) => {
+          // Skip images we've already swapped to placeholders in a previous pass.
+          if (img.dataset.placeholderApplied === "1") return resolve();
           if (!img.src || img.src.startsWith("data:")) return resolve();
           const probe = new Image();
           probe.crossOrigin = "anonymous";
