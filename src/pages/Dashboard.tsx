@@ -337,45 +337,98 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Brand Builder Progress timeline */}
+          {/* Brand Builder Progress — responsive visual grid */}
           <Card title="Brand Builder Progress" action={<Link to="/brand-builder" className="text-xs font-semibold text-accent">Open builder →</Link>}>
-            <ol className="relative ml-3 space-y-5 border-l border-border pl-6">
-              {["Identity & Strategy", "Visual Identity", "Stationery Kit", "Social Media", "Launch"].map(
-                (step, i) => {
-                  const done = i < 3;
-                  const current = i === 3;
-                  return (
-                    <li key={step} className="relative">
-                      <span
-                        className={`absolute -left-[34px] grid size-6 place-items-center rounded-full text-[11px] font-bold ring-4 ring-background ${
-                          done
-                            ? "bg-success text-white"
-                            : current
-                            ? "bg-gradient-red text-white"
-                            : "bg-muted text-muted-foreground"
-                        }`}
-                      >
-                        {done ? "✓" : i + 1}
-                      </span>
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <div>
-                          <div className="text-sm font-semibold">{step}</div>
-                          <div className="text-xs text-muted-foreground">
-                            {done
-                              ? "Completed and approved by client"
+            {(() => {
+              const steps = [
+                { label: "Identity & Strategy", icon: "✦" },
+                { label: "Visual Identity", icon: "◐" },
+                { label: "Stationery Kit", icon: "✉" },
+                { label: "Social Media", icon: "❍" },
+                { label: "Launch", icon: "▲" },
+              ];
+              const completed = 3;
+              const overall = Math.round((completed / steps.length) * 100);
+              return (
+                <>
+                  {/* Overall progress bar */}
+                  <div className="mb-4 rounded-2xl border border-border bg-gradient-card p-3">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-semibold">Overall completion</span>
+                      <span className="font-bold text-primary">{overall}%</span>
+                    </div>
+                    <div className="mt-2 h-2 overflow-hidden rounded-full bg-muted">
+                      <div
+                        className="h-full rounded-full gradient-blue vh-shimmer"
+                        style={{ width: `${overall}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Step tiles — 2 per row on mobile, scales up on larger screens */}
+                  <ol className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+                    {steps.map((s, i) => {
+                      const done = i < completed;
+                      const current = i === completed;
+                      return (
+                        <li
+                          key={s.label}
+                          className={`group relative overflow-hidden rounded-2xl border p-3 transition-all hover:-translate-y-1 hover:shadow-elegant ${
+                            done
+                              ? "border-success/30 bg-success/5"
                               : current
-                              ? "In progress — 2 items waiting approval"
-                              : "Up next"}
+                              ? "border-accent/40 bg-gradient-card shadow-elegant"
+                              : "border-border bg-card"
+                          }`}
+                        >
+                          {/* Decorative corner glow */}
+                          <span
+                            className={`pointer-events-none absolute -right-6 -top-6 size-16 rounded-full blur-2xl ${
+                              done ? "bg-success/30" : current ? "bg-accent/40 vh-float" : "bg-muted"
+                            }`}
+                          />
+                          <div className="relative flex items-start justify-between">
+                            <span
+                              className={`grid size-9 place-items-center rounded-xl text-sm font-bold ring-2 ring-background ${
+                                done
+                                  ? "bg-success text-white"
+                                  : current
+                                  ? "gradient-red text-white vh-pop"
+                                  : "bg-muted text-muted-foreground"
+                              }`}
+                            >
+                              {done ? "✓" : i + 1}
+                            </span>
+                            <span
+                              className={`text-lg ${
+                                done ? "text-success" : current ? "text-accent" : "text-muted-foreground/60"
+                              }`}
+                            >
+                              {s.icon}
+                            </span>
                           </div>
-                        </div>
-                        <StatusBadge status={done ? "Completed" : current ? "In Progress" : "Not Started"} />
-                      </div>
-                    </li>
-                  );
-                }
-              )}
-            </ol>
+                          <div className="relative mt-3">
+                            <div className="text-[13px] font-semibold leading-tight">{s.label}</div>
+                            <div className="mt-1 text-[10px] leading-snug text-muted-foreground line-clamp-2">
+                              {done ? "Completed & approved" : current ? "2 items waiting" : "Up next"}
+                            </div>
+                          </div>
+                          <div className="relative mt-3 h-1.5 overflow-hidden rounded-full bg-muted/70">
+                            <div
+                              className={`h-full rounded-full ${
+                                done ? "bg-success w-full" : current ? "gradient-blue w-2/3 vh-shimmer" : "w-0"
+                              }`}
+                            />
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ol>
+                </>
+              );
+            })()}
           </Card>
+
 
           {/* Deliverables overview */}
           <Card title="Deliverables Overview" action={<button className="text-xs font-semibold text-accent">Filter →</button>}>
