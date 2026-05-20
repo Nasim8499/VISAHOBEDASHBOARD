@@ -452,97 +452,130 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Brand Builder Progress — responsive visual grid */}
-          <Card title="Brand Builder Progress" action={<Link to="/brand-builder" className="text-xs font-semibold text-accent">Open builder →</Link>}>
+          {/* Brand Builder Progress — connected journey stepper */}
+          <Card title="Brand Builder Progress" action={<Link to="/brand-builder" className="text-xs font-semibold text-accent inline-flex items-center gap-1">Open builder <ChevronRight className="size-3" /></Link>}>
             {(() => {
               const steps = [
-                { label: "Identity & Strategy", icon: "✦" },
-                { label: "Visual Identity", icon: "◐" },
-                { label: "Stationery Kit", icon: "✉" },
-                { label: "Social Media", icon: "❍" },
-                { label: "Launch", icon: "▲" },
+                { label: "Identity & Strategy", icon: "✦", pct: 100, days: "Wk 1" },
+                { label: "Visual Identity", icon: "◐", pct: 100, days: "Wk 2" },
+                { label: "Stationery Kit", icon: "✉", pct: 100, days: "Wk 3" },
+                { label: "Social Media", icon: "❍", pct: 65, days: "Wk 4" },
+                { label: "Launch", icon: "▲", pct: 0, days: "Wk 5" },
               ];
-              const completed = 3;
-              const overall = Math.round((completed / steps.length) * 100);
+              const completed = steps.filter((s) => s.pct === 100).length;
+              const overall = Math.round(steps.reduce((a, s) => a + s.pct, 0) / steps.length);
+              const ringR = 18, ringC = 2 * Math.PI * ringR;
+
               return (
                 <>
-                  {/* Overall progress bar */}
-                  <div className="mb-4 rounded-2xl border border-border bg-gradient-card p-3">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="font-semibold">Overall completion</span>
-                      <span className="font-bold text-primary">{overall}%</span>
-                    </div>
-                    <div className="mt-2 h-2 overflow-hidden rounded-full bg-muted">
-                      <div
-                        className="h-full rounded-full gradient-blue vh-shimmer"
-                        style={{ width: `${overall}%` }}
-                      />
+                  {/* Hero summary strip */}
+                  <div className="relative mb-4 overflow-hidden rounded-2xl bg-gradient-hero p-4 text-white">
+                    <span className="pointer-events-none absolute -right-10 -top-10 size-32 rounded-full bg-warning/40 blur-2xl vh-float" />
+                    <span className="pointer-events-none absolute -bottom-12 -left-8 size-28 rounded-full bg-accent/40 blur-2xl vh-float" style={{ animationDelay: "1.2s" }} />
+                    <div className="relative flex items-center justify-between gap-3">
+                      <div>
+                        <div className="inline-flex items-center gap-1.5 rounded-full border border-white/25 bg-white/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider backdrop-blur">
+                          <span className="size-1.5 animate-pulse rounded-full bg-success" />
+                          Active Build
+                        </div>
+                        <div className="mt-1.5 font-display text-2xl font-extrabold leading-none">{overall}%</div>
+                        <div className="text-[10px] text-white/70">{completed} of {steps.length} stages complete</div>
+                      </div>
+                      {/* Big % donut */}
+                      <div className="relative grid size-16 place-items-center">
+                        <svg width="64" height="64" viewBox="0 0 64 64" className="-rotate-90">
+                          <circle cx="32" cy="32" r="26" stroke="rgba(255,255,255,0.2)" strokeWidth="5" fill="none" />
+                          <circle cx="32" cy="32" r="26" stroke="white" strokeWidth="5" strokeLinecap="round" fill="none"
+                            strokeDasharray={`${(overall / 100) * (2 * Math.PI * 26)} ${2 * Math.PI * 26}`} />
+                        </svg>
+                        <Sparkles className="absolute size-5 text-warning animate-pulse" />
+                      </div>
                     </div>
                   </div>
 
-                  {/* Step tiles — 2 per row on mobile, scales up on larger screens */}
-                  <ol className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+                  {/* Horizontal connected stepper */}
+                  <div className="relative mb-4 overflow-x-auto">
+                    <div className="relative flex min-w-[480px] items-start justify-between gap-1 px-2 pb-1">
+                      {/* connector line behind */}
+                      <span className="pointer-events-none absolute left-6 right-6 top-[22px] h-0.5 bg-muted" />
+                      <span
+                        className="pointer-events-none absolute left-6 top-[22px] h-0.5 gradient-blue vh-shimmer transition-all"
+                        style={{ width: `calc((100% - 48px) * ${overall / 100})` }}
+                      />
+
+                      {steps.map((s, i) => {
+                        const done = s.pct === 100;
+                        const current = !done && s.pct > 0;
+                        return (
+                          <div key={s.label} className="relative z-10 flex w-1/5 flex-col items-center">
+                            <div className="relative grid size-11 place-items-center">
+                              <svg width="44" height="44" viewBox="0 0 44 44" className="-rotate-90">
+                                <circle cx="22" cy="22" r={ringR} fill="hsl(var(--background))" stroke="hsl(var(--muted))" strokeWidth="3" />
+                                <circle cx="22" cy="22" r={ringR} fill="none"
+                                  stroke={done ? "hsl(var(--success))" : current ? "hsl(var(--accent))" : "hsl(var(--muted))"}
+                                  strokeWidth="3" strokeLinecap="round"
+                                  strokeDasharray={`${(s.pct / 100) * ringC} ${ringC}`} />
+                              </svg>
+                              <span className={`absolute text-[12px] font-extrabold ${
+                                done ? "text-success" : current ? "text-accent vh-pop" : "text-muted-foreground"
+                              }`}>
+                                {done ? "✓" : i + 1}
+                              </span>
+                            </div>
+                            <div className="mt-1.5 text-center text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
+                              {s.days}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Detail rows */}
+                  <ul className="space-y-2">
                     {steps.map((s, i) => {
-                      const done = i < completed;
-                      const current = i === completed;
+                      const done = s.pct === 100;
+                      const current = !done && s.pct > 0;
+                      const tone = done ? "success" : current ? "accent" : "muted-foreground";
                       return (
                         <li
                           key={s.label}
-                          className={`group relative overflow-hidden rounded-2xl border p-3 transition-all hover:-translate-y-1 hover:shadow-elegant ${
-                            done
-                              ? "border-success/30 bg-success/5"
-                              : current
-                              ? "border-accent/40 bg-gradient-card shadow-elegant"
-                              : "border-border bg-card"
+                          className={`group relative flex items-center gap-3 overflow-hidden rounded-xl border bg-card p-2.5 transition-all hover:-translate-y-0.5 hover:shadow-elegant ${
+                            current ? "border-accent/40 shadow-elegant" : done ? "border-success/20" : "border-border"
                           }`}
                         >
-                          {/* Decorative corner glow */}
-                          <span
-                            className={`pointer-events-none absolute -right-6 -top-6 size-16 rounded-full blur-2xl ${
-                              done ? "bg-success/30" : current ? "bg-accent/40 vh-float" : "bg-muted"
-                            }`}
-                          />
-                          <div className="relative flex items-start justify-between">
-                            <span
-                              className={`grid size-9 place-items-center rounded-xl text-sm font-bold ring-2 ring-background ${
-                                done
-                                  ? "bg-success text-white"
-                                  : current
-                                  ? "gradient-red text-white vh-pop"
-                                  : "bg-muted text-muted-foreground"
-                              }`}
-                            >
-                              {done ? "✓" : i + 1}
-                            </span>
-                            <span
-                              className={`text-lg ${
-                                done ? "text-success" : current ? "text-accent" : "text-muted-foreground/60"
-                              }`}
-                            >
-                              {s.icon}
-                            </span>
-                          </div>
-                          <div className="relative mt-3">
-                            <div className="text-[13px] font-semibold leading-tight">{s.label}</div>
-                            <div className="mt-1 text-[10px] leading-snug text-muted-foreground line-clamp-2">
-                              {done ? "Completed & approved" : current ? "2 items waiting" : "Up next"}
+                          <span className={`absolute left-0 top-0 h-full w-1 bg-${tone}`} />
+                          <span className={`grid size-9 shrink-0 place-items-center rounded-xl text-base ${
+                            done ? "bg-success/15 text-success" : current ? "bg-accent/15 text-accent vh-float" : "bg-muted text-muted-foreground/60"
+                          }`}>
+                            {s.icon}
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="truncate text-[13px] font-bold">{s.label}</span>
+                              <span className={`shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ${
+                                done ? "bg-success/10 text-success" : current ? "bg-accent/10 text-accent" : "bg-muted text-muted-foreground"
+                              }`}>
+                                {done ? "Done" : current ? "Active" : "Queued"}
+                              </span>
                             </div>
-                          </div>
-                          <div className="relative mt-3 h-1.5 overflow-hidden rounded-full bg-muted/70">
-                            <div
-                              className={`h-full rounded-full ${
-                                done ? "bg-success w-full" : current ? "gradient-blue w-2/3 vh-shimmer" : "w-0"
-                              }`}
-                            />
+                            <div className="mt-1 flex items-center gap-2">
+                              <div className="h-1 flex-1 overflow-hidden rounded-full bg-muted/70">
+                                <div className={`h-full rounded-full ${current ? "vh-shimmer" : ""}`}
+                                  style={{ width: `${s.pct}%`, background: done ? "hsl(var(--success))" : current ? "hsl(var(--accent))" : "transparent" }} />
+                              </div>
+                              <span className="text-[10px] font-bold text-muted-foreground">{s.pct}%</span>
+                            </div>
                           </div>
                         </li>
                       );
                     })}
-                  </ol>
+                  </ul>
                 </>
               );
             })()}
           </Card>
+
 
 
           {/* Deliverables overview — each card a distinct infographic */}
