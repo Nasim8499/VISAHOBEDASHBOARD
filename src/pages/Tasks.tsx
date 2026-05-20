@@ -2,6 +2,7 @@ import { PageContainer, PageHeader } from "@/components/layout/Page";
 import { tasksByStatus } from "@/data/mock";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Plus } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
 
 const columns = [
   "Backlog",
@@ -18,40 +19,97 @@ const priorityTone: Record<string, string> = {
   Low: "bg-muted text-muted-foreground",
 };
 
+const ease = [0.22, 1, 0.36, 1] as const;
+
 export default function Tasks() {
+  const reduce = useReducedMotion();
+
+  const colVariants = {
+    hidden: { opacity: 0, y: 16 },
+    show: (i: number) => ({
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.45, ease, delay: reduce ? 0 : i * 0.06 },
+    }),
+  };
+
+  const listVariants = {
+    hidden: {},
+    show: { transition: { staggerChildren: reduce ? 0 : 0.05, delayChildren: 0.1 } },
+  };
+
+  const cardVariants = {
+    hidden: { opacity: 0, y: 10, scale: 0.98 },
+    show: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.35, ease } },
+  };
+
   return (
     <PageContainer>
-      <PageHeader
-        title="Tasks & Workflow"
-        subtitle="Track every task across every client business workspace."
-        actions={
-          <button className="inline-flex items-center gap-2 rounded-xl bg-gradient-blue px-4 py-2.5 text-sm font-semibold text-white">
-            <Plus className="size-4" /> New Task
-          </button>
-        }
-      />
+      <motion.div
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease }}
+      >
+        <PageHeader
+          title="Tasks & Workflow"
+          subtitle="Track every task across every client business workspace."
+          actions={
+            <motion.button
+              whileHover={reduce ? undefined : { scale: 1.04 }}
+              whileTap={reduce ? undefined : { scale: 0.96 }}
+              className="inline-flex items-center gap-2 rounded-xl bg-gradient-blue px-4 py-2.5 text-sm font-semibold text-white shadow-elegant transition-shadow hover:shadow-glow"
+            >
+              <Plus className="size-4" /> New Task
+            </motion.button>
+          }
+        />
+      </motion.div>
 
       <div className="flex gap-4 overflow-x-auto pb-4">
-        {columns.map((col) => {
+        {columns.map((col, i) => {
           const list = tasksByStatus[col] || [];
           return (
-            <div key={col} className="w-72 shrink-0">
+            <motion.div
+              key={col}
+              custom={i}
+              initial="hidden"
+              animate="show"
+              variants={colVariants}
+              className="w-72 shrink-0"
+            >
               <div className="mb-3 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <h3 className="text-sm font-semibold">{col}</h3>
-                  <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">
+                  <motion.span
+                    initial={{ scale: 0.7, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ duration: 0.3, ease, delay: 0.1 + i * 0.05 }}
+                    className="rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground"
+                  >
                     {list.length}
-                  </span>
+                  </motion.span>
                 </div>
-                <button className="rounded-md p-1 text-muted-foreground hover:bg-muted">
+                <motion.button
+                  whileHover={reduce ? undefined : { rotate: 90, scale: 1.1 }}
+                  transition={{ duration: 0.25, ease }}
+                  className="rounded-md p-1 text-muted-foreground hover:bg-muted"
+                >
                   <Plus className="size-4" />
-                </button>
+                </motion.button>
               </div>
-              <div className="space-y-2">
+              <motion.div
+                variants={listVariants}
+                initial="hidden"
+                animate="show"
+                className="space-y-2"
+              >
                 {list.map((t) => (
-                  <div
+                  <motion.div
                     key={t.title}
-                    className="cursor-grab rounded-xl border border-border bg-card p-3 shadow-sm transition hover:shadow-elegant"
+                    variants={cardVariants}
+                    whileHover={reduce ? undefined : { y: -3, scale: 1.015 }}
+                    transition={{ duration: 0.2, ease }}
+                    className="cursor-grab rounded-xl border border-border bg-card p-3 shadow-sm transition-shadow hover:shadow-elegant"
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="text-sm font-semibold">{t.title}</div>
@@ -65,25 +123,45 @@ export default function Tasks() {
                       </span>
                       <span>Due {t.due}</span>
                     </div>
-                  </div>
+                  </motion.div>
                 ))}
                 {list.length === 0 && (
-                  <div className="rounded-xl border-2 border-dashed border-border p-5 text-center text-xs text-muted-foreground">
+                  <motion.div
+                    variants={cardVariants}
+                    className="rounded-xl border-2 border-dashed border-border p-5 text-center text-xs text-muted-foreground"
+                  >
                     No tasks
-                  </div>
+                  </motion.div>
                 )}
-              </div>
-            </div>
+              </motion.div>
+            </motion.div>
           );
         })}
       </div>
 
-      <div className="mt-6 rounded-2xl border border-border bg-card p-5">
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease, delay: 0.3 }}
+        className="mt-6 rounded-2xl border border-border bg-card p-5"
+      >
         <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">Legend</h3>
-        <div className="flex flex-wrap gap-2">
-          {columns.map((c) => <StatusBadge key={c} status={c} />)}
-        </div>
-      </div>
+        <motion.div
+          initial="hidden"
+          animate="show"
+          variants={{ hidden: {}, show: { transition: { staggerChildren: 0.04, delayChildren: 0.35 } } }}
+          className="flex flex-wrap gap-2"
+        >
+          {columns.map((c) => (
+            <motion.div
+              key={c}
+              variants={{ hidden: { opacity: 0, scale: 0.85 }, show: { opacity: 1, scale: 1, transition: { duration: 0.25, ease } } }}
+            >
+              <StatusBadge status={c} />
+            </motion.div>
+          ))}
+        </motion.div>
+      </motion.div>
     </PageContainer>
   );
 }
