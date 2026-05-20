@@ -3,6 +3,9 @@ import { useWorkspace } from "@/context/WorkspaceContext";
 import { activity, deliverables, insights, meetings } from "@/data/mock";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { StatusBadge } from "@/components/ui/status-badge";
+import { useEffect, useMemo, useState } from "react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
+import { toast } from "sonner";
 import {
   ArrowUpRight,
   Building2,
@@ -20,8 +23,59 @@ import {
   Calendar,
   Rocket,
   Palette,
+  Check,
+  Eye,
+  Send,
+  AlertTriangle,
+  CalendarClock,
+  RotateCcw,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+
+type BBState = "queued" | "active" | "review" | "sent" | "done";
+type BBStage = {
+  key: string;
+  label: string;
+  icon: string;
+  pct: number;
+  due: string; // ISO date
+  state: BBState;
+};
+
+const BB_DEFAULTS: Omit<BBStage, "due">[] = [
+  { key: "identity", label: "Identity & Strategy", icon: "✦", pct: 100, state: "done" },
+  { key: "visual", label: "Visual Identity", icon: "◐", pct: 100, state: "done" },
+  { key: "stationery", label: "Stationery Kit", icon: "✉", pct: 100, state: "done" },
+  { key: "social", label: "Social Media", icon: "❍", pct: 65, state: "active" },
+  { key: "launch", label: "Launch", icon: "▲", pct: 0, state: "queued" },
+];
+
+function makeDefaultStages(): BBStage[] {
+  const base = Date.now();
+  return BB_DEFAULTS.map((s, i) => ({
+    ...s,
+    // Stage 1 due 5d ago (overdue demo for active), then weekly
+    due: new Date(base + (i - 3) * 7 * 86400000).toISOString().slice(0, 10),
+  }));
+}
+
+function loadStages(wsId: string): BBStage[] {
+  try {
+    const raw = localStorage.getItem(`vh-bb-${wsId}`);
+    if (!raw) return makeDefaultStages();
+    const parsed = JSON.parse(raw) as BBStage[];
+    if (!Array.isArray(parsed) || parsed.length === 0) return makeDefaultStages();
+    return parsed;
+  } catch {
+    return makeDefaultStages();
+  }
+}
+
+function isOverdue(s: BBStage) {
+  if (s.pct >= 100 || s.state === "done") return false;
+  const today = new Date().toISOString().slice(0, 10);
+  return s.due < today;
+}
 
 const kpis = [
   {
@@ -208,6 +262,43 @@ function DashboardSkeleton() {
 
 export default function Dashboard() {
   const { workspace, all, loading } = useWorkspace();
+
+  const [stages, setStages] = useState<BBStage[]>(() => makeDefaultStages());
+  const [openIdx, setOpenIdx] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (workspace?.id) setStages(loadStages(workspace.id));
+  }, [workspace?.id]);
+
+  useEffect(() => {
+    if (workspace?.id) {
+      try { localStorage.setItem(`vh-bb-${workspace.id}`, JSON.stringify(stages)); } catch {}
+    }
+  }, [stages, workspace?.id]);
+
+  const updateStage = (i: number, patch: Partial<BBStage>) =>
+    setStages((prev) => prev.map((s, idx) => (idx === i ? { ...s, ...patch } : s)));
+
+  const markDone = (i: number) => {
+    updateStage(i, { pct: 100, state: "done" });
+    toast.success(`${stages[i].label} marked as done`);
+  };
+  const requestReview = (i: number) => {
+    updateStage(i, { state: "review", pct: Math.max(stages[i].pct, 80) });
+    toast.message(`Review requested · ${stages[i].label}`, { description: "Internal QA team notified." });
+  };
+  const sendToClient = (i: number) => {
+    updateStage(i, { state: "sent", pct: Math.max(stages[i].pct, 90) });
+    toast.success(`Sent to client · ${stages[i].label}`, { description: "Awaiting client approval." });
+  };
+  const setDue = (i: number, due: string) => {
+    updateStage(i, { due });
+    toast.success(`Due date updated · ${stages[i].label}`);
+  };
+  const resetStage = (i: number) => {
+    updateStage(i, { pct: 0, state: "queued" });
+    toast.message(`${stages[i].label} reset to queued`);
+  };
 
   if (loading) return <DashboardSkeleton />;
   if (all.length === 0) return <EmptyDashboard />;
@@ -452,18 +543,12 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Brand Builder Progress — connected journey stepper */}
+          {/* Brand Builder Progress — interactive journey stepper */}
           <Card title="Brand Builder Progress" action={<Link to="/brand-builder" className="text-xs font-semibold text-accent inline-flex items-center gap-1">Open builder <ChevronRight className="size-3" /></Link>}>
             {(() => {
-              const steps = [
-                { label: "Identity & Strategy", icon: "✦", pct: 100, days: "Wk 1" },
-                { label: "Visual Identity", icon: "◐", pct: 100, days: "Wk 2" },
-                { label: "Stationery Kit", icon: "✉", pct: 100, days: "Wk 3" },
-                { label: "Social Media", icon: "❍", pct: 65, days: "Wk 4" },
-                { label: "Launch", icon: "▲", pct: 0, days: "Wk 5" },
-              ];
-              const completed = steps.filter((s) => s.pct === 100).length;
-              const overall = Math.round(steps.reduce((a, s) => a + s.pct, 0) / steps.length);
+              const completed = stages.filter((s) => s.pct === 100 || s.state === "done").length;
+              const overall = Math.round(stages.reduce((a, s) => a + s.pct, 0) / stages.length);
+              const overdueCount = stages.filter(isOverdue).length;
               const ringR = 18, ringC = 2 * Math.PI * ringR;
 
               return (
@@ -476,12 +561,16 @@ export default function Dashboard() {
                       <div>
                         <div className="inline-flex items-center gap-1.5 rounded-full border border-white/25 bg-white/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider backdrop-blur">
                           <span className="size-1.5 animate-pulse rounded-full bg-success" />
-                          Active Build
+                          Active Build · Saved
                         </div>
                         <div className="mt-1.5 font-display text-2xl font-extrabold leading-none">{overall}%</div>
-                        <div className="text-[10px] text-white/70">{completed} of {steps.length} stages complete</div>
+                        <div className="text-[10px] text-white/70">{completed} of {stages.length} stages complete</div>
+                        {overdueCount > 0 && (
+                          <div className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-destructive/90 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider">
+                            <AlertTriangle className="size-3" /> {overdueCount} overdue
+                          </div>
+                        )}
                       </div>
-                      {/* Big % donut */}
                       <div className="relative grid size-16 place-items-center">
                         <svg width="64" height="64" viewBox="0 0 64 64" className="-rotate-90">
                           <circle cx="32" cy="32" r="26" stroke="rgba(255,255,255,0.2)" strokeWidth="5" fill="none" />
@@ -493,79 +582,132 @@ export default function Dashboard() {
                     </div>
                   </div>
 
-                  {/* Horizontal connected stepper */}
+                  {/* Horizontal connected stepper — clickable */}
                   <div className="relative mb-4 overflow-x-auto">
                     <div className="relative flex min-w-[480px] items-start justify-between gap-1 px-2 pb-1">
-                      {/* connector line behind */}
                       <span className="pointer-events-none absolute left-6 right-6 top-[22px] h-0.5 bg-muted" />
                       <span
                         className="pointer-events-none absolute left-6 top-[22px] h-0.5 gradient-blue vh-shimmer transition-all"
                         style={{ width: `calc((100% - 48px) * ${overall / 100})` }}
                       />
-
-                      {steps.map((s, i) => {
-                        const done = s.pct === 100;
+                      {stages.map((s, i) => {
+                        const done = s.pct === 100 || s.state === "done";
                         const current = !done && s.pct > 0;
+                        const overdue = isOverdue(s);
                         return (
-                          <div key={s.label} className="relative z-10 flex w-1/5 flex-col items-center">
-                            <div className="relative grid size-11 place-items-center">
+                          <button
+                            key={s.key}
+                            onClick={() => setOpenIdx(i)}
+                            className="relative z-10 flex w-1/5 flex-col items-center focus:outline-none"
+                            aria-label={`Open ${s.label}`}
+                          >
+                            <div className="relative grid size-11 place-items-center transition-transform hover:scale-110">
                               <svg width="44" height="44" viewBox="0 0 44 44" className="-rotate-90">
-                                <circle cx="22" cy="22" r={ringR} fill="hsl(var(--background))" stroke="hsl(var(--muted))" strokeWidth="3" />
+                                <circle cx="22" cy="22" r={ringR} fill="hsl(var(--background))" stroke={overdue ? "hsl(var(--destructive))" : "hsl(var(--muted))"} strokeWidth="3" />
                                 <circle cx="22" cy="22" r={ringR} fill="none"
-                                  stroke={done ? "hsl(var(--success))" : current ? "hsl(var(--accent))" : "hsl(var(--muted))"}
+                                  stroke={overdue ? "hsl(var(--destructive))" : done ? "hsl(var(--success))" : current ? "hsl(var(--accent))" : "hsl(var(--muted))"}
                                   strokeWidth="3" strokeLinecap="round"
                                   strokeDasharray={`${(s.pct / 100) * ringC} ${ringC}`} />
                               </svg>
                               <span className={`absolute text-[12px] font-extrabold ${
-                                done ? "text-success" : current ? "text-accent vh-pop" : "text-muted-foreground"
+                                overdue ? "text-destructive vh-pop" : done ? "text-success" : current ? "text-accent vh-pop" : "text-muted-foreground"
                               }`}>
                                 {done ? "✓" : i + 1}
                               </span>
+                              {overdue && (
+                                <span className="absolute -right-1 -top-1 grid size-4 place-items-center rounded-full bg-destructive text-white">
+                                  <AlertTriangle className="size-2.5" />
+                                </span>
+                              )}
                             </div>
-                            <div className="mt-1.5 text-center text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
-                              {s.days}
+                            <div className={`mt-1.5 text-center text-[9px] font-bold uppercase tracking-wider ${overdue ? "text-destructive" : "text-muted-foreground"}`}>
+                              {new Date(s.due).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
                             </div>
-                          </div>
+                          </button>
                         );
                       })}
                     </div>
                   </div>
 
-                  {/* Detail rows */}
+                  {/* Detail rows — clickable + per-stage actions */}
                   <ul className="space-y-2">
-                    {steps.map((s, i) => {
-                      const done = s.pct === 100;
+                    {stages.map((s, i) => {
+                      const done = s.pct === 100 || s.state === "done";
                       const current = !done && s.pct > 0;
-                      const tone = done ? "success" : current ? "accent" : "muted-foreground";
+                      const overdue = isOverdue(s);
+                      const tone = overdue ? "destructive" : done ? "success" : current ? "accent" : "muted-foreground";
+                      const statusLabel =
+                        s.state === "sent" ? "Sent" :
+                        s.state === "review" ? "In Review" :
+                        done ? "Done" : current ? "Active" : "Queued";
+                      const statusClass =
+                        overdue ? "bg-destructive/10 text-destructive" :
+                        s.state === "sent" ? "bg-primary/10 text-primary" :
+                        s.state === "review" ? "bg-warning/10 text-warning" :
+                        done ? "bg-success/10 text-success" :
+                        current ? "bg-accent/10 text-accent" : "bg-muted text-muted-foreground";
                       return (
-                        <li
-                          key={s.label}
-                          className={`group relative flex items-center gap-3 overflow-hidden rounded-xl border bg-card p-2.5 transition-all hover:-translate-y-0.5 hover:shadow-elegant ${
-                            current ? "border-accent/40 shadow-elegant" : done ? "border-success/20" : "border-border"
+                        <li key={s.key}
+                          className={`group relative overflow-hidden rounded-xl border bg-card p-2.5 transition-all hover:-translate-y-0.5 hover:shadow-elegant ${
+                            overdue ? "border-destructive/40 shadow-elegant" :
+                            current ? "border-accent/40 shadow-elegant" :
+                            done ? "border-success/20" : "border-border"
                           }`}
                         >
                           <span className={`absolute left-0 top-0 h-full w-1 bg-${tone}`} />
-                          <span className={`grid size-9 shrink-0 place-items-center rounded-xl text-base ${
-                            done ? "bg-success/15 text-success" : current ? "bg-accent/15 text-accent vh-float" : "bg-muted text-muted-foreground/60"
-                          }`}>
-                            {s.icon}
-                          </span>
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center justify-between gap-2">
-                              <span className="truncate text-[13px] font-bold">{s.label}</span>
-                              <span className={`shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ${
-                                done ? "bg-success/10 text-success" : current ? "bg-accent/10 text-accent" : "bg-muted text-muted-foreground"
-                              }`}>
-                                {done ? "Done" : current ? "Active" : "Queued"}
-                              </span>
-                            </div>
-                            <div className="mt-1 flex items-center gap-2">
-                              <div className="h-1 flex-1 overflow-hidden rounded-full bg-muted/70">
-                                <div className={`h-full rounded-full ${current ? "vh-shimmer" : ""}`}
-                                  style={{ width: `${s.pct}%`, background: done ? "hsl(var(--success))" : current ? "hsl(var(--accent))" : "transparent" }} />
+                          <button
+                            onClick={() => setOpenIdx(i)}
+                            className="flex w-full items-center gap-3 text-left"
+                          >
+                            <span className={`grid size-9 shrink-0 place-items-center rounded-xl text-base ${
+                              overdue ? "bg-destructive/15 text-destructive vh-pop" :
+                              done ? "bg-success/15 text-success" :
+                              current ? "bg-accent/15 text-accent vh-float" : "bg-muted text-muted-foreground/60"
+                            }`}>
+                              {s.icon}
+                            </span>
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center justify-between gap-2">
+                                <span className="truncate text-[13px] font-bold">{s.label}</span>
+                                <span className={`shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ${statusClass}`}>
+                                  {overdue ? "Overdue" : statusLabel}
+                                </span>
                               </div>
-                              <span className="text-[10px] font-bold text-muted-foreground">{s.pct}%</span>
+                              <div className="mt-1 flex items-center gap-2">
+                                <div className="h-1 flex-1 overflow-hidden rounded-full bg-muted/70">
+                                  <div className={`h-full rounded-full ${current ? "vh-shimmer" : ""}`}
+                                    style={{ width: `${s.pct}%`, background: overdue ? "hsl(var(--destructive))" : done ? "hsl(var(--success))" : current ? "hsl(var(--accent))" : "transparent" }} />
+                                </div>
+                                <span className="text-[10px] font-bold text-muted-foreground">{s.pct}%</span>
+                              </div>
+                              <div className={`mt-1 flex items-center gap-1 text-[10px] ${overdue ? "text-destructive font-bold" : "text-muted-foreground"}`}>
+                                <CalendarClock className="size-3" />
+                                Due {new Date(s.due).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
+                              </div>
                             </div>
+                          </button>
+
+                          {/* Per-stage quick actions */}
+                          <div className="mt-2 flex flex-wrap gap-1.5 pl-12">
+                            <button
+                              onClick={() => markDone(i)}
+                              disabled={done}
+                              className="inline-flex items-center gap-1 rounded-md border border-success/30 bg-success/5 px-2 py-1 text-[10px] font-bold text-success hover:bg-success/10 disabled:opacity-40"
+                            >
+                              <Check className="size-3" /> Mark done
+                            </button>
+                            <button
+                              onClick={() => requestReview(i)}
+                              className="inline-flex items-center gap-1 rounded-md border border-warning/30 bg-warning/5 px-2 py-1 text-[10px] font-bold text-warning hover:bg-warning/10"
+                            >
+                              <Eye className="size-3" /> Request review
+                            </button>
+                            <button
+                              onClick={() => sendToClient(i)}
+                              className="inline-flex items-center gap-1 rounded-md border border-primary/30 bg-primary/5 px-2 py-1 text-[10px] font-bold text-primary hover:bg-primary/10"
+                            >
+                              <Send className="size-3" /> Send to client
+                            </button>
                           </div>
                         </li>
                       );
@@ -575,6 +717,132 @@ export default function Dashboard() {
               );
             })()}
           </Card>
+
+          {/* Brand Builder stage side panel */}
+          <Sheet open={openIdx !== null} onOpenChange={(o) => !o && setOpenIdx(null)}>
+            <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-md">
+              {openIdx !== null && stages[openIdx] && (() => {
+                const s = stages[openIdx];
+                const done = s.pct === 100 || s.state === "done";
+                const overdue = isOverdue(s);
+                return (
+                  <>
+                    <SheetHeader>
+                      <div className={`mb-2 inline-flex w-fit items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
+                        overdue ? "bg-destructive/10 text-destructive" :
+                        done ? "bg-success/10 text-success" :
+                        s.state === "sent" ? "bg-primary/10 text-primary" :
+                        s.state === "review" ? "bg-warning/10 text-warning" :
+                        s.pct > 0 ? "bg-accent/10 text-accent" : "bg-muted text-muted-foreground"
+                      }`}>
+                        {overdue && <AlertTriangle className="size-3" />}
+                        Stage {openIdx + 1} of {stages.length}
+                      </div>
+                      <SheetTitle className="flex items-center gap-2 text-xl">
+                        <span className="text-2xl">{s.icon}</span> {s.label}
+                      </SheetTitle>
+                      <SheetDescription>
+                        Manage progress, due date, and approvals for this Brand Builder stage. Changes auto-save for this workspace.
+                      </SheetDescription>
+                    </SheetHeader>
+
+                    <div className="mt-6 space-y-5">
+                      {/* Progress with slider */}
+                      <div>
+                        <div className="mb-2 flex items-center justify-between">
+                          <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Progress</label>
+                          <span className="text-sm font-extrabold">{s.pct}%</span>
+                        </div>
+                        <input
+                          type="range"
+                          min={0}
+                          max={100}
+                          step={5}
+                          value={s.pct}
+                          onChange={(e) => updateStage(openIdx, { pct: Number(e.target.value), state: Number(e.target.value) === 100 ? "done" : Number(e.target.value) > 0 ? (s.state === "queued" ? "active" : s.state) : "queued" })}
+                          className="w-full accent-accent"
+                        />
+                        <div className="mt-2 h-2 overflow-hidden rounded-full bg-muted">
+                          <div className="h-full rounded-full vh-shimmer transition-all"
+                            style={{ width: `${s.pct}%`, background: overdue ? "hsl(var(--destructive))" : done ? "hsl(var(--success))" : "hsl(var(--accent))" }} />
+                        </div>
+                      </div>
+
+                      {/* Due date */}
+                      <div>
+                        <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-muted-foreground">Due date</label>
+                        <div className="flex items-center gap-2">
+                          <CalendarClock className={`size-4 ${overdue ? "text-destructive" : "text-muted-foreground"}`} />
+                          <input
+                            type="date"
+                            value={s.due}
+                            onChange={(e) => setDue(openIdx, e.target.value)}
+                            className={`flex-1 rounded-lg border bg-card px-3 py-2 text-sm font-semibold ${overdue ? "border-destructive/50 text-destructive" : "border-border"}`}
+                          />
+                        </div>
+                        {overdue && (
+                          <p className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-bold text-destructive">
+                            <AlertTriangle className="size-3" /> This stage is past its due date.
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Status */}
+                      <div>
+                        <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-muted-foreground">Status</label>
+                        <div className="grid grid-cols-3 gap-1.5">
+                          {(["queued", "active", "review", "sent", "done"] as BBState[]).map((st) => (
+                            <button
+                              key={st}
+                              onClick={() => updateStage(openIdx, { state: st, pct: st === "done" ? 100 : s.pct })}
+                              className={`rounded-lg border px-2 py-1.5 text-[11px] font-bold capitalize transition ${
+                                s.state === st
+                                  ? "border-accent bg-accent/10 text-accent"
+                                  : "border-border bg-card text-muted-foreground hover:bg-muted"
+                              }`}
+                            >
+                              {st}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="space-y-2">
+                        <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground">Actions</label>
+                        <button
+                          onClick={() => markDone(openIdx)}
+                          disabled={done}
+                          className="flex w-full items-center justify-center gap-2 rounded-lg bg-success px-4 py-2.5 text-sm font-bold text-white hover:opacity-90 disabled:opacity-40"
+                        >
+                          <Check className="size-4" /> Mark as done
+                        </button>
+                        <button
+                          onClick={() => requestReview(openIdx)}
+                          className="flex w-full items-center justify-center gap-2 rounded-lg border border-warning/40 bg-warning/10 px-4 py-2.5 text-sm font-bold text-warning hover:bg-warning/20"
+                        >
+                          <Eye className="size-4" /> Request review
+                        </button>
+                        <button
+                          onClick={() => sendToClient(openIdx)}
+                          className="flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-blue px-4 py-2.5 text-sm font-bold text-white hover:opacity-90"
+                        >
+                          <Send className="size-4" /> Send to client approval
+                        </button>
+                        <button
+                          onClick={() => resetStage(openIdx)}
+                          className="flex w-full items-center justify-center gap-2 rounded-lg border border-border px-4 py-2 text-xs font-semibold text-muted-foreground hover:bg-muted"
+                        >
+                          <RotateCcw className="size-3.5" /> Reset stage
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                );
+              })()}
+            </SheetContent>
+          </Sheet>
+
 
 
 
