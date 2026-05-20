@@ -263,6 +263,43 @@ function DashboardSkeleton() {
 export default function Dashboard() {
   const { workspace, all, loading } = useWorkspace();
 
+  const [stages, setStages] = useState<BBStage[]>(() => makeDefaultStages());
+  const [openIdx, setOpenIdx] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (workspace?.id) setStages(loadStages(workspace.id));
+  }, [workspace?.id]);
+
+  useEffect(() => {
+    if (workspace?.id) {
+      try { localStorage.setItem(`vh-bb-${workspace.id}`, JSON.stringify(stages)); } catch {}
+    }
+  }, [stages, workspace?.id]);
+
+  const updateStage = (i: number, patch: Partial<BBStage>) =>
+    setStages((prev) => prev.map((s, idx) => (idx === i ? { ...s, ...patch } : s)));
+
+  const markDone = (i: number) => {
+    updateStage(i, { pct: 100, state: "done" });
+    toast.success(`${stages[i].label} marked as done`);
+  };
+  const requestReview = (i: number) => {
+    updateStage(i, { state: "review", pct: Math.max(stages[i].pct, 80) });
+    toast.message(`Review requested · ${stages[i].label}`, { description: "Internal QA team notified." });
+  };
+  const sendToClient = (i: number) => {
+    updateStage(i, { state: "sent", pct: Math.max(stages[i].pct, 90) });
+    toast.success(`Sent to client · ${stages[i].label}`, { description: "Awaiting client approval." });
+  };
+  const setDue = (i: number, due: string) => {
+    updateStage(i, { due });
+    toast.success(`Due date updated · ${stages[i].label}`);
+  };
+  const resetStage = (i: number) => {
+    updateStage(i, { pct: 0, state: "queued" });
+    toast.message(`${stages[i].label} reset to queued`);
+  };
+
   if (loading) return <DashboardSkeleton />;
   if (all.length === 0) return <EmptyDashboard />;
 
