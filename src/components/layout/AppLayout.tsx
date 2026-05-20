@@ -1,5 +1,5 @@
 import { Outlet } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
@@ -9,6 +9,13 @@ import { WorkspaceProvider } from "@/context/WorkspaceContext";
 export default function AppLayout() {
   const [open, setOpen] = useState(false);
   const location = useLocation();
+
+  // Auto-scroll to top whenever the route changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  }, [location.pathname]);
 
   return (
     <WorkspaceProvider>
