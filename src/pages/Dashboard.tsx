@@ -596,20 +596,112 @@ export default function Dashboard() {
               </Card>
             </div>
             <div className="lg:col-span-2">
-              <Card title="Project Progress">
-                <Donut value={workspace.progress} />
-                <div className="mt-4 space-y-2 text-sm">
-                  {[
-                    { label: "Completed tasks", v: 28, t: "text-success" },
-                    { label: "In progress", v: 14, t: "text-accent" },
-                    { label: "Waiting approval", v: 4, t: "text-warning" },
-                  ].map((r) => (
-                    <div key={r.label} className="flex items-center justify-between">
-                      <span className="text-muted-foreground">{r.label}</span>
-                      <span className={`font-semibold ${r.t}`}>{r.v}</span>
+              <Card
+                title="Project Progress"
+                action={<span className="rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-success">On Track</span>}
+              >
+                {(() => {
+                  const completed = 28;
+                  const inProgress = 14;
+                  const waiting = 4;
+                  const total = completed + inProgress + waiting;
+                  const pct = (n: number) => (n / total) * 100;
+                  const R = 56;
+                  const C = 2 * Math.PI * R;
+                  const segs = [
+                    { v: completed, color: "hsl(var(--success))", label: "Completed", icon: CheckCircle2 },
+                    { v: inProgress, color: "hsl(var(--accent))", label: "In progress", icon: Clock3 },
+                    { v: waiting, color: "hsl(var(--warning))", label: "Waiting", icon: Sparkles },
+                  ];
+                  let offset = 0;
+
+                  return (
+                    <div className="relative">
+                      {/* corner glow */}
+                      <span className="pointer-events-none absolute -right-6 -top-6 size-24 rounded-full bg-success/20 blur-2xl vh-float" />
+
+                      {/* Multi-segment donut */}
+                      <div className="relative mx-auto grid size-[160px] place-items-center">
+                        <svg width="160" height="160" viewBox="0 0 160 160" className="-rotate-90">
+                          <circle cx="80" cy="80" r={R} fill="none" stroke="hsl(var(--muted))" strokeWidth="14" />
+                          {segs.map((s, i) => {
+                            const len = (pct(s.v) / 100) * C;
+                            const dash = `${len} ${C - len}`;
+                            const el = (
+                              <circle
+                                key={i}
+                                cx="80"
+                                cy="80"
+                                r={R}
+                                fill="none"
+                                stroke={s.color}
+                                strokeWidth="14"
+                                strokeLinecap="butt"
+                                strokeDasharray={dash}
+                                strokeDashoffset={-offset}
+                                style={{ transition: "stroke-dasharray 0.9s ease" }}
+                              />
+                            );
+                            offset += len;
+                            return el;
+                          })}
+                          {/* Inner accent ring */}
+                          <circle cx="80" cy="80" r="38" fill="none" stroke="hsl(var(--border))" strokeWidth="1" strokeDasharray="2 4" />
+                        </svg>
+                        <div className="absolute inset-0 grid place-items-center text-center">
+                          <div>
+                            <div className="font-display text-3xl font-extrabold leading-none bg-gradient-to-br from-primary to-accent bg-clip-text text-transparent">
+                              {Math.round(pct(completed))}%
+                            </div>
+                            <div className="mt-1 text-[9px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+                              Completed
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Total badge */}
+                      <div className="mt-3 flex items-center justify-center gap-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                        <span className="h-px w-8 bg-border" />
+                        {total} Total Tasks
+                        <span className="h-px w-8 bg-border" />
+                      </div>
+
+                      {/* Segmented stat bar */}
+                      <div className="mt-3 flex h-2 overflow-hidden rounded-full">
+                        {segs.map((s, i) => (
+                          <div
+                            key={i}
+                            className="h-full transition-all first:rounded-l-full last:rounded-r-full vh-shimmer"
+                            style={{ width: `${pct(s.v)}%`, background: s.color }}
+                          />
+                        ))}
+                      </div>
+
+                      {/* Stat grid */}
+                      <div className="mt-3 grid grid-cols-3 gap-2">
+                        {segs.map((s) => (
+                          <div
+                            key={s.label}
+                            className="group relative overflow-hidden rounded-xl border border-border bg-card p-2 text-center transition hover:-translate-y-0.5 hover:shadow-elegant"
+                          >
+                            <span
+                              className="pointer-events-none absolute -right-4 -top-4 size-10 rounded-full blur-xl opacity-40"
+                              style={{ background: s.color }}
+                            />
+                            <div className="relative mx-auto grid size-7 place-items-center rounded-lg text-white" style={{ background: s.color }}>
+                              <s.icon className="size-3.5" />
+                            </div>
+                            <div className="relative mt-1.5 font-display text-lg font-extrabold leading-none">{s.v}</div>
+                            <div className="relative mt-0.5 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
+                              {s.label}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  ))}
-                </div>
+                  );
+                })()}
               </Card>
             </div>
           </div>
