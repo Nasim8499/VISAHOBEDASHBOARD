@@ -1,5 +1,5 @@
 import { Outlet } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
@@ -9,6 +9,13 @@ import { WorkspaceProvider } from "@/context/WorkspaceContext";
 export default function AppLayout() {
   const [open, setOpen] = useState(false);
   const location = useLocation();
+
+  // Auto-scroll to top whenever the route changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  }, [location.pathname]);
 
   return (
     <WorkspaceProvider>
@@ -48,9 +55,10 @@ export default function AppLayout() {
                 gap between the old page exiting and the new page entering. */}
             <motion.div
               key={location.pathname}
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.22, ease: "easeOut" }}
+              initial={{ opacity: 0, y: 14, scale: 0.995 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+              className="page-enter"
             >
               <Outlet />
             </motion.div>
