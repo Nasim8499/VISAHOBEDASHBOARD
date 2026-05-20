@@ -9,6 +9,7 @@ import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import RouteBoundary from "@/components/RouteBoundary";
 import SplashScreen from "@/components/SplashScreen";
+import IntroFlow from "@/components/IntroFlow";
 import AppLayout from "./components/layout/AppLayout";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
@@ -52,6 +53,9 @@ function AnimatedRoutes() {
   const location = useLocation();
   const { loading } = useAuth();
   const [showSplash, setShowSplash] = useState(true);
+  const [showIntro, setShowIntro] = useState(
+    () => typeof window !== "undefined" && !sessionStorage.getItem("vh-intro-seen")
+  );
 
   useEffect(() => {
     if (!loading) {
@@ -60,10 +64,17 @@ function AnimatedRoutes() {
     }
   }, [loading]);
 
+  const dismissIntro = () => {
+    sessionStorage.setItem("vh-intro-seen", "1");
+    setShowIntro(false);
+  };
 
   return (
     <>
       <AnimatePresence>{showSplash && <SplashScreen key="splash" />}</AnimatePresence>
+      <AnimatePresence>
+        {!showSplash && showIntro && <IntroFlow key="intro" onDone={dismissIntro} />}
+      </AnimatePresence>
       <Routes location={location}>
         <Route path="/auth" element={<Auth />} />
         <Route path="/reset-password" element={<ResetPassword />} />
