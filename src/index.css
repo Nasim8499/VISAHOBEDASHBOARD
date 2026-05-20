@@ -110,3 +110,81 @@
   .scrollbar-thin::-webkit-scrollbar { width: 6px; height: 6px; }
   .scrollbar-thin::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 999px; }
 }
+
+/* ===== Page-wide entrance choreography =====
+   Auto-stagger fade+rise for direct children of every routed page,
+   so every page in the app feels alive without per-page wiring. */
+@keyframes vh-rise {
+  0% { opacity: 0; transform: translate3d(0, 16px, 0) scale(0.985); filter: blur(4px); }
+  60% { filter: blur(0); }
+  100% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); filter: blur(0); }
+}
+@keyframes vh-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+@keyframes vh-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes vh-pop {
+  0% { transform: scale(0.9); opacity: 0; }
+  60% { transform: scale(1.04); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.page-enter > * {
+  animation: vh-rise 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.page-enter > *:nth-child(1) { animation-delay: 0.02s; }
+.page-enter > *:nth-child(2) { animation-delay: 0.08s; }
+.page-enter > *:nth-child(3) { animation-delay: 0.14s; }
+.page-enter > *:nth-child(4) { animation-delay: 0.2s; }
+.page-enter > *:nth-child(5) { animation-delay: 0.26s; }
+.page-enter > *:nth-child(6) { animation-delay: 0.32s; }
+.page-enter > *:nth-child(7) { animation-delay: 0.38s; }
+.page-enter > *:nth-child(n+8) { animation-delay: 0.44s; }
+
+/* Grids inside pages also stagger their cards */
+.page-enter [class*="grid"] > * {
+  animation: vh-rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.page-enter [class*="grid"] > *:nth-child(1) { animation-delay: 0.05s; }
+.page-enter [class*="grid"] > *:nth-child(2) { animation-delay: 0.10s; }
+.page-enter [class*="grid"] > *:nth-child(3) { animation-delay: 0.15s; }
+.page-enter [class*="grid"] > *:nth-child(4) { animation-delay: 0.20s; }
+.page-enter [class*="grid"] > *:nth-child(5) { animation-delay: 0.25s; }
+.page-enter [class*="grid"] > *:nth-child(6) { animation-delay: 0.30s; }
+.page-enter [class*="grid"] > *:nth-child(7) { animation-delay: 0.35s; }
+.page-enter [class*="grid"] > *:nth-child(8) { animation-delay: 0.40s; }
+.page-enter [class*="grid"] > *:nth-child(n+9) { animation-delay: 0.45s; }
+
+/* Reusable eye-catching helpers */
+.vh-float { animation: vh-float 4.5s ease-in-out infinite; }
+.vh-pop { animation: vh-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+.vh-shimmer {
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    hsl(var(--primary) / 0.18) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: vh-shimmer 2.6s linear infinite;
+}
+
+/* Lift interactive cards on hover for extra polish */
+.page-enter .group:hover,
+.page-enter [class*="rounded-"][class*="border"]:hover {
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-enter > *,
+  .page-enter [class*="grid"] > *,
+  .vh-float,
+  .vh-pop,
+  .vh-shimmer {
+    animation: none !important;
+  }
+}
