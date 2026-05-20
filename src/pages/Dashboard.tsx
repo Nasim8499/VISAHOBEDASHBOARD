@@ -620,15 +620,69 @@ export default function Dashboard() {
           </Card>
 
           <Card title="AI Assistant">
-            <div className="rounded-2xl bg-gradient-hero p-4 text-white">
-              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider opacity-90">
-                <Sparkles className="size-3.5" /> VisaHOBe AI
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-hero p-4 text-white">
+              {/* Animated orbs */}
+              <span className="pointer-events-none absolute -right-10 -top-10 size-32 rounded-full bg-accent/40 blur-2xl vh-float" />
+              <span className="pointer-events-none absolute -bottom-12 -left-8 size-28 rounded-full bg-warning/30 blur-2xl vh-float" style={{ animationDelay: "1s" }} />
+
+              {/* Soundwave SVG */}
+              <svg className="pointer-events-none absolute bottom-2 right-3 opacity-40" width="80" height="32" viewBox="0 0 80 32">
+                {Array.from({ length: 12 }).map((_, i) => (
+                  <rect
+                    key={i}
+                    x={i * 7}
+                    y={16 - (4 + (i % 4) * 4)}
+                    width="3"
+                    height={8 + (i % 4) * 8}
+                    rx="1.5"
+                    fill="white"
+                    style={{ animation: `vh-rise 1.${i}s ease-in-out ${i * 0.08}s infinite alternate` }}
+                  />
+                ))}
+              </svg>
+
+              <div className="relative flex items-center justify-between">
+                <div className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider backdrop-blur">
+                  <Sparkles className="size-3 animate-pulse" /> VisaHOBe AI
+                </div>
+                <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-success">
+                  <span className="size-1.5 animate-pulse rounded-full bg-success" /> Online
+                </span>
               </div>
-              <p className="mt-2 text-sm leading-relaxed">
-                Want me to draft a launch caption for {workspace.name} and 3 ad variations?
-              </p>
-              <button className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-white/15 px-3 py-1.5 text-xs font-semibold backdrop-blur hover:bg-white/25">
-                Generate now <Wand2 className="size-3.5" />
+
+              {/* Avatar + bubble */}
+              <div className="relative mt-3 flex items-start gap-2.5">
+                <span className="relative grid size-9 shrink-0 place-items-center rounded-full bg-white/15 backdrop-blur">
+                  <span className="absolute inset-0 animate-ping rounded-full bg-white/20" />
+                  <Wand2 className="relative size-4" />
+                </span>
+                <div className="relative rounded-2xl rounded-tl-sm border border-white/15 bg-white/10 p-2.5 backdrop-blur">
+                  <p className="text-[13px] leading-relaxed">
+                    Want me to draft a launch caption for{" "}
+                    <span className="font-semibold underline decoration-warning decoration-2 underline-offset-2">
+                      {workspace.name}
+                    </span>{" "}
+                    and 3 ad variations?
+                  </p>
+                </div>
+              </div>
+
+              {/* Suggestion chips */}
+              <div className="relative mt-3 flex flex-wrap gap-1.5">
+                {["Captions", "Ad Copy", "Hashtags"].map((c) => (
+                  <span
+                    key={c}
+                    className="rounded-full border border-white/20 bg-white/10 px-2 py-0.5 text-[10px] font-medium backdrop-blur"
+                  >
+                    {c}
+                  </span>
+                ))}
+              </div>
+
+              <button className="group relative mt-3 inline-flex w-full items-center justify-center gap-1.5 overflow-hidden rounded-xl bg-white px-3 py-2 text-xs font-bold text-primary shadow-elegant transition hover:-translate-y-0.5">
+                <span className="relative z-10">Generate now</span>
+                <Wand2 className="relative z-10 size-3.5 transition-transform group-hover:rotate-12" />
+                <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-accent/30 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
               </button>
             </div>
           </Card>
