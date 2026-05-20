@@ -1,14 +1,26 @@
 import { useState } from "react";
 import { PageContainer, PageHeader } from "@/components/layout/Page";
 import { employees } from "@/data/mock";
-import { ProgressBar } from "@/components/ui/progress-bar";
-import { Plus, X, Loader2, ShieldCheck } from "lucide-react";
+import { Plus, X, Loader2, ShieldCheck, Users, UserCheck, Briefcase, Activity } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
+import { Sparkline, MiniRing, KpiCard } from "@/components/charts/MiniCharts";
+
+const ease = [0.22, 1, 0.36, 1] as const;
 
 type Role = "employee" | "client";
+
+const seedTrend = (seed: number) =>
+  Array.from({ length: 10 }, (_, i) => Math.round(10 + Math.sin(i / 1.4 + seed) * 6 + (i % 5) + (seed % 4)));
+
+const kpis = [
+  { label: "Team members", value: String(employees.length), delta: "+1", icon: Users, tone: "bg-gradient-blue", trend: [4, 5, 6, 7, 7, 8, 9, 10], sub: "active staff" },
+  { label: "Available now", value: String(Math.max(1, employees.length - 2)), delta: "live", icon: UserCheck, tone: "bg-success", trend: [3, 4, 5, 5, 6, 7, 7, 8], sub: "online today" },
+  { label: "Avg. workload", value: "72%", delta: "balanced", icon: Briefcase, tone: "bg-accent", trend: [55, 60, 64, 66, 68, 70, 71, 72], bars: true, sub: "across team" },
+  { label: "Tasks moved", value: "184", delta: "+24", icon: Activity, tone: "bg-gradient-red", trend: [110, 124, 132, 145, 156, 168, 176, 184], sub: "this week" },
+];
 
 export default function Team() {
   const { role } = useAuth();
@@ -21,48 +33,76 @@ export default function Team() {
         subtitle="VisaHOBe employees, roles, workload and assigned client businesses."
         actions={
           role === "super_admin" ? (
-            <button
+            <motion.button
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
               onClick={() => setOpen(true)}
               className="inline-flex items-center gap-2 rounded-xl bg-gradient-blue px-4 py-2.5 text-sm font-semibold text-white shadow-elegant transition hover:shadow-glow"
             >
               <Plus className="size-4" /> Create user
-            </button>
+            </motion.button>
           ) : null
         }
       />
 
+      <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {kpis.map((k, i) => <KpiCard key={k.label} {...k} index={i} />)}
+      </div>
+
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {employees.map((e) => (
-          <article key={e.name} className="rounded-2xl border border-border bg-card p-5 shadow-sm transition hover:shadow-elegant">
-            <div className="flex items-center gap-3">
-              <span className="grid size-12 place-items-center rounded-2xl bg-gradient-blue text-sm font-semibold text-white">
-                {e.initials}
-              </span>
-              <div>
-                <div className="font-semibold">{e.name}</div>
-                <div className="text-xs text-muted-foreground">{e.role}</div>
+        {employees.map((e, i) => {
+          const workload = Math.min(100, e.load * 12);
+          const ringColor = workload > 80 ? "hsl(var(--destructive))" : workload > 60 ? "hsl(var(--warning))" : "hsl(var(--primary))";
+          return (
+            <motion.article
+              key={e.name}
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, ease, delay: 0.2 + i * 0.05 }}
+              whileHover={{ y: -3 }}
+              className="group relative overflow-hidden rounded-2xl border border-border bg-card p-5 shadow-sm transition hover:shadow-elegant"
+            >
+              <div aria-hidden className="pointer-events-none absolute -right-10 -top-10 size-28 rounded-full bg-gradient-blue opacity-[0.08] blur-2xl transition group-hover:opacity-20" />
+              <div className="relative flex items-center gap-3">
+                <span className="grid size-12 place-items-center rounded-2xl bg-gradient-blue text-sm font-semibold text-white shadow-sm">
+                  {e.initials}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="truncate font-semibold">{e.name}</div>
+                  <div className="truncate text-xs text-muted-foreground">{e.role}</div>
+                </div>
+                <span className="rounded-full bg-success/10 px-2 py-0.5 text-[11px] font-semibold text-success">Available</span>
               </div>
-              <span className="ml-auto rounded-full bg-success/10 px-2 py-0.5 text-[11px] font-semibold text-success">
-                Available
-              </span>
-            </div>
-            <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
-              <Stat label="Clients" value={e.clients} />
-              <Stat label="Active tasks" value={e.load} />
-            </div>
-            <div className="mt-4">
-              <div className="mb-1 flex items-center justify-between text-[11px] text-muted-foreground">
-                <span>Workload</span>
-                <span>{Math.min(100, e.load * 12)}%</span>
+
+              <div className="relative mt-5 flex items-center gap-4">
+                <div style={{ color: ringColor }}>
+                  <MiniRing value={workload} size={64} stroke={7} color={ringColor} />
+                </div>
+                <div className="flex-1">
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <Stat label="Clients" value={e.clients} />
+                    <Stat label="Tasks" value={e.load} />
+                  </div>
+                </div>
               </div>
-              <ProgressBar value={Math.min(100, e.load * 12)} tone={e.load > 7 ? "red" : "blue"} />
-            </div>
-            <div className="mt-4 flex gap-2">
-              <button className="flex-1 rounded-lg border border-border px-3 py-2 text-xs font-semibold transition hover:bg-muted">View profile</button>
-              <button className="rounded-lg border border-border px-3 py-2 text-xs font-semibold transition hover:bg-muted">Permissions</button>
-            </div>
-          </article>
-        ))}
+
+              <div className="relative mt-4">
+                <div className="mb-1 flex items-center justify-between text-[11px] uppercase tracking-wider text-muted-foreground">
+                  <span>Activity · 10d</span>
+                  <span>+{(i + 1) * 4}%</span>
+                </div>
+                <div className="text-primary">
+                  <Sparkline data={seedTrend(i + 3)} className="h-9 w-full" />
+                </div>
+              </div>
+
+              <div className="relative mt-4 flex gap-2">
+                <button className="flex-1 rounded-lg border border-border px-3 py-2 text-xs font-semibold transition hover:bg-muted">View profile</button>
+                <button className="rounded-lg border border-border px-3 py-2 text-xs font-semibold transition hover:bg-muted">Permissions</button>
+              </div>
+            </motion.article>
+          );
+        })}
       </div>
 
       <AnimatePresence>
@@ -74,12 +114,13 @@ export default function Team() {
 
 function Stat({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-xl bg-muted/50 p-3">
-      <div className="text-[11px] uppercase tracking-wider text-muted-foreground">{label}</div>
-      <div className="text-lg font-bold">{value}</div>
+    <div className="rounded-xl bg-muted/50 p-2.5">
+      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
+      <div className="text-base font-bold leading-tight">{value}</div>
     </div>
   );
 }
+
 
 function CreateUserModal({ onClose }: { onClose: () => void }) {
   const [username, setUsername] = useState("");
