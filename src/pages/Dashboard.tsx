@@ -240,37 +240,151 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* KPI cards */}
+      {/* KPI cards — each one a distinct mini-infographic */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-        {kpis.map((k) => (
-          <div
-            key={k.label}
-            className="group relative overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-elegant"
-          >
-            {/* corner glow */}
+        {kpis.map((k, idx) => {
+          // Distinct visual per card
+          const styles = [
+            { ring: "hsl(var(--accent))", soft: "bg-accent/10", text: "text-accent", glow: "bg-accent/30" },
+            { ring: "hsl(var(--destructive))", soft: "bg-destructive/10", text: "text-destructive", glow: "bg-destructive/30" },
+            { ring: "hsl(var(--primary))", soft: "bg-primary/10", text: "text-primary", glow: "bg-primary/30" },
+            { ring: "hsl(var(--success))", soft: "bg-success/10", text: "text-success", glow: "bg-success/30" },
+            { ring: "hsl(var(--warning))", soft: "bg-warning/10", text: "text-warning", glow: "bg-warning/30" },
+          ];
+          const s = styles[idx % styles.length];
+          const num = parseInt(String(k.value).replace(/\D/g, "")) || 0;
+          const pct = Math.min(100, Math.max(15, (num / (num > 100 ? num * 1.2 : 50)) * 100));
+
+          // Infographic variants
+          const renderInfographic = () => {
+            switch (idx) {
+              case 0: {
+                // Total Clients — progress ring
+                const R = 14;
+                const C = 2 * Math.PI * R;
+                return (
+                  <div className="relative grid size-10 place-items-center">
+                    <svg width="40" height="40" viewBox="0 0 40 40" className="-rotate-90">
+                      <circle cx="20" cy="20" r={R} fill="none" stroke="hsl(var(--muted))" strokeWidth="3" />
+                      <circle
+                        cx="20" cy="20" r={R} fill="none"
+                        stroke={s.ring} strokeWidth="3" strokeLinecap="round"
+                        strokeDasharray={`${(pct / 100) * C} ${C}`}
+                      />
+                    </svg>
+                    <span className="absolute text-[9px] font-bold">{Math.round(pct)}%</span>
+                  </div>
+                );
+              }
+              case 1:
+                // Active Projects — segmented dots row
+                return (
+                  <div className="flex h-10 items-end gap-1">
+                    {Array.from({ length: 7 }).map((_, i) => (
+                      <span
+                        key={i}
+                        className="w-1.5 rounded-full vh-shimmer"
+                        style={{
+                          height: `${20 + (i % 4) * 16}%`,
+                          background: i < 5 ? s.ring : "hsl(var(--muted))",
+                          animationDelay: `${i * 0.1}s`,
+                        }}
+                      />
+                    ))}
+                  </div>
+                );
+              case 2:
+                // In Progress — animated dashed flow
+                return (
+                  <svg width="56" height="40" viewBox="0 0 56 40" className="overflow-visible">
+                    <path d="M2 20 Q14 4 28 20 T54 20" fill="none" stroke={s.ring} strokeWidth="2.5" strokeLinecap="round" strokeDasharray="4 4">
+                      <animate attributeName="stroke-dashoffset" from="0" to="-16" dur="1.2s" repeatCount="indefinite" />
+                    </path>
+                    <circle r="3" fill={s.ring}>
+                      <animateMotion dur="2.2s" repeatCount="indefinite" path="M2 20 Q14 4 28 20 T54 20" />
+                    </circle>
+                  </svg>
+                );
+              case 3:
+                // Completed — checkmark stack of bars
+                return (
+                  <div className="space-y-1">
+                    {[100, 80, 60].map((w, i) => (
+                      <div key={i} className="flex items-center gap-1">
+                        <CheckCircle2 className={`size-2.5 ${s.text}`} />
+                        <span
+                          className="h-1 rounded-full vh-shimmer"
+                          style={{ width: `${w * 0.32}px`, background: s.ring, animationDelay: `${i * 0.15}s` }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                );
+              default:
+                // Revenue — area + dot
+                return (
+                  <svg width="64" height="36" viewBox="0 0 64 36">
+                    <defs>
+                      <linearGradient id={`rev-${idx}`} x1="0" x2="0" y1="0" y2="1">
+                        <stop offset="0%" stopColor={s.ring} stopOpacity="0.5" />
+                        <stop offset="100%" stopColor={s.ring} stopOpacity="0" />
+                      </linearGradient>
+                    </defs>
+                    <path d="M0 28 L10 22 L20 24 L30 14 L42 18 L52 8 L64 12 L64 36 L0 36 Z" fill={`url(#rev-${idx})`} />
+                    <path d="M0 28 L10 22 L20 24 L30 14 L42 18 L52 8 L64 12" fill="none" stroke={s.ring} strokeWidth="2" strokeLinecap="round" />
+                    <circle cx="64" cy="12" r="3" fill={s.ring}>
+                      <animate attributeName="r" values="3;5;3" dur="1.4s" repeatCount="indefinite" />
+                    </circle>
+                  </svg>
+                );
+            }
+          };
+
+          return (
             <div
-              aria-hidden
-              className={`pointer-events-none absolute -right-8 -top-8 size-24 rounded-full ${k.tone} opacity-10 blur-2xl transition group-hover:opacity-20`}
-            />
-            <div className="relative flex items-start justify-between">
-              <span className={`grid size-9 place-items-center rounded-xl ${k.tone} text-white shadow-sm`}>
-                <k.icon className="size-4" />
-              </span>
-              <span className="rounded-full bg-success/10 px-2 py-0.5 text-[11px] font-semibold text-success">
-                {k.delta}
-              </span>
+              key={k.label}
+              className="group relative overflow-hidden rounded-2xl border border-border bg-card p-3 shadow-sm transition-all hover:-translate-y-1 hover:shadow-elegant sm:p-4"
+            >
+              {/* corner glow */}
+              <span className={`pointer-events-none absolute -right-8 -top-8 size-24 rounded-full blur-2xl opacity-60 transition-opacity group-hover:opacity-100 ${s.glow} vh-float`} />
+
+              {/* dotted bg */}
+              <svg className="pointer-events-none absolute inset-0 h-full w-full opacity-[0.05]">
+                <defs>
+                  <pattern id={`kpi-dots-${idx}`} width="8" height="8" patternUnits="userSpaceOnUse">
+                    <circle cx="1" cy="1" r="1" fill="currentColor" />
+                  </pattern>
+                </defs>
+                <rect width="100%" height="100%" fill={`url(#kpi-dots-${idx})`} />
+              </svg>
+
+              <div className="relative flex items-start justify-between">
+                <span className="grid size-9 place-items-center rounded-xl text-white shadow-elegant transition-transform group-hover:scale-110 group-hover:rotate-6" style={{ background: s.ring }}>
+                  <k.icon className="size-4" />
+                </span>
+                <span className={`inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-[10px] font-bold ${s.soft} ${s.text}`}>
+                  <ArrowUpRight className="size-2.5" />
+                  {k.delta}
+                </span>
+              </div>
+
+              <div className="relative mt-3 font-display text-2xl font-extrabold leading-none tracking-tight">
+                {k.value}
+              </div>
+              <div className="relative mt-1 text-[11px] font-semibold text-foreground/80">{k.label}</div>
+
+              {/* Per-card infographic */}
+              <div className={`relative mt-2.5 ${s.text}`}>{renderInfographic()}</div>
+
+              <div className="relative mt-1.5 flex items-center justify-between text-[9px] uppercase tracking-wider text-muted-foreground">
+                <span>{k.sub}</span>
+                <span className={`font-bold ${s.text}`}>●</span>
+              </div>
             </div>
-            <div className="relative mt-3 text-2xl font-bold tracking-tight">{k.value}</div>
-            <div className="relative text-xs text-muted-foreground">{k.label}</div>
-            <div className="relative mt-3 text-primary">
-              <Sparkline data={k.trend} bars={k.bars} />
-            </div>
-            <div className="relative mt-1 text-[10px] uppercase tracking-wider text-muted-foreground/70">
-              {k.sub}
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
+
 
 
       <div className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-3">
