@@ -13,7 +13,7 @@ const seedTrend = (seed: number) =>
   Array.from({ length: 8 }, (_, i) => Math.round(20 + Math.sin(i / 1.6 + seed) * 12 + i * 4 + (seed % 7)));
 
 const kpis = [
-  { label: "Active", value: String(businesses.filter((b) => b.status !== "Completed").length), delta: "+2", icon: FolderKanban, tone: "bg-gradient-blue", trend: [6, 7, 8, 8, 9, 10, 11, 12], sub: "this month" },
+  { label: "Active", value: String(businesses.length), delta: "+2", icon: FolderKanban, tone: "bg-gradient-blue", trend: [6, 7, 8, 8, 9, 10, 11, 12], sub: "this month" },
   { label: "In review", value: "5", delta: "+1", icon: Clock3, tone: "bg-accent", trend: [2, 3, 3, 4, 4, 5, 5, 5], sub: "waiting approval" },
   { label: "Completed", value: "146", delta: "+12", icon: CheckCircle2, tone: "bg-success", trend: [80, 96, 110, 122, 130, 138, 142, 146], bars: true, sub: "all-time" },
   { label: "Avg. velocity", value: "+18%", delta: "↑", icon: TrendingUp, tone: "bg-gradient-red", trend: [10, 12, 14, 13, 15, 16, 17, 18], sub: "vs last month" },
