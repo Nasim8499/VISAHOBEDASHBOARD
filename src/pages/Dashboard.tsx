@@ -576,27 +576,102 @@ export default function Dashboard() {
 
         {/* Right panel */}
         <aside className="space-y-6">
-          <Card title="Client Communication" action={<Link to="/chat" className="text-xs font-semibold text-accent">Open chat →</Link>}>
-            <ul className="space-y-3">
-              {[
-                { name: "Rohit (SpiceBite)", msg: "Loving the new logo direction!", t: "2m" },
-                { name: "Aaliyah (GlowBeauty)", msg: "Can we tweak the banner copy?", t: "1h" },
-                { name: "Daniel (Elite Travel)", msg: "Approved the social kit ✅", t: "3h" },
-              ].map((m, i) => (
-                <li key={i} className="flex items-start gap-3 rounded-xl p-2 hover:bg-muted/60">
-                  <span className="grid size-9 place-items-center rounded-full bg-gradient-red text-xs font-semibold text-white">
-                    {m.name[0]}
+          <Card
+            title="Client Communication"
+            action={
+              <Link to="/chat" className="inline-flex items-center gap-1 text-xs font-semibold text-accent">
+                Open chat <ChevronRight className="size-3" />
+              </Link>
+            }
+          >
+            {/* Live header strip */}
+            <div className="mb-3 flex items-center justify-between rounded-xl border border-border bg-gradient-card p-2.5">
+              <div className="flex items-center gap-2 text-[11px] font-semibold">
+                <span className="relative grid size-2 place-items-center">
+                  <span className="absolute inset-0 animate-ping rounded-full bg-success/60" />
+                  <span className="relative size-2 rounded-full bg-success" />
+                </span>
+                3 active chats
+              </div>
+              <div className="flex -space-x-2">
+                {["R", "A", "D"].map((l, i) => (
+                  <span
+                    key={l}
+                    className={`grid size-6 place-items-center rounded-full text-[10px] font-bold text-white ring-2 ring-card ${
+                      ["bg-accent", "bg-warning", "bg-success"][i]
+                    }`}
+                  >
+                    {l}
                   </span>
+                ))}
+              </div>
+            </div>
+
+            <ul className="space-y-2">
+              {[
+                { name: "Rohit (SpiceBite)", msg: "Loving the new logo direction!", t: "2m", unread: 2, tone: "bg-accent", emoji: "💬" },
+                { name: "Aaliyah (GlowBeauty)", msg: "Can we tweak the banner copy?", t: "1h", unread: 1, tone: "bg-warning", emoji: "✏️" },
+                { name: "Daniel (Elite Travel)", msg: "Approved the social kit ✅", t: "3h", unread: 0, tone: "bg-success", emoji: "✅" },
+              ].map((m, i) => (
+                <li
+                  key={i}
+                  className="group relative flex items-start gap-3 overflow-hidden rounded-2xl border border-border bg-card p-2.5 transition-all hover:-translate-y-0.5 hover:shadow-elegant"
+                >
+                  {/* Left accent rail */}
+                  <span className={`absolute left-0 top-0 h-full w-1 ${m.tone}`} />
+
+                  {/* Avatar with status dot */}
+                  <span className="relative shrink-0">
+                    <span className={`grid size-10 place-items-center rounded-full text-sm font-bold text-white ${m.tone}`}>
+                      {m.name[0]}
+                    </span>
+                    <span className="absolute -bottom-0.5 -right-0.5 size-3 rounded-full border-2 border-card bg-success" />
+                  </span>
+
                   <div className="min-w-0 flex-1">
-                    <div className="flex justify-between text-sm">
-                      <span className="truncate font-semibold">{m.name}</span>
-                      <span className="text-xs text-muted-foreground">{m.t}</span>
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="truncate text-[13px] font-bold">{m.name}</span>
+                      <span className="shrink-0 text-[10px] font-medium text-muted-foreground">{m.t}</span>
                     </div>
-                    <p className="truncate text-xs text-muted-foreground">{m.msg}</p>
+                    <div className="mt-0.5 flex items-center justify-between gap-2">
+                      <p className="truncate text-[11px] text-muted-foreground">
+                        <span className="mr-1">{m.emoji}</span>
+                        {m.msg}
+                      </p>
+                      {m.unread > 0 && (
+                        <span className="grid size-4 shrink-0 animate-pulse place-items-center rounded-full bg-destructive text-[9px] font-bold text-white">
+                          {m.unread}
+                        </span>
+                      )}
+                    </div>
+                    {/* Typing wave for first item */}
+                    {i === 0 && (
+                      <div className="mt-1 flex items-center gap-0.5">
+                        {[0, 1, 2].map((d) => (
+                          <span
+                            key={d}
+                            className="size-1 animate-bounce rounded-full bg-accent"
+                            style={{ animationDelay: `${d * 0.15}s` }}
+                          />
+                        ))}
+                        <span className="ml-1 text-[9px] font-medium text-accent">typing…</span>
+                      </div>
+                    )}
                   </div>
                 </li>
               ))}
             </ul>
+
+            {/* Quick reply input */}
+            <div className="mt-3 flex items-center gap-2 rounded-xl border border-border bg-muted/40 p-1.5">
+              <input
+                placeholder="Quick reply…"
+                className="flex-1 bg-transparent px-2 text-[12px] outline-none placeholder:text-muted-foreground"
+              />
+              <button className="grid size-7 place-items-center rounded-lg bg-gradient-blue text-white transition hover:scale-110">
+                <ChevronRight className="size-3.5" />
+              </button>
+            </div>
           </Card>
 
           <Card title="Upcoming Meetings" action={<Link to="/meetings" className="text-xs font-semibold text-accent">Calendar →</Link>}>
