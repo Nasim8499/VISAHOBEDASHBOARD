@@ -244,21 +244,33 @@ export default function Dashboard() {
         {kpis.map((k) => (
           <div
             key={k.label}
-            className="group rounded-2xl border border-border bg-card p-4 shadow-sm transition hover:shadow-elegant"
+            className="group relative overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-elegant"
           >
-            <div className="flex items-start justify-between">
-              <span className={`grid size-9 place-items-center rounded-xl ${k.tone} text-white`}>
+            {/* corner glow */}
+            <div
+              aria-hidden
+              className={`pointer-events-none absolute -right-8 -top-8 size-24 rounded-full ${k.tone} opacity-10 blur-2xl transition group-hover:opacity-20`}
+            />
+            <div className="relative flex items-start justify-between">
+              <span className={`grid size-9 place-items-center rounded-xl ${k.tone} text-white shadow-sm`}>
                 <k.icon className="size-4" />
               </span>
               <span className="rounded-full bg-success/10 px-2 py-0.5 text-[11px] font-semibold text-success">
                 {k.delta}
               </span>
             </div>
-            <div className="mt-3 text-2xl font-bold">{k.value}</div>
-            <div className="text-xs text-muted-foreground">{k.label}</div>
+            <div className="relative mt-3 text-2xl font-bold tracking-tight">{k.value}</div>
+            <div className="relative text-xs text-muted-foreground">{k.label}</div>
+            <div className="relative mt-3 text-primary">
+              <Sparkline data={k.trend} bars={k.bars} />
+            </div>
+            <div className="relative mt-1 text-[10px] uppercase tracking-wider text-muted-foreground/70">
+              {k.sub}
+            </div>
           </div>
         ))}
       </div>
+
 
       <div className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-3">
         {/* Main column */}
