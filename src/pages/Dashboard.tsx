@@ -430,26 +430,92 @@ export default function Dashboard() {
           </Card>
 
 
-          {/* Deliverables overview */}
+          {/* Deliverables overview — eye-catching ring + gradient tiles */}
           <Card title="Deliverables Overview" action={<button className="text-xs font-semibold text-accent">Filter →</button>}>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {deliverables.map((d) => (
-                <div key={d.key} className="rounded-2xl border border-border bg-gradient-card p-4 hover:shadow-elegant transition">
-                  <div className="flex items-center justify-between">
-                    <div className="text-sm font-semibold">{d.title}</div>
-                    <StatusBadge status={d.status} />
-                  </div>
-                  <div className="mt-3">
-                    <ProgressBar value={d.progress} tone={d.progress > 70 ? "blue" : "red"} />
-                    <div className="mt-2 flex justify-between text-[11px] text-muted-foreground">
-                      <span>{d.progress}% done</span>
-                      <span>Owner · Sara K.</span>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {deliverables.map((d, i) => {
+                const tones = [
+                  { ring: "hsl(var(--accent))", glow: "bg-accent/30", chip: "bg-accent/10 text-accent" },
+                  { ring: "hsl(var(--primary))", glow: "bg-primary/30", chip: "bg-primary/10 text-primary" },
+                  { ring: "hsl(var(--success))", glow: "bg-success/30", chip: "bg-success/10 text-success" },
+                  { ring: "hsl(var(--warning))", glow: "bg-warning/30", chip: "bg-warning/10 text-warning" },
+                  { ring: "hsl(var(--destructive))", glow: "bg-destructive/30", chip: "bg-destructive/10 text-destructive" },
+                ];
+                const t = tones[i % tones.length];
+                const r = 22;
+                const c = 2 * Math.PI * r;
+                const dash = (d.progress / 100) * c;
+                const initials = d.title
+                  .split(" ")
+                  .slice(0, 2)
+                  .map((w) => w[0])
+                  .join("");
+                return (
+                  <div
+                    key={d.key}
+                    className="group relative overflow-hidden rounded-2xl border border-border bg-gradient-card p-3 transition-all hover:-translate-y-1 hover:shadow-elegant sm:p-4"
+                  >
+                    {/* corner glow */}
+                    <span
+                      className={`pointer-events-none absolute -right-8 -top-8 size-20 rounded-full blur-2xl ${t.glow} vh-float`}
+                    />
+
+                    <div className="relative flex items-start gap-3">
+                      {/* Progress ring */}
+                      <div className="relative shrink-0">
+                        <svg width="56" height="56" viewBox="0 0 56 56" className="-rotate-90">
+                          <circle cx="28" cy="28" r={r} stroke="hsl(var(--muted))" strokeWidth="5" fill="none" />
+                          <circle
+                            cx="28"
+                            cy="28"
+                            r={r}
+                            stroke={t.ring}
+                            strokeWidth="5"
+                            strokeLinecap="round"
+                            fill="none"
+                            strokeDasharray={`${dash} ${c}`}
+                            style={{ transition: "stroke-dasharray 0.8s ease" }}
+                          />
+                        </svg>
+                        <div className="absolute inset-0 grid place-items-center text-[11px] font-bold">
+                          {d.progress}%
+                        </div>
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <div className="text-[13px] font-semibold leading-tight line-clamp-2">{d.title}</div>
+                        <div className={`mt-1.5 inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold ${t.chip}`}>
+                          {d.status}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Animated bar */}
+                    <div className="relative mt-3 h-1.5 overflow-hidden rounded-full bg-muted/70">
+                      <div
+                        className="h-full rounded-full vh-shimmer"
+                        style={{ width: `${d.progress}%`, background: t.ring }}
+                      />
+                    </div>
+
+                    <div className="relative mt-2 flex items-center justify-between text-[10px] text-muted-foreground">
+                      <span className="inline-flex items-center gap-1.5">
+                        <span
+                          className="grid size-5 place-items-center rounded-full text-[9px] font-bold text-white"
+                          style={{ background: t.ring }}
+                        >
+                          {initials}
+                        </span>
+                        Sara K.
+                      </span>
+                      <span className="font-semibold">{d.progress > 70 ? "On track" : d.progress > 30 ? "In flight" : "Kickoff"}</span>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </Card>
+
 
           {/* Activity + Donut */}
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
