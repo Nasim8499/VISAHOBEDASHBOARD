@@ -19,6 +19,7 @@ import {
   ChevronRight,
   Calendar,
   Rocket,
+  Palette,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -656,28 +657,72 @@ export default function Dashboard() {
         </aside>
       </div>
 
-      {/* Bottom banner */}
-      <div className="mt-8 overflow-hidden rounded-3xl bg-gradient-hero p-6 text-white shadow-premium sm:p-10">
-        <div className="flex flex-col items-start gap-4 md:flex-row md:items-center md:justify-between">
-          <div>
-            <div className="text-xs font-semibold uppercase tracking-[0.18em] text-white/70">
+      {/* Bottom banner — graphic-rich CTA */}
+      <div className="relative mt-8 overflow-hidden rounded-3xl bg-gradient-hero p-6 text-white shadow-premium sm:p-10">
+        {/* Animated orbs */}
+        <span className="pointer-events-none absolute -left-16 -top-16 size-64 rounded-full bg-white/20 blur-3xl vh-float" />
+        <span className="pointer-events-none absolute -bottom-20 right-1/4 size-72 rounded-full bg-accent/40 blur-3xl vh-float" style={{ animationDelay: "1.2s" }} />
+        <span className="pointer-events-none absolute right-10 top-6 size-32 rounded-full bg-warning/30 blur-2xl vh-float" style={{ animationDelay: "0.6s" }} />
+
+        {/* Grid pattern overlay */}
+        <svg className="pointer-events-none absolute inset-0 h-full w-full opacity-[0.12]" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <pattern id="vh-grid" width="32" height="32" patternUnits="userSpaceOnUse">
+              <path d="M32 0H0V32" fill="none" stroke="white" strokeWidth="0.6" />
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#vh-grid)" />
+        </svg>
+
+        {/* Decorative dotted arcs (desktop only) */}
+        <svg className="pointer-events-none absolute -right-10 top-1/2 hidden -translate-y-1/2 opacity-30 md:block" width="260" height="260" viewBox="0 0 260 260">
+          <circle cx="130" cy="130" r="120" fill="none" stroke="white" strokeWidth="1" strokeDasharray="2 6" />
+          <circle cx="130" cy="130" r="90" fill="none" stroke="white" strokeWidth="1" strokeDasharray="2 6" />
+          <circle cx="130" cy="130" r="60" fill="none" stroke="white" strokeWidth="1" strokeDasharray="2 6" />
+        </svg>
+
+        <div className="relative flex flex-col items-start gap-5 md:flex-row md:items-center md:justify-between">
+          <div className="max-w-2xl">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/90 backdrop-blur">
+              <span className="size-1.5 animate-pulse rounded-full bg-success" />
               VisaHOBe Operating OS
             </div>
-            <h3 className="mt-1 max-w-2xl font-display text-2xl font-bold sm:text-3xl">
-              Build, manage & grow your client businesses — all in one place.
+            <h3 className="mt-3 font-display text-2xl font-bold leading-tight sm:text-3xl md:text-4xl">
+              Build, manage & grow your client businesses
+              <span className="block bg-gradient-to-r from-white via-warning to-white bg-clip-text text-transparent">
+                — all in one place.
+              </span>
             </h3>
+
+            {/* Mini stat strip */}
+            <div className="mt-4 grid grid-cols-3 gap-2 sm:max-w-md">
+              {[
+                { v: "12+", l: "Workspaces" },
+                { v: "98%", l: "On-time" },
+                { v: "24/7", l: "AI Support" },
+              ].map((s) => (
+                <div key={s.l} className="rounded-xl border border-white/20 bg-white/10 p-2 text-center backdrop-blur">
+                  <div className="font-display text-lg font-bold leading-none">{s.v}</div>
+                  <div className="mt-1 text-[9px] uppercase tracking-wider text-white/70">{s.l}</div>
+                </div>
+              ))}
+            </div>
           </div>
-          <div className="flex gap-2">
+
+          <div className="flex w-full flex-col gap-2 sm:flex-row md:w-auto md:flex-col lg:flex-row">
             <Link
               to="/clients/new"
-              className="rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-primary hover:bg-white/90"
+              className="group relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-xl bg-white px-5 py-3 text-sm font-semibold text-primary shadow-elegant transition hover:-translate-y-0.5 hover:shadow-glow"
             >
-              New Workspace
+              <span className="relative z-10">+ New Workspace</span>
+              <ChevronRight className="size-4 transition-transform group-hover:translate-x-1" />
+              <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-accent/20 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
             </Link>
             <Link
               to="/brand-builder"
-              className="rounded-xl border border-white/30 bg-white/10 px-4 py-2.5 text-sm font-semibold backdrop-blur hover:bg-white/20"
+              className="group inline-flex items-center justify-center gap-2 rounded-xl border border-white/30 bg-white/10 px-5 py-3 text-sm font-semibold backdrop-blur transition hover:-translate-y-0.5 hover:bg-white/20"
             >
+              <Palette className="size-4" />
               Open Brand Builder
             </Link>
           </div>
