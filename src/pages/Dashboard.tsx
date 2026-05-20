@@ -687,23 +687,82 @@ export default function Dashboard() {
             </div>
           </Card>
 
-          <Card title="Quick Shortcuts">
-            <div className="grid grid-cols-2 gap-2">
+          <Card title="Quick Shortcuts" action={<span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">4 tools</span>}>
+            <div className="grid grid-cols-2 gap-2.5">
               {[
-                { to: "/logo-maker", label: "Logo Maker", icon: Wand2 },
-                { to: "/post-designer", label: "Post Designer", icon: Sparkles },
-                { to: "/website-builder", label: "Website", icon: Rocket },
-                { to: "/documents", label: "Documents", icon: FileText },
+                {
+                  to: "/logo-maker",
+                  label: "Logo Maker",
+                  hint: "Brand marks",
+                  icon: Wand2,
+                  grad: "from-accent to-primary",
+                  glow: "bg-accent/40",
+                  badge: "AI",
+                },
+                {
+                  to: "/post-designer",
+                  label: "Post Designer",
+                  hint: "Social posts",
+                  icon: Sparkles,
+                  grad: "from-warning to-destructive",
+                  glow: "bg-warning/40",
+                  badge: "New",
+                },
+                {
+                  to: "/website-builder",
+                  label: "Website",
+                  hint: "Landing page",
+                  icon: Rocket,
+                  grad: "from-success to-accent",
+                  glow: "bg-success/40",
+                  badge: "Live",
+                },
+                {
+                  to: "/documents",
+                  label: "Documents",
+                  hint: "Files & PDFs",
+                  icon: FileText,
+                  grad: "from-primary to-accent",
+                  glow: "bg-primary/40",
+                  badge: "12",
+                },
               ].map((s) => (
                 <Link
                   key={s.label}
                   to={s.to}
-                  className="flex items-center gap-2 rounded-xl border border-border bg-card p-3 text-sm font-medium transition hover:shadow-elegant"
+                  className="group relative overflow-hidden rounded-2xl border border-border bg-card p-3 transition-all hover:-translate-y-1 hover:shadow-elegant"
                 >
-                  <span className="grid size-8 place-items-center rounded-lg bg-gradient-blue text-white">
-                    <s.icon className="size-4" />
-                  </span>
-                  {s.label}
+                  {/* corner glow */}
+                  <span className={`pointer-events-none absolute -right-6 -top-6 size-16 rounded-full blur-2xl ${s.glow} opacity-60 transition-opacity group-hover:opacity-100`} />
+
+                  {/* dotted pattern */}
+                  <svg className="pointer-events-none absolute inset-0 h-full w-full opacity-[0.05]" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                      <pattern id={`dots-${s.label}`} width="10" height="10" patternUnits="userSpaceOnUse">
+                        <circle cx="1" cy="1" r="1" fill="currentColor" />
+                      </pattern>
+                    </defs>
+                    <rect width="100%" height="100%" fill={`url(#dots-${s.label})`} />
+                  </svg>
+
+                  <div className="relative flex items-start justify-between">
+                    <span className={`grid size-10 place-items-center rounded-xl bg-gradient-to-br ${s.grad} text-white shadow-elegant transition-transform group-hover:scale-110 group-hover:rotate-6`}>
+                      <s.icon className="size-5" />
+                    </span>
+                    <span className="rounded-full bg-muted px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
+                      {s.badge}
+                    </span>
+                  </div>
+
+                  <div className="relative mt-3">
+                    <div className="text-[13px] font-bold leading-tight">{s.label}</div>
+                    <div className="mt-0.5 text-[10px] text-muted-foreground">{s.hint}</div>
+                  </div>
+
+                  <div className="relative mt-2 flex items-center gap-1 text-[10px] font-semibold text-accent">
+                    Open
+                    <ChevronRight className="size-3 transition-transform group-hover:translate-x-1" />
+                  </div>
                 </Link>
               ))}
             </div>
