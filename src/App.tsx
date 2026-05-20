@@ -38,6 +38,8 @@ import Projects from "./pages/Projects";
 import More from "./pages/More";
 import Templates from "./pages/Templates";
 import BrandKit from "./pages/BrandKit";
+import Welcome from "./pages/Welcome";
+import Training from "./pages/Training";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -76,6 +78,8 @@ function AnimatedRoutes() {
         {!showSplash && showIntro && <IntroFlow key="intro" onDone={dismissIntro} />}
       </AnimatePresence>
       <Routes location={location}>
+        <Route path="/welcome" element={<Welcome />} />
+        <Route path="/training" element={<Training />} />
         <Route path="/auth" element={<Auth />} />
         <Route path="/reset-password" element={<ResetPassword />} />
 
