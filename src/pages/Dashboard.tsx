@@ -885,7 +885,61 @@ export default function Dashboard() {
             </SheetContent>
           </Sheet>
 
-
+          {/* Brand Builder Activity Timeline — per workspace */}
+          <Card
+            title="Brand Builder Timeline"
+            action={
+              <Link to="/client-approvals" className="text-xs font-semibold text-accent inline-flex items-center gap-1">
+                Client approvals <ChevronRight className="size-3" />
+              </Link>
+            }
+          >
+            {events.length === 0 ? (
+              <div className="grid place-items-center rounded-2xl border-2 border-dashed border-border p-6 text-center">
+                <Sparkles className="mb-2 size-5 text-accent" />
+                <p className="text-xs font-semibold text-muted-foreground">
+                  Mark a stage done, request review, or send to client to start the timeline.
+                </p>
+              </div>
+            ) : (
+              <ol className="relative space-y-3 pl-6">
+                <span className="absolute left-2 top-1 h-[calc(100%-0.5rem)] w-px bg-gradient-to-b from-accent via-border to-transparent" />
+                {events.slice(0, 12).map((ev) => {
+                  const tone =
+                    ev.type === "stage.done" || ev.type === "stage.approved" ? "success" :
+                    ev.type === "stage.rejected" ? "destructive" :
+                    ev.type === "stage.sent" ? "primary" :
+                    ev.type === "stage.review" ? "warning" :
+                    ev.type === "template.switched" ? "accent" : "muted-foreground";
+                  const Icon =
+                    ev.type === "stage.done" || ev.type === "stage.approved" ? Check :
+                    ev.type === "stage.rejected" ? AlertTriangle :
+                    ev.type === "stage.sent" ? Send :
+                    ev.type === "stage.review" ? Eye :
+                    ev.type === "stage.due_updated" ? CalendarClock :
+                    ev.type === "template.switched" ? Wand2 : RotateCcw;
+                  return (
+                    <li key={ev.id} className="relative">
+                      <span className={`absolute -left-[18px] top-1 grid size-5 place-items-center rounded-full ring-2 ring-card bg-${tone} text-white`}>
+                        <Icon className="size-2.5" />
+                      </span>
+                      <div className="rounded-xl border border-border bg-card/60 p-2.5">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-[12px] font-bold">{ev.message}</span>
+                          <span className="shrink-0 text-[10px] font-semibold text-muted-foreground">
+                            {new Date(ev.at).toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                          </span>
+                        </div>
+                        {ev.comment && (
+                          <p className="mt-1 text-[11px] text-muted-foreground">“{ev.comment}”</p>
+                        )}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ol>
+            )}
+          </Card>
 
 
           {/* Deliverables overview — each card a distinct infographic */}
