@@ -26,6 +26,7 @@ import Chat from "./pages/Chat";
 import Meetings from "./pages/Meetings";
 import Tasks from "./pages/Tasks";
 import Approvals from "./pages/Approvals";
+import ClientApprovals from "./pages/ClientApprovals";
 import ClientPortal from "./pages/ClientPortal";
 import AIAssistant from "./pages/AIAssistant";
 import Automation from "./pages/Automation";
