@@ -905,12 +905,12 @@ export default function Dashboard() {
               <ol className="relative space-y-3 pl-6">
                 <span className="absolute left-2 top-1 h-[calc(100%-0.5rem)] w-px bg-gradient-to-b from-accent via-border to-transparent" />
                 {events.slice(0, 12).map((ev) => {
-                  const tone =
-                    ev.type === "stage.done" || ev.type === "stage.approved" ? "success" :
-                    ev.type === "stage.rejected" ? "destructive" :
-                    ev.type === "stage.sent" ? "primary" :
-                    ev.type === "stage.review" ? "warning" :
-                    ev.type === "template.switched" ? "accent" : "muted-foreground";
+                  const toneColor =
+                    ev.type === "stage.done" || ev.type === "stage.approved" ? "hsl(var(--success))" :
+                    ev.type === "stage.rejected" ? "hsl(var(--destructive))" :
+                    ev.type === "stage.sent" ? "hsl(var(--primary))" :
+                    ev.type === "stage.review" ? "hsl(var(--warning))" :
+                    ev.type === "template.switched" ? "hsl(var(--accent))" : "hsl(var(--muted-foreground))";
                   const Icon =
                     ev.type === "stage.done" || ev.type === "stage.approved" ? Check :
                     ev.type === "stage.rejected" ? AlertTriangle :
@@ -920,9 +920,13 @@ export default function Dashboard() {
                     ev.type === "template.switched" ? Wand2 : RotateCcw;
                   return (
                     <li key={ev.id} className="relative">
-                      <span className={`absolute -left-[18px] top-1 grid size-5 place-items-center rounded-full ring-2 ring-card bg-${tone} text-white`}>
+                      <span
+                        className="absolute -left-[18px] top-1 grid size-5 place-items-center rounded-full text-white ring-2 ring-card"
+                        style={{ background: toneColor }}
+                      >
                         <Icon className="size-2.5" />
                       </span>
+
                       <div className="rounded-xl border border-border bg-card/60 p-2.5">
                         <div className="flex items-center justify-between gap-2">
                           <span className="text-[12px] font-bold">{ev.message}</span>
