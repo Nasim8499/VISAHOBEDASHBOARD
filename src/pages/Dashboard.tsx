@@ -236,18 +236,33 @@ function DashboardSkeleton() {
 export default function Dashboard() {
   const { workspace, all, loading } = useWorkspace();
 
-  const [stages, setStages] = useState<BBStage[]>(() => makeDefaultStages());
+  // Brand Builder: template (per workspace/category) + persisted stages + timeline.
+  const initialTpl = pickTemplateForCategory(workspace?.category);
+  const [templateId, setTemplateId] = useState<string>(initialTpl.id);
+  const [stages, setStages] = useState<BBStage[]>(() => templateToStages(initialTpl));
   const [openIdx, setOpenIdx] = useState<number | null>(null);
+  const [events, setEvents] = useState(() => (workspace?.id ? loadEvents(workspace.id) : []));
 
   useEffect(() => {
-    if (workspace?.id) setStages(loadStages(workspace.id));
-  }, [workspace?.id]);
+    if (!workspace?.id) return;
+    const storedId = loadTemplateId(workspace.id);
+    const tpl = storedId
+      ? BB_TEMPLATES.find((t) => t.id === storedId) ?? pickTemplateForCategory(workspace.category)
+      : pickTemplateForCategory(workspace.category);
+    setTemplateId(tpl.id);
+    setStages(loadStages(workspace.id, templateToStages(tpl)));
+    setEvents(loadEvents(workspace.id));
+  }, [workspace?.id, workspace?.category]);
 
   useEffect(() => {
-    if (workspace?.id) {
-      try { localStorage.setItem(`vh-bb-${workspace.id}`, JSON.stringify(stages)); } catch {}
-    }
+    if (workspace?.id) saveStages(workspace.id, stages);
   }, [stages, workspace?.id]);
+
+  const logEvent = (e: Parameters<typeof pushEvent>[1]) => {
+    if (!workspace?.id) return;
+    pushEvent(workspace.id, e);
+    setEvents(loadEvents(workspace.id));
+  };
 
   const updateStage = (i: number, patch: Partial<BBStage>) =>
     setStages((prev) => prev.map((s, idx) => (idx === i ? { ...s, ...patch } : s)));
@@ -255,23 +270,40 @@ export default function Dashboard() {
   const markDone = (i: number) => {
     updateStage(i, { pct: 100, state: "done" });
     toast.success(`${stages[i].label} marked as done`);
+    logEvent({ stageKey: stages[i].key, stageLabel: stages[i].label, type: "stage.done", message: `Marked “${stages[i].label}” as done` });
   };
   const requestReview = (i: number) => {
     updateStage(i, { state: "review", pct: Math.max(stages[i].pct, 80) });
     toast.message(`Review requested · ${stages[i].label}`, { description: "Internal QA team notified." });
+    logEvent({ stageKey: stages[i].key, stageLabel: stages[i].label, type: "stage.review", message: `Requested internal review for “${stages[i].label}”` });
   };
   const sendToClient = (i: number) => {
     updateStage(i, { state: "sent", pct: Math.max(stages[i].pct, 90) });
     toast.success(`Sent to client · ${stages[i].label}`, { description: "Awaiting client approval." });
+    logEvent({ stageKey: stages[i].key, stageLabel: stages[i].label, type: "stage.sent", message: `Sent “${stages[i].label}” to client for approval` });
   };
   const setDue = (i: number, due: string) => {
     updateStage(i, { due });
     toast.success(`Due date updated · ${stages[i].label}`);
+    logEvent({ stageKey: stages[i].key, stageLabel: stages[i].label, type: "stage.due_updated", message: `Updated due date for “${stages[i].label}” to ${due}` });
   };
   const resetStage = (i: number) => {
     updateStage(i, { pct: 0, state: "queued" });
     toast.message(`${stages[i].label} reset to queued`);
+    logEvent({ stageKey: stages[i].key, stageLabel: stages[i].label, type: "stage.reset", message: `Reset “${stages[i].label}” to queued` });
   };
+  const switchTemplate = (id: string) => {
+    const tpl = BB_TEMPLATES.find((t) => t.id === id);
+    if (!tpl || !workspace?.id) return;
+    setTemplateId(id);
+    saveTemplateId(workspace.id, id);
+    const next = templateToStages(tpl);
+    setStages(next);
+    saveStages(workspace.id, next);
+    toast.success(`Template applied · ${tpl.name}`);
+    logEvent({ stageKey: "_template", stageLabel: tpl.name, type: "template.switched", message: `Switched template to “${tpl.name}”` });
+  };
+
 
   if (loading) return <DashboardSkeleton />;
   if (all.length === 0) return <EmptyDashboard />;
