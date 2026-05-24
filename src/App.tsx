@@ -99,6 +99,7 @@ function AnimatedRoutes() {
           <Route path="/tasks" element={<ProtectedRoute allow={["super_admin", "employee"]}><Tasks /></ProtectedRoute>} />
           <Route path="/calendar" element={<Meetings />} />
           <Route path="/approvals" element={<Approvals />} />
+          <Route path="/client-approvals" element={<ProtectedRoute><RouteBoundary name="client-approvals"><ClientApprovals /></RouteBoundary></ProtectedRoute>} />
           <Route path="/brand-builder" element={<ProtectedRoute allow={["super_admin", "employee"]}><BrandBuilder /></ProtectedRoute>} />
           <Route path="/logo-maker" element={<ProtectedRoute allow={["super_admin", "employee"]}><LogoMaker /></ProtectedRoute>} />
           <Route path="/website-builder" element={<ProtectedRoute allow={["super_admin", "employee"]}><WebsiteBuilder /></ProtectedRoute>} />
