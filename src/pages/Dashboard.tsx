@@ -32,50 +32,23 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
-type BBState = "queued" | "active" | "review" | "sent" | "done";
-type BBStage = {
-  key: string;
-  label: string;
-  icon: string;
-  pct: number;
-  due: string; // ISO date
-  state: BBState;
-};
+import {
+  BB_TEMPLATES,
+  BBStage,
+  BBState,
+  daysUntil,
+  isDueSoon,
+  isOverdue,
+  loadEvents,
+  loadStages,
+  loadTemplateId,
+  pickTemplateForCategory,
+  pushEvent,
+  saveStages,
+  saveTemplateId,
+  templateToStages,
+} from "@/lib/brandBuilder";
 
-const BB_DEFAULTS: Omit<BBStage, "due">[] = [
-  { key: "identity", label: "Identity & Strategy", icon: "✦", pct: 100, state: "done" },
-  { key: "visual", label: "Visual Identity", icon: "◐", pct: 100, state: "done" },
-  { key: "stationery", label: "Stationery Kit", icon: "✉", pct: 100, state: "done" },
-  { key: "social", label: "Social Media", icon: "❍", pct: 65, state: "active" },
-  { key: "launch", label: "Launch", icon: "▲", pct: 0, state: "queued" },
-];
-
-function makeDefaultStages(): BBStage[] {
-  const base = Date.now();
-  return BB_DEFAULTS.map((s, i) => ({
-    ...s,
-    // Stage 1 due 5d ago (overdue demo for active), then weekly
-    due: new Date(base + (i - 3) * 7 * 86400000).toISOString().slice(0, 10),
-  }));
-}
-
-function loadStages(wsId: string): BBStage[] {
-  try {
-    const raw = localStorage.getItem(`vh-bb-${wsId}`);
-    if (!raw) return makeDefaultStages();
-    const parsed = JSON.parse(raw) as BBStage[];
-    if (!Array.isArray(parsed) || parsed.length === 0) return makeDefaultStages();
-    return parsed;
-  } catch {
-    return makeDefaultStages();
-  }
-}
-
-function isOverdue(s: BBStage) {
-  if (s.pct >= 100 || s.state === "done") return false;
-  const today = new Date().toISOString().slice(0, 10);
-  return s.due < today;
-}
 
 const kpis = [
   {
