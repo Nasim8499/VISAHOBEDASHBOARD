@@ -26,6 +26,7 @@ import Chat from "./pages/Chat";
 import Meetings from "./pages/Meetings";
 import Tasks from "./pages/Tasks";
 import Approvals from "./pages/Approvals";
+import ClientApprovals from "./pages/ClientApprovals";
 import ClientPortal from "./pages/ClientPortal";
 import AIAssistant from "./pages/AIAssistant";
 import Automation from "./pages/Automation";
@@ -98,6 +99,7 @@ function AnimatedRoutes() {
           <Route path="/tasks" element={<ProtectedRoute allow={["super_admin", "employee"]}><Tasks /></ProtectedRoute>} />
           <Route path="/calendar" element={<Meetings />} />
           <Route path="/approvals" element={<Approvals />} />
+          <Route path="/client-approvals" element={<ProtectedRoute><RouteBoundary name="client-approvals"><ClientApprovals /></RouteBoundary></ProtectedRoute>} />
           <Route path="/brand-builder" element={<ProtectedRoute allow={["super_admin", "employee"]}><BrandBuilder /></ProtectedRoute>} />
           <Route path="/logo-maker" element={<ProtectedRoute allow={["super_admin", "employee"]}><LogoMaker /></ProtectedRoute>} />
           <Route path="/website-builder" element={<ProtectedRoute allow={["super_admin", "employee"]}><WebsiteBuilder /></ProtectedRoute>} />

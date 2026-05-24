@@ -32,50 +32,23 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
-type BBState = "queued" | "active" | "review" | "sent" | "done";
-type BBStage = {
-  key: string;
-  label: string;
-  icon: string;
-  pct: number;
-  due: string; // ISO date
-  state: BBState;
-};
+import {
+  BB_TEMPLATES,
+  BBStage,
+  BBState,
+  daysUntil,
+  isDueSoon,
+  isOverdue,
+  loadEvents,
+  loadStages,
+  loadTemplateId,
+  pickTemplateForCategory,
+  pushEvent,
+  saveStages,
+  saveTemplateId,
+  templateToStages,
+} from "@/lib/brandBuilder";
 
-const BB_DEFAULTS: Omit<BBStage, "due">[] = [
-  { key: "identity", label: "Identity & Strategy", icon: "✦", pct: 100, state: "done" },
-  { key: "visual", label: "Visual Identity", icon: "◐", pct: 100, state: "done" },
-  { key: "stationery", label: "Stationery Kit", icon: "✉", pct: 100, state: "done" },
-  { key: "social", label: "Social Media", icon: "❍", pct: 65, state: "active" },
-  { key: "launch", label: "Launch", icon: "▲", pct: 0, state: "queued" },
-];
-
-function makeDefaultStages(): BBStage[] {
-  const base = Date.now();
-  return BB_DEFAULTS.map((s, i) => ({
-    ...s,
-    // Stage 1 due 5d ago (overdue demo for active), then weekly
-    due: new Date(base + (i - 3) * 7 * 86400000).toISOString().slice(0, 10),
-  }));
-}
-
-function loadStages(wsId: string): BBStage[] {
-  try {
-    const raw = localStorage.getItem(`vh-bb-${wsId}`);
-    if (!raw) return makeDefaultStages();
-    const parsed = JSON.parse(raw) as BBStage[];
-    if (!Array.isArray(parsed) || parsed.length === 0) return makeDefaultStages();
-    return parsed;
-  } catch {
-    return makeDefaultStages();
-  }
-}
-
-function isOverdue(s: BBStage) {
-  if (s.pct >= 100 || s.state === "done") return false;
-  const today = new Date().toISOString().slice(0, 10);
-  return s.due < today;
-}
 
 const kpis = [
   {
@@ -263,18 +236,33 @@ function DashboardSkeleton() {
 export default function Dashboard() {
   const { workspace, all, loading } = useWorkspace();
 
-  const [stages, setStages] = useState<BBStage[]>(() => makeDefaultStages());
+  // Brand Builder: template (per workspace/category) + persisted stages + timeline.
+  const initialTpl = pickTemplateForCategory(workspace?.category);
+  const [templateId, setTemplateId] = useState<string>(initialTpl.id);
+  const [stages, setStages] = useState<BBStage[]>(() => templateToStages(initialTpl));
   const [openIdx, setOpenIdx] = useState<number | null>(null);
+  const [events, setEvents] = useState(() => (workspace?.id ? loadEvents(workspace.id) : []));
 
   useEffect(() => {
-    if (workspace?.id) setStages(loadStages(workspace.id));
-  }, [workspace?.id]);
+    if (!workspace?.id) return;
+    const storedId = loadTemplateId(workspace.id);
+    const tpl = storedId
+      ? BB_TEMPLATES.find((t) => t.id === storedId) ?? pickTemplateForCategory(workspace.category)
+      : pickTemplateForCategory(workspace.category);
+    setTemplateId(tpl.id);
+    setStages(loadStages(workspace.id, templateToStages(tpl)));
+    setEvents(loadEvents(workspace.id));
+  }, [workspace?.id, workspace?.category]);
 
   useEffect(() => {
-    if (workspace?.id) {
-      try { localStorage.setItem(`vh-bb-${workspace.id}`, JSON.stringify(stages)); } catch {}
-    }
+    if (workspace?.id) saveStages(workspace.id, stages);
   }, [stages, workspace?.id]);
+
+  const logEvent = (e: Parameters<typeof pushEvent>[1]) => {
+    if (!workspace?.id) return;
+    pushEvent(workspace.id, e);
+    setEvents(loadEvents(workspace.id));
+  };
 
   const updateStage = (i: number, patch: Partial<BBStage>) =>
     setStages((prev) => prev.map((s, idx) => (idx === i ? { ...s, ...patch } : s)));
@@ -282,23 +270,40 @@ export default function Dashboard() {
   const markDone = (i: number) => {
     updateStage(i, { pct: 100, state: "done" });
     toast.success(`${stages[i].label} marked as done`);
+    logEvent({ stageKey: stages[i].key, stageLabel: stages[i].label, type: "stage.done", message: `Marked “${stages[i].label}” as done` });
   };
   const requestReview = (i: number) => {
     updateStage(i, { state: "review", pct: Math.max(stages[i].pct, 80) });
     toast.message(`Review requested · ${stages[i].label}`, { description: "Internal QA team notified." });
+    logEvent({ stageKey: stages[i].key, stageLabel: stages[i].label, type: "stage.review", message: `Requested internal review for “${stages[i].label}”` });
   };
   const sendToClient = (i: number) => {
     updateStage(i, { state: "sent", pct: Math.max(stages[i].pct, 90) });
     toast.success(`Sent to client · ${stages[i].label}`, { description: "Awaiting client approval." });
+    logEvent({ stageKey: stages[i].key, stageLabel: stages[i].label, type: "stage.sent", message: `Sent “${stages[i].label}” to client for approval` });
   };
   const setDue = (i: number, due: string) => {
     updateStage(i, { due });
     toast.success(`Due date updated · ${stages[i].label}`);
+    logEvent({ stageKey: stages[i].key, stageLabel: stages[i].label, type: "stage.due_updated", message: `Updated due date for “${stages[i].label}” to ${due}` });
   };
   const resetStage = (i: number) => {
     updateStage(i, { pct: 0, state: "queued" });
     toast.message(`${stages[i].label} reset to queued`);
+    logEvent({ stageKey: stages[i].key, stageLabel: stages[i].label, type: "stage.reset", message: `Reset “${stages[i].label}” to queued` });
   };
+  const switchTemplate = (id: string) => {
+    const tpl = BB_TEMPLATES.find((t) => t.id === id);
+    if (!tpl || !workspace?.id) return;
+    setTemplateId(id);
+    saveTemplateId(workspace.id, id);
+    const next = templateToStages(tpl);
+    setStages(next);
+    saveStages(workspace.id, next);
+    toast.success(`Template applied · ${tpl.name}`);
+    logEvent({ stageKey: "_template", stageLabel: tpl.name, type: "template.switched", message: `Switched template to “${tpl.name}”` });
+  };
+
 
   if (loading) return <DashboardSkeleton />;
   if (all.length === 0) return <EmptyDashboard />;
@@ -544,11 +549,32 @@ export default function Dashboard() {
           </div>
 
           {/* Brand Builder Progress — interactive journey stepper */}
-          <Card title="Brand Builder Progress" action={<Link to="/brand-builder" className="text-xs font-semibold text-accent inline-flex items-center gap-1">Open builder <ChevronRight className="size-3" /></Link>}>
+          <Card
+            title="Brand Builder Progress"
+            action={
+              <div className="flex items-center gap-2">
+                <select
+                  value={templateId}
+                  onChange={(e) => switchTemplate(e.target.value)}
+                  className="rounded-lg border border-border bg-card px-2 py-1 text-[11px] font-bold focus:outline-none focus:ring-2 focus:ring-accent"
+                  title="Brand Builder template"
+                >
+                  {BB_TEMPLATES.map((t) => (
+                    <option key={t.id} value={t.id}>{t.name}</option>
+                  ))}
+                </select>
+                <Link to="/client-approvals" className="hidden sm:inline-flex items-center gap-1 text-xs font-semibold text-accent">
+                  Client approvals <ChevronRight className="size-3" />
+                </Link>
+              </div>
+            }
+          >
             {(() => {
-              const completed = stages.filter((s) => s.pct === 100 || s.state === "done").length;
+              const completed = stages.filter((s) => s.pct === 100 || s.state === "done" || s.state === "approved").length;
               const overall = Math.round(stages.reduce((a, s) => a + s.pct, 0) / stages.length);
               const overdueCount = stages.filter(isOverdue).length;
+              const dueSoonCount = stages.filter((s) => isDueSoon(s, 3)).length;
+              const pendingApprovalCount = stages.filter((s) => s.state === "sent").length;
               const ringR = 18, ringC = 2 * Math.PI * ringR;
 
               return (
@@ -558,19 +584,35 @@ export default function Dashboard() {
                     <span className="pointer-events-none absolute -right-10 -top-10 size-32 rounded-full bg-warning/40 blur-2xl vh-float" />
                     <span className="pointer-events-none absolute -bottom-12 -left-8 size-28 rounded-full bg-accent/40 blur-2xl vh-float" style={{ animationDelay: "1.2s" }} />
                     <div className="relative flex items-center justify-between gap-3">
-                      <div>
+                      <div className="min-w-0 flex-1">
                         <div className="inline-flex items-center gap-1.5 rounded-full border border-white/25 bg-white/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider backdrop-blur">
                           <span className="size-1.5 animate-pulse rounded-full bg-success" />
                           Active Build · Saved
                         </div>
                         <div className="mt-1.5 font-display text-2xl font-extrabold leading-none">{overall}%</div>
                         <div className="text-[10px] text-white/70">{completed} of {stages.length} stages complete</div>
-                        {overdueCount > 0 && (
-                          <div className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-destructive/90 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider">
-                            <AlertTriangle className="size-3" /> {overdueCount} overdue
-                          </div>
-                        )}
+                        <div className="mt-1.5 flex flex-wrap gap-1">
+                          {overdueCount > 0 && (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-destructive/90 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider">
+                              <AlertTriangle className="size-3" /> {overdueCount} overdue
+                            </span>
+                          )}
+                          {dueSoonCount > 0 && (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-warning/90 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-black/80">
+                              <CalendarClock className="size-3" /> {dueSoonCount} due soon
+                            </span>
+                          )}
+                          {pendingApprovalCount > 0 && (
+                            <Link
+                              to="/client-approvals"
+                              className="inline-flex items-center gap-1 rounded-full bg-white/15 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider hover:bg-white/25"
+                            >
+                              <Send className="size-3" /> {pendingApprovalCount} awaiting approval
+                            </Link>
+                          )}
+                        </div>
                       </div>
+
                       <div className="relative grid size-16 place-items-center">
                         <svg width="64" height="64" viewBox="0 0 64 64" className="-rotate-90">
                           <circle cx="32" cy="32" r="26" stroke="rgba(255,255,255,0.2)" strokeWidth="5" fill="none" />
@@ -843,7 +885,65 @@ export default function Dashboard() {
             </SheetContent>
           </Sheet>
 
+          {/* Brand Builder Activity Timeline — per workspace */}
+          <Card
+            title="Brand Builder Timeline"
+            action={
+              <Link to="/client-approvals" className="text-xs font-semibold text-accent inline-flex items-center gap-1">
+                Client approvals <ChevronRight className="size-3" />
+              </Link>
+            }
+          >
+            {events.length === 0 ? (
+              <div className="grid place-items-center rounded-2xl border-2 border-dashed border-border p-6 text-center">
+                <Sparkles className="mb-2 size-5 text-accent" />
+                <p className="text-xs font-semibold text-muted-foreground">
+                  Mark a stage done, request review, or send to client to start the timeline.
+                </p>
+              </div>
+            ) : (
+              <ol className="relative space-y-3 pl-6">
+                <span className="absolute left-2 top-1 h-[calc(100%-0.5rem)] w-px bg-gradient-to-b from-accent via-border to-transparent" />
+                {events.slice(0, 12).map((ev) => {
+                  const toneColor =
+                    ev.type === "stage.done" || ev.type === "stage.approved" ? "hsl(var(--success))" :
+                    ev.type === "stage.rejected" ? "hsl(var(--destructive))" :
+                    ev.type === "stage.sent" ? "hsl(var(--primary))" :
+                    ev.type === "stage.review" ? "hsl(var(--warning))" :
+                    ev.type === "template.switched" ? "hsl(var(--accent))" : "hsl(var(--muted-foreground))";
+                  const Icon =
+                    ev.type === "stage.done" || ev.type === "stage.approved" ? Check :
+                    ev.type === "stage.rejected" ? AlertTriangle :
+                    ev.type === "stage.sent" ? Send :
+                    ev.type === "stage.review" ? Eye :
+                    ev.type === "stage.due_updated" ? CalendarClock :
+                    ev.type === "template.switched" ? Wand2 : RotateCcw;
+                  return (
+                    <li key={ev.id} className="relative">
+                      <span
+                        className="absolute -left-[18px] top-1 grid size-5 place-items-center rounded-full text-white ring-2 ring-card"
+                        style={{ background: toneColor }}
+                      >
+                        <Icon className="size-2.5" />
+                      </span>
 
+                      <div className="rounded-xl border border-border bg-card/60 p-2.5">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-[12px] font-bold">{ev.message}</span>
+                          <span className="shrink-0 text-[10px] font-semibold text-muted-foreground">
+                            {new Date(ev.at).toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                          </span>
+                        </div>
+                        {ev.comment && (
+                          <p className="mt-1 text-[11px] text-muted-foreground">“{ev.comment}”</p>
+                        )}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ol>
+            )}
+          </Card>
 
 
           {/* Deliverables overview — each card a distinct infographic */}
