@@ -549,11 +549,32 @@ export default function Dashboard() {
           </div>
 
           {/* Brand Builder Progress — interactive journey stepper */}
-          <Card title="Brand Builder Progress" action={<Link to="/brand-builder" className="text-xs font-semibold text-accent inline-flex items-center gap-1">Open builder <ChevronRight className="size-3" /></Link>}>
+          <Card
+            title="Brand Builder Progress"
+            action={
+              <div className="flex items-center gap-2">
+                <select
+                  value={templateId}
+                  onChange={(e) => switchTemplate(e.target.value)}
+                  className="rounded-lg border border-border bg-card px-2 py-1 text-[11px] font-bold focus:outline-none focus:ring-2 focus:ring-accent"
+                  title="Brand Builder template"
+                >
+                  {BB_TEMPLATES.map((t) => (
+                    <option key={t.id} value={t.id}>{t.name}</option>
+                  ))}
+                </select>
+                <Link to="/client-approvals" className="hidden sm:inline-flex items-center gap-1 text-xs font-semibold text-accent">
+                  Client approvals <ChevronRight className="size-3" />
+                </Link>
+              </div>
+            }
+          >
             {(() => {
-              const completed = stages.filter((s) => s.pct === 100 || s.state === "done").length;
+              const completed = stages.filter((s) => s.pct === 100 || s.state === "done" || s.state === "approved").length;
               const overall = Math.round(stages.reduce((a, s) => a + s.pct, 0) / stages.length);
               const overdueCount = stages.filter(isOverdue).length;
+              const dueSoonCount = stages.filter((s) => isDueSoon(s, 3)).length;
+              const pendingApprovalCount = stages.filter((s) => s.state === "sent").length;
               const ringR = 18, ringC = 2 * Math.PI * ringR;
 
               return (
@@ -563,19 +584,37 @@ export default function Dashboard() {
                     <span className="pointer-events-none absolute -right-10 -top-10 size-32 rounded-full bg-warning/40 blur-2xl vh-float" />
                     <span className="pointer-events-none absolute -bottom-12 -left-8 size-28 rounded-full bg-accent/40 blur-2xl vh-float" style={{ animationDelay: "1.2s" }} />
                     <div className="relative flex items-center justify-between gap-3">
-                      <div>
+                      <div className="min-w-0 flex-1">
                         <div className="inline-flex items-center gap-1.5 rounded-full border border-white/25 bg-white/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider backdrop-blur">
                           <span className="size-1.5 animate-pulse rounded-full bg-success" />
                           Active Build · Saved
                         </div>
                         <div className="mt-1.5 font-display text-2xl font-extrabold leading-none">{overall}%</div>
                         <div className="text-[10px] text-white/70">{completed} of {stages.length} stages complete</div>
-                        {overdueCount > 0 && (
-                          <div className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-destructive/90 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider">
-                            <AlertTriangle className="size-3" /> {overdueCount} overdue
-                          </div>
-                        )}
+                        <div className="mt-1.5 flex flex-wrap gap-1">
+                          {overdueCount > 0 && (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-destructive/90 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider">
+                              <AlertTriangle className="size-3" /> {overdueCount} overdue
+                            </span>
+                          )}
+                          {dueSoonCount > 0 && (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-warning/90 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-black/80">
+                              <CalendarClock className="size-3" /> {dueSoonCount} due soon
+                            </span>
+                          )}
+                          {pendingApprovalCount > 0 && (
+                            <Link
+                              to="/client-approvals"
+                              className="inline-flex items-center gap-1 rounded-full bg-white/15 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider hover:bg-white/25"
+                            >
+                              <Send className="size-3" /> {pendingApprovalCount} awaiting approval
+                            </Link>
+                          )}
+                        </div>
                       </div>
+                      <div className="relative grid size-16 place-items-center">
+                        <svg width="64" height="64" viewBox="0 0 64 64" className="-rotate-90">
+
                       <div className="relative grid size-16 place-items-center">
                         <svg width="64" height="64" viewBox="0 0 64 64" className="-rotate-90">
                           <circle cx="32" cy="32" r="26" stroke="rgba(255,255,255,0.2)" strokeWidth="5" fill="none" />
