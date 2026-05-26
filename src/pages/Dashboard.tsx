@@ -1569,11 +1569,17 @@ export default function Dashboard() {
                 ))}
               </div>
 
-              <button className="group relative mt-3 inline-flex w-full items-center justify-center gap-1.5 overflow-hidden rounded-xl bg-white px-3 py-2 text-xs font-bold text-primary shadow-elegant transition hover:-translate-y-0.5">
+              <motion.button
+                onClick={() => navigate("/ai-assistant")}
+                whileHover={{ y: -2, scale: 1.01 }}
+                whileTap={{ scale: 0.97 }}
+                transition={{ type: "spring", stiffness: 380, damping: 22 }}
+                className="group relative mt-3 inline-flex w-full items-center justify-center gap-1.5 overflow-hidden rounded-xl bg-white px-3 py-2 text-xs font-bold text-primary shadow-elegant"
+              >
                 <span className="relative z-10">Generate now</span>
                 <Wand2 className="relative z-10 size-3.5 transition-transform group-hover:rotate-12" />
                 <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-accent/30 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
-              </button>
+              </motion.button>
             </div>
           </Card>
 
