@@ -201,7 +201,37 @@ const PHASES = [
   { icon: Award, title: "Certify", desc: "Auto-generated certificate, joining letter & employee ID." },
 ];
 
+type CourseRow = (typeof COURSES)[number];
+
+const TONE_BG: Record<CourseRow["tone"], string> = {
+  navy: "from-[hsl(230_55%_22%)] via-[hsl(235_65%_38%)] to-[hsl(245_70%_60%)]",
+  lavender: "from-[hsl(245_80%_88%)] via-[hsl(235_75%_78%)] to-[hsl(225_70%_70%)]",
+  blush: "from-[hsl(340_70%_88%)] via-[hsl(20_80%_84%)] to-[hsl(35_80%_80%)]",
+  sand: "from-[hsl(40_60%_92%)] via-[hsl(30_50%_84%)] to-[hsl(20_45%_78%)]",
+};
+
+const TONE_TEXT_DARK: Record<CourseRow["tone"], boolean> = {
+  navy: false,
+  lavender: true,
+  blush: true,
+  sand: true,
+};
+
+const lessonsFor = (c: CourseRow) =>
+  Array.from({ length: c.lessons }, (_, i) => {
+    const per = 100 / c.lessons;
+    const done = (i + 1) * per <= c.progress;
+    const active = !done && i * per <= c.progress;
+    return {
+      idx: i + 1,
+      title: `${c.eyebrow.split(" ")[1]}.${String(i + 1).padStart(2, "0")} — Lesson ${i + 1}`,
+      minutes: Math.max(4, Math.round(c.minutes / c.lessons)),
+      status: done ? "done" : active ? "active" : "locked",
+    } as const;
+  });
+
 export default function Training() {
+  const [openCourse, setOpenCourse] = useState<CourseRow | null>(null);
   const overall = Math.round(
     COURSES.reduce((s, c) => s + c.progress, 0) / COURSES.length
   );
