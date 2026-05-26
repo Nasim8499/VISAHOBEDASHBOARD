@@ -339,65 +339,241 @@ export default function Training() {
 
       {/* Course library */}
       <section className="mx-auto max-w-5xl px-5 pt-12 sm:px-8">
-        <div className="mb-5 flex items-end justify-between">
+        <div className="mb-4 flex items-end justify-between">
           <div>
-            <div className="text-[10px] font-semibold uppercase tracking-[0.24em] text-muted-foreground">
+            <div className="text-[9px] font-semibold uppercase tracking-[0.24em] text-muted-foreground">
               Curriculum
             </div>
-            <h2 className="mt-1 font-display text-2xl font-bold tracking-tight text-primary sm:text-3xl">
+            <h2 className="mt-1 font-display text-lg font-bold tracking-tight text-primary sm:text-2xl">
               Modules tailored for you
             </h2>
           </div>
-          <button className="hidden items-center gap-1 text-sm font-semibold text-primary sm:inline-flex">
-            View all <ChevronRight className="size-4" />
+          <button className="hidden items-center gap-1 text-xs font-semibold text-primary sm:inline-flex">
+            View all <ChevronRight className="size-3.5" />
           </button>
         </div>
 
-        <div className="grid gap-5 sm:grid-cols-2">
-          {COURSES.map((c, i) => (
-            <motion.div
-              key={c.title}
-              initial={{ opacity: 0, y: 24 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.55, ease, delay: 0.08 * i }}
-            >
-              <PhotoCard
-                eyebrow={c.eyebrow}
-                title={c.title}
-                description={c.description}
-                tone={c.tone}
-                badge={c.badge}
-                aspect="video"
-                onClick={() => {}}
+        <div className="grid grid-cols-2 gap-3 sm:gap-4">
+          {COURSES.map((c, i) => {
+            const dark = TONE_TEXT_DARK[c.tone];
+            return (
+              <motion.button
+                key={c.title}
+                onClick={() => setOpenCourse(c)}
+                initial={{ opacity: 0, y: 18 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, ease, delay: 0.05 * i }}
+                whileTap={{ scale: 0.97 }}
+                className="group relative overflow-hidden rounded-2xl border border-border bg-card text-left shadow-elegant transition-all duration-300 hover:-translate-y-1 hover:shadow-premium"
               >
-                <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <span className="inline-flex items-center gap-1.5">
-                    <PlayCircle className="size-3.5" /> {c.lessons} lessons
-                  </span>
-                  <span className="inline-flex items-center gap-1.5">
-                    <Clock className="size-3.5" /> {c.minutes} min
-                  </span>
-                </div>
-                <div className="mt-1">
-                  <div className="mb-1.5 flex items-center justify-between text-[11px] font-semibold">
-                    <span className="text-muted-foreground">Progress</span>
-                    <span className="text-primary">{c.progress}%</span>
+                {/* Graphic top with gradient + decorative orbs */}
+                <div
+                  className={cn(
+                    "relative h-24 bg-gradient-to-br p-3",
+                    TONE_BG[c.tone]
+                  )}
+                >
+                  <div className="absolute -right-4 -top-6 size-20 rounded-full bg-white/25 blur-2xl" />
+                  <div className="absolute -bottom-6 -left-4 size-16 rounded-full bg-black/10 blur-xl" />
+                  <div className="absolute right-2 top-2 rounded-full bg-white/25 px-2 py-0.5 text-[8.5px] font-bold uppercase tracking-wider text-white backdrop-blur">
+                    {c.badge}
                   </div>
-                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
-                    <div
-                      className={cn(
-                        "h-full rounded-full transition-[width] duration-700",
-                        c.progress === 100 ? "bg-success" : "bg-gradient-blue"
-                      )}
-                      style={{ width: `${c.progress}%` }}
-                    />
+                  <div
+                    className={cn(
+                      "absolute bottom-2 left-3 font-display text-[10px] font-bold uppercase tracking-[0.18em]",
+                      dark ? "text-primary/80" : "text-white/85"
+                    )}
+                  >
+                    {c.eyebrow}
+                  </div>
+                  <div className="absolute -bottom-3 right-3 grid size-10 place-items-center rounded-full bg-white/90 text-primary shadow-md ring-1 ring-white/60 backdrop-blur transition group-hover:scale-110">
+                    <PlayCircle className="size-5" strokeWidth={2} />
                   </div>
                 </div>
-              </PhotoCard>
-            </motion.div>
-          ))}
+
+                {/* Body */}
+                <div className="p-3 pt-4">
+                  <div className="line-clamp-2 min-h-[2.4rem] font-display text-[12.5px] font-bold leading-tight tracking-tight text-primary">
+                    {c.title}
+                  </div>
+                  <div className="mt-2 flex items-center gap-2 text-[10px] text-muted-foreground">
+                    <span className="inline-flex items-center gap-1">
+                      <BookOpen className="size-3" /> {c.lessons}
+                    </span>
+                    <span className="size-0.5 rounded-full bg-border" />
+                    <span className="inline-flex items-center gap-1">
+                      <Clock className="size-3" /> {c.minutes}m
+                    </span>
+                  </div>
+                  <div className="mt-2">
+                    <div className="h-1 w-full overflow-hidden rounded-full bg-muted">
+                      <div
+                        className={cn(
+                          "h-full rounded-full transition-[width] duration-700",
+                          c.progress === 100 ? "bg-success" : "bg-gradient-blue"
+                        )}
+                        style={{ width: `${c.progress}%` }}
+                      />
+                    </div>
+                    <div className="mt-1 flex items-center justify-between text-[9.5px] font-semibold">
+                      <span className="text-muted-foreground">{c.progress}%</span>
+                      <span className="inline-flex items-center gap-0.5 text-primary opacity-0 transition group-hover:opacity-100">
+                        Open <ChevronRight className="size-3" />
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </motion.button>
+            );
+          })}
         </div>
       </section>
+
+      {/* Course detail sheet */}
+      <Sheet open={!!openCourse} onOpenChange={(o) => !o && setOpenCourse(null)}>
+        <SheetContent side="right" className="w-full overflow-y-auto p-0 sm:max-w-lg">
+          {openCourse && (
+            <div>
+              <div
+                className={cn(
+                  "relative h-44 bg-gradient-to-br p-5",
+                  TONE_BG[openCourse.tone]
+                )}
+              >
+                <div className="absolute -right-10 -top-12 size-44 rounded-full bg-white/25 blur-3xl" />
+                <div className="absolute -bottom-10 -left-8 size-36 rounded-full bg-black/15 blur-2xl" />
+                <div
+                  className={cn(
+                    "text-[10px] font-bold uppercase tracking-[0.22em]",
+                    TONE_TEXT_DARK[openCourse.tone] ? "text-primary/80" : "text-white/85"
+                  )}
+                >
+                  {openCourse.eyebrow} · {openCourse.badge}
+                </div>
+                <SheetHeader className="mt-2 space-y-2 text-left">
+                  <SheetTitle
+                    className={cn(
+                      "font-display text-2xl font-bold leading-tight tracking-tight",
+                      TONE_TEXT_DARK[openCourse.tone] ? "text-primary" : "text-white"
+                    )}
+                  >
+                    {openCourse.title}
+                  </SheetTitle>
+                  <SheetDescription
+                    className={cn(
+                      "text-[13px] leading-relaxed",
+                      TONE_TEXT_DARK[openCourse.tone] ? "text-primary/75" : "text-white/85"
+                    )}
+                  >
+                    {openCourse.description}
+                  </SheetDescription>
+                </SheetHeader>
+              </div>
+
+              <div className="p-5">
+                {/* Stat strip */}
+                <div className="grid grid-cols-3 gap-2 rounded-2xl border border-border bg-card p-3 text-center shadow-elegant">
+                  {[
+                    { label: "Lessons", value: openCourse.lessons, icon: BookOpen },
+                    { label: "Minutes", value: openCourse.minutes, icon: Clock },
+                    { label: "Progress", value: `${openCourse.progress}%`, icon: Trophy },
+                  ].map((s) => (
+                    <div key={s.label}>
+                      <s.icon className="mx-auto size-4 text-accent" />
+                      <div className="mt-1 font-display text-base font-bold text-primary">
+                        {s.value}
+                      </div>
+                      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                        {s.label}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* CTA */}
+                <button className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-primary py-3 text-sm font-semibold text-primary-foreground shadow-glow transition hover:-translate-y-0.5 active:scale-[0.98]">
+                  <PlayCircle className="size-4" />
+                  {openCourse.progress === 0
+                    ? "Start module"
+                    : openCourse.progress === 100
+                    ? "Review module"
+                    : "Continue module"}
+                </button>
+                <button className="mt-2 flex w-full items-center justify-center gap-2 rounded-full border border-border bg-card py-2.5 text-xs font-semibold text-muted-foreground transition hover:text-primary">
+                  <Download className="size-3.5" /> Download workbook PDF
+                </button>
+
+                {/* Lesson list */}
+                <div className="mt-6">
+                  <div className="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
+                    Lessons
+                  </div>
+                  <ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card">
+                    {lessonsFor(openCourse).map((l) => (
+                      <li
+                        key={l.idx}
+                        className={cn(
+                          "flex items-center gap-3 px-4 py-3 transition hover:bg-secondary/50",
+                          l.status === "active" && "bg-accent/10"
+                        )}
+                      >
+                        <div
+                          className={cn(
+                            "grid size-8 shrink-0 place-items-center rounded-full text-[11px] font-bold",
+                            l.status === "done" && "bg-success text-white",
+                            l.status === "active" && "bg-gradient-blue text-white shadow-glow",
+                            l.status === "locked" && "bg-muted text-muted-foreground"
+                          )}
+                        >
+                          {l.status === "done" ? (
+                            <CheckCircle2 className="size-4" />
+                          ) : l.status === "locked" ? (
+                            <Lock className="size-3.5" />
+                          ) : (
+                            l.idx
+                          )}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate text-[13px] font-semibold text-primary">
+                            {l.title}
+                          </div>
+                          <div className="text-[10.5px] text-muted-foreground">
+                            {l.minutes} min · {l.status === "done" ? "Completed" : l.status === "active" ? "In progress" : "Locked"}
+                          </div>
+                        </div>
+                        {l.status !== "locked" && (
+                          <PlayCircle className="size-4 text-primary" />
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* What you'll learn */}
+                <div className="mt-6 rounded-2xl border border-border bg-gradient-card p-4">
+                  <div className="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
+                    What you'll learn
+                  </div>
+                  <ul className="space-y-1.5 text-[12.5px] leading-relaxed text-foreground">
+                    {[
+                      "Clear definitions, examples, and edge cases.",
+                      "Walkthroughs with real anonymised client files.",
+                      "Templates, checklists and downloadable workbooks.",
+                      "End-of-module quiz feeding into your 100-mark exam.",
+                    ].map((p) => (
+                      <li key={p} className="flex items-start gap-2">
+                        <CheckCircle2 className="mt-0.5 size-3.5 shrink-0 text-success" />
+                        <span>{p}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
+
 
       {/* Visa Specialization Tracks — country playbooks */}
       <section className="mx-auto max-w-5xl px-5 pt-14 sm:px-8">
