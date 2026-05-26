@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import {
   ArrowLeft,
@@ -12,8 +13,12 @@ import {
   ChevronRight,
   Sparkles,
   Trophy,
+  CheckCircle2,
+  Lock,
+  Download,
 } from "lucide-react";
 import { PhotoCard } from "@/components/ui/photo-card";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 
 const ease = [0.22, 1, 0.36, 1] as const;
