@@ -1498,7 +1498,10 @@ export default function Dashboard() {
                     <div className="truncate text-xs text-muted-foreground">{m.business}</div>
                     <div className="text-[11px] text-accent">{m.time}</div>
                   </div>
-                  <button className="rounded-lg border border-border px-2.5 py-1.5 text-xs font-semibold hover:bg-muted">
+                  <button
+                    onClick={() => toast.success(`Joining ${m.title}…`, { description: "Opening secure room." })}
+                    className="rounded-lg border border-border px-2.5 py-1.5 text-xs font-semibold hover:bg-muted"
+                  >
                     Join
                   </button>
                 </li>
