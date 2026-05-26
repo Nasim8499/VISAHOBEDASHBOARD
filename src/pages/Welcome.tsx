@@ -11,7 +11,10 @@ type Role = {
   desc: string;
   icon: typeof Shield;
   to: string;
-  accent: string;
+  /** Tailwind gradient for the card face */
+  face: string;
+  /** Whether face renders dark text */
+  light: boolean;
 };
 
 const ROLES: Role[] = [
@@ -22,7 +25,8 @@ const ROLES: Role[] = [
     desc: "Full control — businesses, employees, revenue, approvals, training & system settings.",
     icon: Shield,
     to: "/auth?role=admin",
-    accent: "from-cyan-300/30 to-teal-200/10",
+    face: "from-[hsl(230_55%_22%)] via-[hsl(235_65%_38%)] to-[hsl(245_70%_60%)]",
+    light: false,
   },
   {
     id: "employee",
@@ -31,7 +35,8 @@ const ROLES: Role[] = [
     desc: "Workspace for branding, website, visa, marketing & client-support specialists.",
     icon: Users,
     to: "/auth?role=employee",
-    accent: "from-teal-300/30 to-cyan-200/10",
+    face: "from-[hsl(245_80%_88%)] via-[hsl(235_75%_78%)] to-[hsl(225_70%_70%)]",
+    light: true,
   },
   {
     id: "training",
@@ -40,7 +45,8 @@ const ROLES: Role[] = [
     desc: "Learn the system, complete modules, pass the 100-mark exam and get certified.",
     icon: GraduationCap,
     to: "/training",
-    accent: "from-sky-300/30 to-cyan-200/10",
+    face: "from-[hsl(340_70%_88%)] via-[hsl(20_80%_84%)] to-[hsl(35_80%_80%)]",
+    light: true,
   },
 ];
 
@@ -49,40 +55,23 @@ export default function Welcome() {
   const reduce = useReducedMotion();
 
   return (
-    <div
-      className="relative min-h-screen overflow-hidden text-white"
-      style={{
-        background:
-          "radial-gradient(120% 80% at 20% 10%, hsl(193 56% 40% / 0.55) 0%, transparent 60%), radial-gradient(120% 80% at 85% 90%, hsl(178 38% 55% / 0.45) 0%, transparent 55%), linear-gradient(135deg, hsl(212 60% 14%) 0%, hsl(204 58% 26%) 60%, hsl(186 50% 40%) 100%)",
-      }}
-    >
-      {/* ambient orbs */}
+    <div className="relative min-h-screen overflow-hidden bg-background text-foreground">
+      {/* Editorial lavender backdrop */}
+      <div className="absolute inset-0 -z-10 bg-gradient-hero" />
       <motion.div
         aria-hidden
         animate={reduce ? undefined : { x: [0, 40, 0], y: [0, -30, 0] }}
         transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }}
-        className="pointer-events-none absolute -left-40 top-1/4 size-[34rem] rounded-full bg-cyan-300/10 blur-3xl"
+        className="pointer-events-none absolute -left-40 top-1/4 -z-10 size-[34rem] rounded-full bg-accent/30 blur-3xl"
       />
       <motion.div
         aria-hidden
         animate={reduce ? undefined : { x: [0, -30, 0], y: [0, 40, 0] }}
         transition={{ duration: 16, repeat: Infinity, ease: "easeInOut" }}
-        className="pointer-events-none absolute -right-40 bottom-1/4 size-[36rem] rounded-full bg-teal-300/10 blur-3xl"
-      />
-      {/* subtle grid */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 opacity-[0.06]"
-        style={{
-          backgroundImage:
-            "linear-gradient(white 1px, transparent 1px), linear-gradient(90deg, white 1px, transparent 1px)",
-          backgroundSize: "48px 48px",
-          maskImage:
-            "radial-gradient(ellipse at center, black 30%, transparent 75%)",
-        }}
+        className="pointer-events-none absolute -right-40 bottom-1/4 -z-10 size-[36rem] rounded-full bg-primary/20 blur-3xl"
       />
 
-      <div className="relative z-10 mx-auto flex min-h-screen max-w-6xl flex-col px-6 py-10">
+      <div className="relative z-10 mx-auto flex min-h-screen max-w-6xl flex-col px-5 py-8 sm:px-8 sm:py-10">
         {/* top bar */}
         <div className="flex items-center justify-between">
           <motion.div
@@ -91,11 +80,12 @@ export default function Welcome() {
             transition={{ duration: 0.5, ease }}
             className="flex items-center gap-2"
           >
-            <div className="grid size-9 place-items-center rounded-xl bg-white/10 ring-1 ring-white/25 backdrop-blur-md">
+            <div className="grid size-9 place-items-center rounded-xl bg-primary text-primary-foreground shadow-glow">
               <Sparkles className="size-4" />
             </div>
-            <div className="font-display text-lg font-semibold tracking-tight">
-              VisaHOBe<span className="text-cyan-200/80"> Business OS</span>
+            <div className="font-display text-base font-bold tracking-tight text-primary sm:text-lg">
+              VisaHOBe
+              <span className="text-muted-foreground"> · Business OS</span>
             </div>
           </motion.div>
           <motion.button
@@ -103,47 +93,45 @@ export default function Welcome() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
-            className="rounded-full border border-white/20 bg-white/5 px-4 py-1.5 text-xs uppercase tracking-[0.2em] text-white/80 backdrop-blur-md transition hover:bg-white/10 hover:text-white"
+            className="rounded-full border border-border bg-card/70 px-3.5 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground backdrop-blur-md transition hover:bg-card hover:text-primary"
           >
             Sign in
           </motion.button>
         </div>
 
         {/* hero */}
-        <div className="mx-auto mt-16 max-w-2xl text-center">
+        <div className="mx-auto mt-12 max-w-2xl text-center sm:mt-16">
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease, delay: 0.1 }}
-            className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-[11px] uppercase tracking-[0.28em] text-cyan-100/90 backdrop-blur-md"
+            className="mb-4 inline-flex items-center gap-2 rounded-full border border-accent/40 bg-card/70 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-primary backdrop-blur"
           >
-            <span className="size-1.5 rounded-full bg-cyan-300" />
+            <span className="size-1.5 rounded-full bg-accent" />
             Choose your workspace
           </motion.div>
           <motion.h1
             initial={{ opacity: 0, y: 14, filter: "blur(6px)" }}
             animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
             transition={{ duration: 0.7, ease, delay: 0.18 }}
-            className="font-display text-4xl font-semibold leading-[1.05] tracking-tight sm:text-5xl"
+            className="font-display text-[2.2rem] font-bold leading-[1.02] tracking-tight text-primary sm:text-5xl"
           >
             Build, train & grow{" "}
-            <span className="bg-gradient-to-r from-cyan-200 via-teal-100 to-white bg-clip-text text-transparent">
-              any business
-            </span>{" "}
+            <span className="text-gradient-blue">any business</span>{" "}
             from one OS.
           </motion.h1>
           <motion.p
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease, delay: 0.3 }}
-            className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-white/70 sm:text-base"
+            className="mx-auto mt-4 max-w-xl text-[13.5px] leading-relaxed text-muted-foreground sm:text-base"
           >
             Pick the door that fits you. Admins run the platform, employees deliver client work, and trainees get certified before going live.
           </motion.p>
         </div>
 
-        {/* role cards */}
-        <div className="mt-14 grid flex-1 items-start gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        {/* role cards — Apple-style photo cards */}
+        <div className="mt-10 grid flex-1 items-start gap-4 sm:mt-14 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
           {ROLES.map((r, i) => {
             const Icon = r.icon;
             return (
@@ -153,52 +141,67 @@ export default function Welcome() {
                 initial={{ opacity: 0, y: 22, filter: "blur(6px)" }}
                 animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
                 transition={{ duration: 0.55, ease, delay: 0.35 + i * 0.08 }}
-                whileHover={reduce ? undefined : { y: -6, scale: 1.015 }}
-                whileTap={reduce ? undefined : { scale: 0.985 }}
-                className="group relative overflow-hidden rounded-3xl border border-white/15 bg-white/[0.06] p-7 text-left backdrop-blur-xl shadow-[0_30px_80px_-30px_rgba(0,0,0,0.6)] transition-colors hover:border-white/25 hover:bg-white/[0.09]"
+                whileHover={reduce ? undefined : { y: -6 }}
+                whileTap={reduce ? undefined : { scale: 0.98 }}
+                className="group relative overflow-hidden rounded-[1.75rem] border border-border bg-card text-left shadow-premium transition-all"
               >
-                {/* gradient sheen */}
-                <div
-                  aria-hidden
-                  className={`pointer-events-none absolute -inset-px rounded-3xl bg-gradient-to-br ${r.accent} opacity-0 transition-opacity duration-500 group-hover:opacity-100`}
-                />
-                {/* glow line */}
-                <motion.div
-                  aria-hidden
-                  className="pointer-events-none absolute -top-px left-6 right-6 h-px bg-gradient-to-r from-transparent via-cyan-200/70 to-transparent"
-                  initial={{ scaleX: 0 }}
-                  animate={{ scaleX: 1 }}
-                  transition={{ duration: 0.8, ease, delay: 0.6 + i * 0.08 }}
-                />
-
-                <div className="relative flex items-start justify-between">
-                  <div className="grid size-14 place-items-center rounded-2xl bg-gradient-to-br from-white/15 to-white/[0.04] ring-1 ring-white/20 backdrop-blur-md transition group-hover:ring-cyan-200/50">
-                    <Icon className="size-6" strokeWidth={1.7} />
+                {/* Photo face */}
+                <div className={`relative h-44 bg-gradient-to-br ${r.face} p-5`}>
+                  <div className="absolute -right-10 -top-10 size-44 rounded-full bg-white/25 blur-3xl" />
+                  <div className="absolute -bottom-12 -left-8 size-36 rounded-full bg-black/15 blur-2xl" />
+                  <div className="relative flex items-start justify-between">
+                    <div
+                      className={`grid size-12 place-items-center rounded-2xl backdrop-blur-md ring-1 ${
+                        r.light
+                          ? "bg-white/60 text-primary ring-white/70"
+                          : "bg-white/15 text-white ring-white/25"
+                      }`}
+                    >
+                      <Icon className="size-5" strokeWidth={1.8} />
+                    </div>
+                    <motion.span
+                      aria-hidden
+                      className={`grid size-9 place-items-center rounded-full ring-1 transition ${
+                        r.light
+                          ? "bg-white/70 text-primary ring-white/70"
+                          : "bg-white/15 text-white ring-white/25"
+                      } group-hover:bg-primary group-hover:text-primary-foreground`}
+                      whileHover={reduce ? undefined : { rotate: -10 }}
+                    >
+                      <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
+                    </motion.span>
                   </div>
-                  <motion.span
-                    aria-hidden
-                    className="grid size-9 place-items-center rounded-full bg-white/10 text-white/70 ring-1 ring-white/15 transition group-hover:bg-white group-hover:text-[hsl(212_60%_14%)]"
-                    whileHover={reduce ? undefined : { rotate: -10 }}
-                  >
-                    <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
-                  </motion.span>
+
+                  <div className="absolute inset-x-5 bottom-4">
+                    <div
+                      className={`text-[10px] font-bold uppercase tracking-[0.22em] ${
+                        r.light ? "text-primary/75" : "text-white/85"
+                      }`}
+                    >
+                      {r.kicker}
+                    </div>
+                    <h3
+                      className={`mt-1 font-display text-2xl font-bold leading-tight tracking-tight ${
+                        r.light ? "text-primary" : "text-white"
+                      }`}
+                    >
+                      {r.title}
+                    </h3>
+                  </div>
                 </div>
 
-                <div className="relative mt-6">
-                  <div className="text-[11px] uppercase tracking-[0.28em] text-cyan-200/80">
-                    {r.kicker}
-                  </div>
-                  <h3 className="mt-1.5 font-display text-2xl font-semibold tracking-tight">
-                    {r.title}
-                  </h3>
-                  <p className="mt-3 text-sm leading-relaxed text-white/70">
+                {/* Body */}
+                <div className="p-5">
+                  <p className="text-[13px] leading-relaxed text-muted-foreground">
                     {r.desc}
                   </p>
-                </div>
-
-                <div className="relative mt-7 flex items-center justify-between text-[11px] uppercase tracking-[0.22em] text-white/55">
-                  <span>Continue</span>
-                  <span className="text-cyan-100/80">{r.id === "training" ? "Open portal" : "Sign in"}</span>
+                  <div className="mt-4 flex items-center justify-between border-t border-border pt-3 text-[10px] font-semibold uppercase tracking-[0.2em]">
+                    <span className="text-muted-foreground">Continue</span>
+                    <span className="inline-flex items-center gap-1 text-primary transition group-hover:gap-2">
+                      {r.id === "training" ? "Open portal" : "Sign in"}
+                      <ArrowRight className="size-3" />
+                    </span>
+                  </div>
                 </div>
               </motion.button>
             );
@@ -210,12 +213,10 @@ export default function Welcome() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.9 }}
-          className="mt-12 flex flex-col items-center justify-between gap-3 border-t border-white/10 pt-6 text-[11px] uppercase tracking-[0.22em] text-white/50 sm:flex-row"
+          className="mt-12 flex flex-col items-center justify-between gap-3 border-t border-border pt-6 text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground sm:flex-row"
         >
           <span>© {new Date().getFullYear()} VisaHOBe</span>
-          <span className="flex items-center gap-4">
-            <span>Working hours · Sat–Sun off · 9am–5pm Dhaka</span>
-          </span>
+          <span>Working hours · Sat–Sun off · 9am–5pm Dhaka</span>
         </motion.div>
       </div>
     </div>
