@@ -538,8 +538,10 @@ export default function Meetings() {
       <Sheet open={newOpen} onOpenChange={setNewOpen}>
         <SheetContent>
           <SheetHeader>
-            <SheetTitle>New Meeting</SheetTitle>
-            <SheetDescription>Quickly schedule a call with a client or your team.</SheetDescription>
+            <SheetTitle>{editingId ? "Edit Meeting" : "New Meeting"}</SheetTitle>
+            <SheetDescription>
+              {editingId ? "Update title, type, day or time." : "Quickly schedule a call with a client or your team."}
+            </SheetDescription>
           </SheetHeader>
           <div className="mt-5 space-y-4">
             <label className="block">
@@ -548,8 +550,9 @@ export default function Meetings() {
                 value={form.title}
                 onChange={(e) => setForm({ ...form, title: e.target.value })}
                 placeholder="Discovery call with Acme"
-                className="w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm outline-none focus:border-accent"
+                className={`w-full rounded-xl border bg-card px-3 py-2.5 text-sm outline-none focus:border-accent ${errors.title ? "border-destructive" : "border-border"}`}
               />
+              {errors.title && <span className="mt-1 block text-[11px] font-semibold text-destructive">{errors.title}</span>}
             </label>
             <label className="block">
               <span className="mb-1 block text-xs font-semibold text-muted-foreground">Type</span>
@@ -581,8 +584,9 @@ export default function Meetings() {
                   value={form.time}
                   onChange={(e) => setForm({ ...form, time: e.target.value })}
                   placeholder="10:00 AM"
-                  className="w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm outline-none focus:border-accent"
+                  className={`w-full rounded-xl border bg-card px-3 py-2.5 text-sm outline-none focus:border-accent ${errors.time ? "border-destructive" : "border-border"}`}
                 />
+                {errors.time && <span className="mt-1 block text-[11px] font-semibold text-destructive">{errors.time}</span>}
               </label>
             </div>
             <div className="flex gap-2 pt-2">
@@ -590,10 +594,18 @@ export default function Meetings() {
                 onClick={handleCreate}
                 className="flex-1 rounded-xl bg-gradient-blue px-4 py-2.5 text-sm font-semibold text-white shadow-elegant hover:shadow-glow"
               >
-                <Plus className="size-4" /> Schedule
+                <Plus className="size-4" /> {editingId ? "Save changes" : "Schedule"}
               </MotionButton>
+              {editingId && (
+                <MotionButton
+                  onClick={() => { deleteEvent(editingId); setNewOpen(false); setEditingId(null); }}
+                  className="rounded-xl border border-destructive/40 bg-card px-4 py-2.5 text-sm font-semibold text-destructive hover:bg-destructive/10"
+                >
+                  <Trash2 className="size-4" /> Delete
+                </MotionButton>
+              )}
               <MotionButton
-                onClick={() => setNewOpen(false)}
+                onClick={() => { setNewOpen(false); setEditingId(null); }}
                 className="rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-semibold hover:bg-muted"
               >
                 <X className="size-4" /> Cancel
