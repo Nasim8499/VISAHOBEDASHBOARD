@@ -434,10 +434,7 @@ export default function Meetings() {
               {["Discovery Call", "Brand Review", "Website Review", "Final Delivery", "Support"].map((t) => (
                 <li key={t}>
                   <button
-                    onClick={() => {
-                      setForm({ ...form, type: t });
-                      setNewOpen(true);
-                    }}
+                    onClick={() => openNewSheet({ type: t })}
                     className="tap flex w-full items-center gap-1.5 rounded-lg border border-border p-2 hover:border-accent hover:bg-muted/50"
                   >
                     <CalIcon className="size-3.5 text-accent" /> {t}
@@ -475,44 +472,63 @@ export default function Meetings() {
                   icon: Plus,
                   onClick: () => {
                     setOpen(false);
-                    setForm({ ...form, day: selectedDay });
-                    setNewOpen(true);
+                    openNewSheet({ day: selectedDay });
                   },
                 }}
               />
             ) : (
               selectedDay &&
-              eventsForDay(selectedDay).map((e, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, x: 12 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.05 }}
-                  className="rounded-xl border border-border p-3"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="text-sm font-semibold">{e.title}</div>
-                    <span className="rounded-full bg-accent/10 px-2 py-0.5 text-[10px] font-semibold text-accent">
-                      {e.type}
-                    </span>
-                  </div>
-                  <div className="mt-1 text-xs text-muted-foreground">{e.time}</div>
-                  <div className="mt-2 flex gap-2">
-                    <MotionButton
-                      onClick={() => join(e.title)}
-                      className="rounded-lg bg-primary px-2.5 py-1 text-[11px] font-semibold text-primary-foreground"
-                    >
-                      Join
-                    </MotionButton>
-                    <MotionButton
-                      onClick={() => toast.message("Reschedule", { description: "Pick a new time slot." })}
-                      className="rounded-lg border border-border px-2.5 py-1 text-[11px] font-semibold hover:bg-muted"
-                    >
-                      Reschedule
-                    </MotionButton>
-                  </div>
-                </motion.div>
-              ))
+              eventsForDay(selectedDay).map((e, i) => {
+                const isLocal = (e as LocalEvent).id != null;
+                return (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, x: 12 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.05 }}
+                    className="rounded-xl border border-border p-3"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="text-sm font-semibold">{e.title}</div>
+                      <span className="rounded-full bg-accent/10 px-2 py-0.5 text-[10px] font-semibold text-accent">
+                        {e.type}
+                      </span>
+                    </div>
+                    <div className="mt-1 text-xs text-muted-foreground">{e.time}</div>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      <MotionButton
+                        onClick={() => join(e.title)}
+                        className="rounded-lg bg-primary px-2.5 py-1 text-[11px] font-semibold text-primary-foreground"
+                      >
+                        Join
+                      </MotionButton>
+                      {isLocal ? (
+                        <>
+                          <MotionButton
+                            onClick={() => openEditSheet(e as LocalEvent)}
+                            className="rounded-lg border border-border px-2.5 py-1 text-[11px] font-semibold hover:bg-muted"
+                          >
+                            <Pencil className="size-3" /> Edit
+                          </MotionButton>
+                          <MotionButton
+                            onClick={() => deleteEvent((e as LocalEvent).id)}
+                            className="rounded-lg border border-destructive/40 px-2.5 py-1 text-[11px] font-semibold text-destructive hover:bg-destructive/10"
+                          >
+                            <Trash2 className="size-3" /> Delete
+                          </MotionButton>
+                        </>
+                      ) : (
+                        <MotionButton
+                          onClick={() => toast.message("Reschedule", { description: "Pick a new time slot." })}
+                          className="rounded-lg border border-border px-2.5 py-1 text-[11px] font-semibold hover:bg-muted"
+                        >
+                          Reschedule
+                        </MotionButton>
+                      )}
+                    </div>
+                  </motion.div>
+                );
+              })
             )}
           </div>
         </SheetContent>
