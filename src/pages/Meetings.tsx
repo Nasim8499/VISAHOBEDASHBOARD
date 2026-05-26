@@ -66,15 +66,47 @@ export default function Meetings() {
     setOpen(true);
   };
 
+  const validate = () => {
+    const e: { title?: string; time?: string } = {};
+    if (!form.title.trim()) e.title = "Title is required";
+    if (!form.time.trim()) e.time = "Time is required";
+    else if (!TIME_RE.test(form.time.trim())) e.time = "Use a format like 10:00 AM";
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  };
+
+  const openNewSheet = (preset?: Partial<typeof form>) => {
+    setEditingId(null);
+    setErrors({});
+    setForm({ title: "", type: "Discovery Call", time: "10:00 AM", day: today.getDate(), ...preset });
+    setNewOpen(true);
+  };
+
+  const openEditSheet = (ev: LocalEvent) => {
+    setEditingId(ev.id);
+    setErrors({});
+    setForm({ title: ev.title, type: ev.type, time: ev.time, day: ev.day });
+    setOpen(false);
+    setNewOpen(true);
+  };
+
   const handleCreate = () => {
-    if (!form.title.trim()) {
-      toast.error("Please add a meeting title");
-      return;
+    if (!validate()) return;
+    if (editingId) {
+      setLocalEvents((p) => p.map((e) => (e.id === editingId ? { ...e, ...form } : e)));
+      toast.success(`Meeting updated · ${form.title}`);
+    } else {
+      setLocalEvents((p) => [...p, { id: uid(), ...form }]);
+      toast.success(`Meeting scheduled · ${form.title}`, { description: `${form.type} · ${form.time}` });
     }
-    setLocalEvents((p) => [...p, { ...form }]);
-    toast.success(`Meeting scheduled · ${form.title}`, { description: `${form.type} · ${form.time}` });
+    setEditingId(null);
     setForm({ ...form, title: "" });
     setNewOpen(false);
+  };
+
+  const deleteEvent = (id: string) => {
+    setLocalEvents((p) => p.filter((e) => e.id !== id));
+    toast.message("Meeting deleted");
   };
 
   const join = (title: string) => toast.success(`Joining ${title}…`, { description: "Opening secure room." });
