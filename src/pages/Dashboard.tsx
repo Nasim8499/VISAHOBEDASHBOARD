@@ -1,4 +1,5 @@
 import { PageContainer } from "@/components/layout/Page";
+import { cn } from "@/lib/utils";
 import { useWorkspace } from "@/context/WorkspaceContext";
 import { activity, deliverables, insights, meetings } from "@/data/mock";
 import { ProgressBar } from "@/components/ui/progress-bar";
@@ -575,62 +576,97 @@ export default function Dashboard() {
               const overdueCount = stages.filter(isOverdue).length;
               const dueSoonCount = stages.filter((s) => isDueSoon(s, 3)).length;
               const pendingApprovalCount = stages.filter((s) => s.state === "sent").length;
-              const ringR = 18, ringC = 2 * Math.PI * ringR;
+              const R = 30;
+              const C = 2 * Math.PI * R;
 
               return (
-                <>
-                  {/* Hero summary strip */}
-                  <div className="relative mb-4 overflow-hidden rounded-2xl bg-gradient-hero p-4 text-white">
-                    <span className="pointer-events-none absolute -right-10 -top-10 size-32 rounded-full bg-warning/40 blur-2xl vh-float" />
-                    <span className="pointer-events-none absolute -bottom-12 -left-8 size-28 rounded-full bg-accent/40 blur-2xl vh-float" style={{ animationDelay: "1.2s" }} />
-                    <div className="relative flex items-center justify-between gap-3">
+                <div className="space-y-5">
+                  {/* HERO — Apple-style premium glass card */}
+                  <div className="relative overflow-hidden rounded-[1.75rem] border border-border bg-gradient-to-br from-[hsl(230_55%_22%)] via-[hsl(235_65%_38%)] to-[hsl(245_70%_60%)] p-6 text-white shadow-premium">
+                    {/* Ambient blur orbs */}
+                    <div className="pointer-events-none absolute -right-16 -top-16 size-48 rounded-full bg-accent/40 blur-3xl" />
+                    <div className="pointer-events-none absolute -bottom-16 -left-10 size-40 rounded-full bg-white/15 blur-3xl" />
+                    <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.18),transparent_50%)]" />
+
+                    <div className="relative flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
                       <div className="min-w-0 flex-1">
-                        <div className="inline-flex items-center gap-1.5 rounded-full border border-white/25 bg-white/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider backdrop-blur">
+                        <div className="inline-flex items-center gap-1.5 rounded-full border border-white/25 bg-white/10 px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.2em] backdrop-blur-md">
                           <span className="size-1.5 animate-pulse rounded-full bg-success" />
-                          Active Build · Saved
+                          Active Build · Auto-saved
                         </div>
-                        <div className="mt-1.5 font-display text-2xl font-extrabold leading-none">{overall}%</div>
-                        <div className="text-[10px] text-white/70">{completed} of {stages.length} stages complete</div>
-                        <div className="mt-1.5 flex flex-wrap gap-1">
+                        <div className="mt-3 flex items-end gap-2">
+                          <div className="font-display text-[3.25rem] font-bold leading-none tracking-tight tabular-nums">
+                            {overall}
+                          </div>
+                          <div className="pb-2 text-xl font-semibold text-white/70">%</div>
+                          <div className="pb-3 pl-1 text-[11px] text-white/70">
+                            {completed}/{stages.length} stages
+                          </div>
+                        </div>
+
+                        {/* Notification chips */}
+                        <div className="mt-3 flex flex-wrap gap-1.5">
                           {overdueCount > 0 && (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-destructive/90 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider">
+                            <span className="inline-flex items-center gap-1 rounded-full bg-destructive/95 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider shadow-md">
                               <AlertTriangle className="size-3" /> {overdueCount} overdue
                             </span>
                           )}
                           {dueSoonCount > 0 && (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-warning/90 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-black/80">
+                            <span className="inline-flex items-center gap-1 rounded-full bg-warning/95 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-black/80 shadow-md">
                               <CalendarClock className="size-3" /> {dueSoonCount} due soon
                             </span>
                           )}
                           {pendingApprovalCount > 0 && (
                             <Link
                               to="/client-approvals"
-                              className="inline-flex items-center gap-1 rounded-full bg-white/15 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider hover:bg-white/25"
+                              className="inline-flex items-center gap-1 rounded-full border border-white/30 bg-white/15 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider backdrop-blur-md transition hover:bg-white/25"
                             >
-                              <Send className="size-3" /> {pendingApprovalCount} awaiting approval
+                              <Send className="size-3" /> {pendingApprovalCount} pending
                             </Link>
+                          )}
+                          {!overdueCount && !dueSoonCount && !pendingApprovalCount && (
+                            <span className="inline-flex items-center gap-1 rounded-full border border-white/25 bg-white/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider backdrop-blur">
+                              <Sparkles className="size-3" /> On track
+                            </span>
                           )}
                         </div>
                       </div>
 
-                      <div className="relative grid size-16 place-items-center">
-                        <svg width="64" height="64" viewBox="0 0 64 64" className="-rotate-90">
-                          <circle cx="32" cy="32" r="26" stroke="rgba(255,255,255,0.2)" strokeWidth="5" fill="none" />
-                          <circle cx="32" cy="32" r="26" stroke="white" strokeWidth="5" strokeLinecap="round" fill="none"
-                            strokeDasharray={`${(overall / 100) * (2 * Math.PI * 26)} ${2 * Math.PI * 26}`} />
+                      {/* Donut ring */}
+                      <div className="relative grid size-[88px] shrink-0 place-items-center">
+                        <svg width="88" height="88" viewBox="0 0 88 88" className="-rotate-90">
+                          <circle cx="44" cy="44" r={R} stroke="rgba(255,255,255,0.18)" strokeWidth="7" fill="none" />
+                          <circle
+                            cx="44"
+                            cy="44"
+                            r={R}
+                            stroke="white"
+                            strokeWidth="7"
+                            strokeLinecap="round"
+                            fill="none"
+                            strokeDasharray={C}
+                            strokeDashoffset={C - (overall / 100) * C}
+                            style={{ transition: "stroke-dashoffset 900ms cubic-bezier(0.22,1,0.36,1)" }}
+                          />
                         </svg>
-                        <Sparkles className="absolute size-5 text-warning animate-pulse" />
+                        <div className="absolute text-center">
+                          <div className="font-display text-base font-bold leading-none tabular-nums">{overall}%</div>
+                          <div className="mt-0.5 text-[8px] uppercase tracking-wider text-white/70">complete</div>
+                        </div>
                       </div>
                     </div>
                   </div>
 
-                  {/* Horizontal connected stepper — clickable */}
-                  <div className="relative mb-4 overflow-x-auto">
-                    <div className="relative flex min-w-[480px] items-start justify-between gap-1 px-2 pb-1">
-                      <span className="pointer-events-none absolute left-6 right-6 top-[22px] h-0.5 bg-muted" />
+                  {/* INFOGRAPHIC STEPPER — connected glass dots */}
+                  <div className="relative overflow-x-auto">
+                    <div className="relative flex min-w-[520px] items-start justify-between gap-1 rounded-2xl border border-border bg-gradient-card px-4 py-5 shadow-elegant">
+                      <span className="pointer-events-none absolute left-10 right-10 top-[34px] h-1 rounded-full bg-muted" />
                       <span
-                        className="pointer-events-none absolute left-6 top-[22px] h-0.5 gradient-blue vh-shimmer transition-all"
-                        style={{ width: `calc((100% - 48px) * ${overall / 100})` }}
+                        className="pointer-events-none absolute left-10 top-[34px] h-1 rounded-full bg-gradient-blue shadow-glow"
+                        style={{
+                          width: `calc((100% - 80px) * ${overall / 100})`,
+                          transition: "width 900ms cubic-bezier(0.22,1,0.36,1)",
+                        }}
                       />
                       {stages.map((s, i) => {
                         const done = s.pct === 100 || s.state === "done";
@@ -643,26 +679,35 @@ export default function Dashboard() {
                             className="relative z-10 flex w-1/5 flex-col items-center focus:outline-none"
                             aria-label={`Open ${s.label}`}
                           >
-                            <div className="relative grid size-11 place-items-center transition-transform hover:scale-110">
-                              <svg width="44" height="44" viewBox="0 0 44 44" className="-rotate-90">
-                                <circle cx="22" cy="22" r={ringR} fill="hsl(var(--background))" stroke={overdue ? "hsl(var(--destructive))" : "hsl(var(--muted))"} strokeWidth="3" />
-                                <circle cx="22" cy="22" r={ringR} fill="none"
-                                  stroke={overdue ? "hsl(var(--destructive))" : done ? "hsl(var(--success))" : current ? "hsl(var(--accent))" : "hsl(var(--muted))"}
-                                  strokeWidth="3" strokeLinecap="round"
-                                  strokeDasharray={`${(s.pct / 100) * ringC} ${ringC}`} />
-                              </svg>
-                              <span className={`absolute text-[12px] font-extrabold ${
-                                overdue ? "text-destructive vh-pop" : done ? "text-success" : current ? "text-accent vh-pop" : "text-muted-foreground"
-                              }`}>
+                            <div
+                              className={cn(
+                                "relative grid size-12 place-items-center rounded-full border-2 bg-card shadow-md transition-all duration-300 hover:scale-110 hover:shadow-glow",
+                                overdue && "border-destructive",
+                                done && !overdue && "border-success bg-success text-white",
+                                current && !overdue && "border-accent",
+                                !done && !current && !overdue && "border-border"
+                              )}
+                            >
+                              <span
+                                className={cn(
+                                  "font-display text-[13px] font-bold tabular-nums",
+                                  overdue ? "text-destructive" :
+                                  done ? "text-white" :
+                                  current ? "text-accent" : "text-muted-foreground"
+                                )}
+                              >
                                 {done ? "✓" : i + 1}
                               </span>
                               {overdue && (
-                                <span className="absolute -right-1 -top-1 grid size-4 place-items-center rounded-full bg-destructive text-white">
+                                <span className="absolute -right-1 -top-1 grid size-4 place-items-center rounded-full bg-destructive text-white shadow-md">
                                   <AlertTriangle className="size-2.5" />
                                 </span>
                               )}
                             </div>
-                            <div className={`mt-1.5 text-center text-[9px] font-bold uppercase tracking-wider ${overdue ? "text-destructive" : "text-muted-foreground"}`}>
+                            <div className={cn(
+                              "mt-2 text-center text-[9.5px] font-bold uppercase tracking-wider",
+                              overdue ? "text-destructive" : current ? "text-primary" : "text-muted-foreground"
+                            )}>
                               {new Date(s.due).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
                             </div>
                           </button>
@@ -671,94 +716,122 @@ export default function Dashboard() {
                     </div>
                   </div>
 
-                  {/* Detail rows — clickable + per-stage actions */}
-                  <ul className="space-y-2">
+                  {/* APPLE-STYLE STAGE CARDS */}
+                  <ul className="grid gap-3 sm:grid-cols-2">
                     {stages.map((s, i) => {
                       const done = s.pct === 100 || s.state === "done";
                       const current = !done && s.pct > 0;
                       const overdue = isOverdue(s);
-                      const tone = overdue ? "destructive" : done ? "success" : current ? "accent" : "muted-foreground";
                       const statusLabel =
                         s.state === "sent" ? "Sent" :
                         s.state === "review" ? "In Review" :
                         done ? "Done" : current ? "Active" : "Queued";
+                      const accentColor =
+                        overdue ? "hsl(var(--destructive))" :
+                        done ? "hsl(var(--success))" :
+                        current ? "hsl(var(--accent))" : "hsl(var(--muted-foreground))";
                       const statusClass =
                         overdue ? "bg-destructive/10 text-destructive" :
                         s.state === "sent" ? "bg-primary/10 text-primary" :
-                        s.state === "review" ? "bg-warning/10 text-warning" :
+                        s.state === "review" ? "bg-warning/15 text-warning" :
                         done ? "bg-success/10 text-success" :
-                        current ? "bg-accent/10 text-accent" : "bg-muted text-muted-foreground";
+                        current ? "bg-accent/15 text-accent" : "bg-muted text-muted-foreground";
+
                       return (
-                        <li key={s.key}
-                          className={`group relative overflow-hidden rounded-xl border bg-card p-2.5 transition-all hover:-translate-y-0.5 hover:shadow-elegant ${
-                            overdue ? "border-destructive/40 shadow-elegant" :
-                            current ? "border-accent/40 shadow-elegant" :
-                            done ? "border-success/20" : "border-border"
-                          }`}
+                        <li
+                          key={s.key}
+                          className="group relative overflow-hidden rounded-2xl border border-border bg-card shadow-elegant transition-all duration-300 hover:-translate-y-1 hover:shadow-premium"
                         >
-                          <span className={`absolute left-0 top-0 h-full w-1 bg-${tone}`} />
+                          {/* Soft tinted blur per status */}
+                          <div
+                            className="pointer-events-none absolute -right-12 -top-12 size-32 rounded-full opacity-40 blur-3xl transition-opacity duration-500 group-hover:opacity-70"
+                            style={{ background: accentColor }}
+                          />
+                          {/* Left status rail */}
+                          <span
+                            className="absolute left-0 top-0 h-full w-1 rounded-r-full"
+                            style={{ background: accentColor }}
+                          />
+
                           <button
                             onClick={() => setOpenIdx(i)}
-                            className="flex w-full items-center gap-3 text-left"
+                            className="relative flex w-full items-start gap-3 p-4 text-left"
                           >
-                            <span className={`grid size-9 shrink-0 place-items-center rounded-xl text-base ${
-                              overdue ? "bg-destructive/15 text-destructive vh-pop" :
-                              done ? "bg-success/15 text-success" :
-                              current ? "bg-accent/15 text-accent vh-float" : "bg-muted text-muted-foreground/60"
-                            }`}>
+                            <span
+                              className={cn(
+                                "grid size-12 shrink-0 place-items-center rounded-2xl text-xl shadow-sm ring-1 backdrop-blur",
+                                overdue && "bg-destructive/10 text-destructive ring-destructive/20",
+                                done && !overdue && "bg-success/10 text-success ring-success/20",
+                                current && !overdue && "bg-accent/15 text-accent ring-accent/30",
+                                !done && !current && !overdue && "bg-muted text-muted-foreground/70 ring-border"
+                              )}
+                            >
                               {s.icon}
                             </span>
                             <div className="min-w-0 flex-1">
                               <div className="flex items-center justify-between gap-2">
-                                <span className="truncate text-[13px] font-bold">{s.label}</span>
-                                <span className={`shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ${statusClass}`}>
+                                <span className="truncate font-display text-[14px] font-bold tracking-tight text-primary">
+                                  {s.label}
+                                </span>
+                                <span className={cn("shrink-0 rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider", statusClass)}>
                                   {overdue ? "Overdue" : statusLabel}
                                 </span>
                               </div>
-                              <div className="mt-1 flex items-center gap-2">
-                                <div className="h-1 flex-1 overflow-hidden rounded-full bg-muted/70">
-                                  <div className={`h-full rounded-full ${current ? "vh-shimmer" : ""}`}
-                                    style={{ width: `${s.pct}%`, background: overdue ? "hsl(var(--destructive))" : done ? "hsl(var(--success))" : current ? "hsl(var(--accent))" : "transparent" }} />
+
+                              {/* Progress with shimmer */}
+                              <div className="mt-2.5">
+                                <div className="flex items-center justify-between text-[10px] font-semibold">
+                                  <span className={cn(overdue ? "text-destructive" : "text-muted-foreground")}>
+                                    <CalendarClock className="mr-1 inline size-3" />
+                                    {new Date(s.due).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+                                  </span>
+                                  <span className="tabular-nums text-primary">{s.pct}%</span>
                                 </div>
-                                <span className="text-[10px] font-bold text-muted-foreground">{s.pct}%</span>
-                              </div>
-                              <div className={`mt-1 flex items-center gap-1 text-[10px] ${overdue ? "text-destructive font-bold" : "text-muted-foreground"}`}>
-                                <CalendarClock className="size-3" />
-                                Due {new Date(s.due).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
+                                <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                                  <div
+                                    className={cn("h-full rounded-full", current && "vh-shimmer")}
+                                    style={{
+                                      width: `${s.pct}%`,
+                                      background: accentColor,
+                                      transition: "width 800ms cubic-bezier(0.22,1,0.36,1)",
+                                    }}
+                                  />
+                                </div>
                               </div>
                             </div>
                           </button>
 
-                          {/* Per-stage quick actions */}
-                          <div className="mt-2 flex flex-wrap gap-1.5 pl-12">
+                          {/* Quick actions */}
+                          <div className="relative flex items-center gap-1.5 border-t border-border bg-gradient-card/60 px-4 py-2 backdrop-blur">
                             <button
                               onClick={() => markDone(i)}
                               disabled={done}
-                              className="inline-flex items-center gap-1 rounded-md border border-success/30 bg-success/5 px-2 py-1 text-[10px] font-bold text-success hover:bg-success/10 disabled:opacity-40"
+                              className="inline-flex flex-1 items-center justify-center gap-1 rounded-lg border border-success/30 bg-success/5 px-2 py-1.5 text-[10px] font-bold text-success transition hover:bg-success/15 hover:shadow-sm active:scale-95 disabled:opacity-40"
                             >
-                              <Check className="size-3" /> Mark done
+                              <Check className="size-3" /> Done
                             </button>
                             <button
                               onClick={() => requestReview(i)}
-                              className="inline-flex items-center gap-1 rounded-md border border-warning/30 bg-warning/5 px-2 py-1 text-[10px] font-bold text-warning hover:bg-warning/10"
+                              className="inline-flex flex-1 items-center justify-center gap-1 rounded-lg border border-warning/30 bg-warning/5 px-2 py-1.5 text-[10px] font-bold text-warning transition hover:bg-warning/15 hover:shadow-sm active:scale-95"
                             >
-                              <Eye className="size-3" /> Request review
+                              <Eye className="size-3" /> Review
                             </button>
                             <button
                               onClick={() => sendToClient(i)}
-                              className="inline-flex items-center gap-1 rounded-md border border-primary/30 bg-primary/5 px-2 py-1 text-[10px] font-bold text-primary hover:bg-primary/10"
+                              className="inline-flex flex-1 items-center justify-center gap-1 rounded-lg border border-primary/30 bg-primary/5 px-2 py-1.5 text-[10px] font-bold text-primary transition hover:bg-primary/15 hover:shadow-sm active:scale-95"
                             >
-                              <Send className="size-3" /> Send to client
+                              <Send className="size-3" /> Send
                             </button>
                           </div>
                         </li>
                       );
                     })}
                   </ul>
-                </>
+                </div>
               );
             })()}
           </Card>
+
 
           {/* Brand Builder stage side panel */}
           <Sheet open={openIdx !== null} onOpenChange={(o) => !o && setOpenIdx(null)}>
