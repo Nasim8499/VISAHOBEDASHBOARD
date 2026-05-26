@@ -64,6 +64,7 @@ export default function AppLayout() {
               <Outlet />
             </motion.div>
           </main>
+          <BottomNav />
         </div>
       </div>
     </WorkspaceProvider>
