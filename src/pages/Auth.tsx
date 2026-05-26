@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Lock, User2, ArrowRight, ShieldCheck, ShieldUser,
+  Lock, User2, ArrowRight, ShieldCheck, Shield,
   Briefcase, GraduationCap, ArrowLeft, Sparkles,
 } from "lucide-react";
 
