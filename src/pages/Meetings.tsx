@@ -94,6 +94,28 @@ export default function Meetings() {
         }
       />
 
+      {/* Infographic strip — eye-catching, animated stats */}
+      <CalendarInfographics
+        totalThisMonth={meetings.length + localEvents.length}
+        types={meetings.concat(localEvents as any).map((m) => m.type)}
+        busyByDay={Array.from({ length: 7 }).map((_, dow) => {
+          const seedDays = [today.getDate(), today.getDate() + 1, today.getDate() + 3];
+          let count = 0;
+          if (isCurrentMonth) {
+            seedDays.forEach((d) => {
+              const date = new Date(cursor.getFullYear(), cursor.getMonth(), d);
+              if (date.getDay() === dow) count += 2;
+            });
+          }
+          localEvents.forEach((e) => {
+            const date = new Date(cursor.getFullYear(), cursor.getMonth(), e.day);
+            if (date.getDay() === dow) count += 1;
+          });
+          return count;
+        })}
+      />
+
+
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_340px]">
         {/* Calendar */}
         <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
