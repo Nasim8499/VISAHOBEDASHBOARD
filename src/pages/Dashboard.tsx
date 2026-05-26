@@ -1036,7 +1036,7 @@ export default function Dashboard() {
 
 
           {/* Deliverables overview — each card a distinct infographic */}
-          <Card title="Deliverables Overview" action={<button className="text-xs font-semibold text-accent">Filter →</button>}>
+          <Card title="Deliverables Overview" action={<button onClick={() => toast.message("Filter deliverables", { description: "Filter UI coming soon." })} className="text-xs font-semibold text-accent">Filter →</button>}>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {deliverables.map((d, i) => {
                 const tones = [
