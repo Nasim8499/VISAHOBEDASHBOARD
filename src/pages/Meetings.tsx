@@ -2,21 +2,26 @@ import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { PageContainer, PageHeader } from "@/components/layout/Page";
 import { meetings } from "@/data/mock";
-import { Video, Plus, Calendar as CalIcon, ChevronLeft, ChevronRight, X } from "lucide-react";
+import { Video, Plus, Calendar as CalIcon, ChevronLeft, ChevronRight, X, Pencil, Trash2, List } from "lucide-react";
 import { toast } from "sonner";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { MotionButton, FadeIn } from "@/components/ui/motion";
 import { EmptyState } from "@/components/ui/empty-state";
+import { usePersistentState } from "@/hooks/usePersistentState";
 
-type View = "month" | "week";
+type View = "month" | "week" | "agenda";
 
 type LocalEvent = {
+  id: string;
   day: number;
   title: string;
   type: string;
   time: string;
   business?: string;
 };
+
+const uid = () => Math.random().toString(36).slice(2, 9);
+const TIME_RE = /^([01]?\d|2[0-3]):[0-5]\d\s?(AM|PM|am|pm)?$/;
 
 export default function Meetings() {
   const today = useMemo(() => new Date(), []);
@@ -25,8 +30,10 @@ export default function Meetings() {
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [open, setOpen] = useState(false);
   const [newOpen, setNewOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState({ title: "", type: "Discovery Call", time: "10:00 AM", day: today.getDate() });
-  const [localEvents, setLocalEvents] = useState<LocalEvent[]>([]);
+  const [localEvents, setLocalEvents] = usePersistentState<LocalEvent[]>("vh-meetings-v1", []);
+  const [errors, setErrors] = useState<{ title?: string; time?: string }>({});
 
   const monthLabel = cursor.toLocaleString("default", { month: "long", year: "numeric" });
   const firstDow = new Date(cursor.getFullYear(), cursor.getMonth(), 1).getDay();
