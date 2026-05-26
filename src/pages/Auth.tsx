@@ -21,7 +21,7 @@ const ROLES: {
     title: "Admin Login",
     subtitle: "Super Admin · Owner",
     desc: "Full control of teams, clients, billing and workspace governance.",
-    icon: ShieldUser,
+    icon: Shield,
     tone: "from-[hsl(230_55%_18%)] to-[hsl(235_60%_38%)]",
   },
   {
