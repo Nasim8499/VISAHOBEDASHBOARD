@@ -52,17 +52,7 @@ export default function AppLayout() {
         <div className="flex min-w-0 flex-1 flex-col">
           <TopHeader onOpenSidebar={() => setOpen(true)} />
           <main className="flex-1 pb-28 lg:pb-10">
-            {/* Enter-only fade so switching sidebar tabs doesn't flash an empty
-                gap between the old page exiting and the new page entering. */}
-            <motion.div
-              key={location.pathname}
-              initial={{ opacity: 0, y: 14, scale: 0.995 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-              className="page-enter"
-            >
-              <Outlet />
-            </motion.div>
+            <Outlet />
           </main>
           <BottomNav />
         </div>
