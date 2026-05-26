@@ -1,13 +1,14 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { toast } from "sonner";
 import {
   Plus, Search, Filter, X, MoreHorizontal, CheckCircle2, Clock3,
-  AlertTriangle, Sparkles, ListChecks, Trash2, ArrowRight, ArrowLeft, Flag,
+  AlertTriangle, Sparkles, ListChecks, Trash2, ArrowRight, ArrowLeft, Flag, GripVertical,
 } from "lucide-react";
 import { PageContainer, PageHeader } from "@/components/layout/Page";
 import { tasksByStatus as seedTasks } from "@/data/mock";
 import { cn } from "@/lib/utils";
+import { usePersistentState } from "@/hooks/usePersistentState";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription,
 } from "@/components/ui/sheet";
@@ -136,27 +137,43 @@ function PulseBlip({ color }: { color: string }) {
 
 /* ---------------- TASK CARD ---------------- */
 function TaskCard({
-  task, onMove, onDelete, onOpen,
+  task, onMove, onDelete, onOpen, onDragStart, onDragEnd, isDragging,
 }: {
   task: Task;
   onMove: (id: string, dir: -1 | 1) => void;
   onDelete: (id: string) => void;
   onOpen: (t: Task) => void;
+  onDragStart: (id: string) => void;
+  onDragEnd: () => void;
+  isDragging: boolean;
 }) {
   const reduce = useReducedMotion();
   return (
     <motion.div
       layout
       initial={{ opacity: 0, y: 8, scale: 0.98 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
+      animate={{ opacity: isDragging ? 0.4 : 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: -6, scale: 0.96 }}
       whileHover={reduce ? undefined : { y: -3 }}
       transition={{ duration: 0.28, ease }}
+      draggable
+      onDragStart={(e) => {
+        // framer-motion forwards the native event
+        (e as unknown as DragEvent).dataTransfer?.setData("text/plain", task.id);
+        onDragStart(task.id);
+      }}
+      onDragEnd={onDragEnd}
       onClick={() => onOpen(task)}
-      className="group cursor-pointer rounded-xl border border-border bg-card p-3 shadow-sm transition hover:shadow-elegant hover:border-accent/60"
+      className={cn(
+        "group cursor-grab active:cursor-grabbing rounded-xl border border-border bg-card p-3 shadow-sm transition hover:shadow-elegant hover:border-accent/60",
+        isDragging && "ring-2 ring-accent",
+      )}
     >
       <div className="flex items-start justify-between gap-2">
-        <div className="text-sm font-semibold leading-snug">{task.title}</div>
+        <div className="flex items-start gap-1.5 min-w-0">
+          <GripVertical className="mt-0.5 size-3.5 shrink-0 text-muted-foreground/50 transition group-hover:text-muted-foreground" />
+          <div className="text-sm font-semibold leading-snug">{task.title}</div>
+        </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
             <button className="grid size-6 shrink-0 place-items-center rounded-md text-muted-foreground opacity-0 transition group-hover:opacity-100 hover:bg-muted">
