@@ -1,4 +1,5 @@
 import { PageContainer } from "@/components/layout/Page";
+import { cn } from "@/lib/utils";
 import { useWorkspace } from "@/context/WorkspaceContext";
 import { activity, deliverables, insights, meetings } from "@/data/mock";
 import { ProgressBar } from "@/components/ui/progress-bar";
