@@ -41,25 +41,154 @@ const COURSES = [
   },
   {
     eyebrow: "Module 03",
-    title: "Visa, Documentation & Compliance",
-    description: "Country playbooks, document standards, edge cases, and how to brief a client cleanly.",
-    minutes: 88,
-    lessons: 14,
-    progress: 28,
+    title: "Visa Fundamentals & Global Categories",
+    description: "Tourist, business, student, work, transit, dependent — taxonomy, validity rules and entry types.",
+    minutes: 70,
+    lessons: 11,
+    progress: 48,
     tone: "blush" as const,
-    badge: "New",
+    badge: "Core",
   },
   {
     eyebrow: "Module 04",
+    title: "Documentation & Compliance Mastery",
+    description: "Document standards, attestation, affidavits, financial proofs, sponsor letters and edge cases.",
+    minutes: 88,
+    lessons: 14,
+    progress: 28,
+    tone: "sand" as const,
+    badge: "New",
+  },
+  {
+    eyebrow: "Module 05",
+    title: "Embassy Interviews & Client Briefing",
+    description: "How to brief, rehearse and represent a client. Body language, common rejections, recoveries.",
+    minutes: 55,
+    lessons: 9,
+    progress: 10,
+    tone: "navy" as const,
+    badge: "Skill",
+  },
+  {
+    eyebrow: "Module 06",
     title: "Brand Builder Studio Craft",
     description: "Hands-on with logo, post and website builders. Editorial taste, not templated output.",
     minutes: 54,
     lessons: 10,
     progress: 0,
-    tone: "sand" as const,
+    tone: "lavender" as const,
     badge: "Locked",
   },
 ];
+
+const VISA_TRACKS = [
+  {
+    flag: "🇺🇸",
+    region: "United States",
+    title: "B1/B2, F1, H1B & Family",
+    lessons: 18,
+    minutes: 142,
+    level: "Advanced",
+    progress: 35,
+  },
+  {
+    flag: "🇬🇧",
+    region: "United Kingdom",
+    title: "Visitor, Student & Skilled Worker",
+    lessons: 14,
+    minutes: 108,
+    level: "Intermediate",
+    progress: 60,
+  },
+  {
+    flag: "🇨🇦",
+    region: "Canada",
+    title: "TRV, Study Permit & Express Entry",
+    lessons: 16,
+    minutes: 124,
+    level: "Advanced",
+    progress: 20,
+  },
+  {
+    flag: "🇦🇺",
+    region: "Australia",
+    title: "Subclass 600, 500, 482 & PR Pathways",
+    lessons: 15,
+    minutes: 118,
+    level: "Advanced",
+    progress: 0,
+  },
+  {
+    flag: "🇪🇺",
+    region: "Schengen Europe",
+    title: "Short-Stay C-Visa & National D-Visa",
+    lessons: 12,
+    minutes: 96,
+    level: "Core",
+    progress: 75,
+  },
+  {
+    flag: "🇦🇪",
+    region: "UAE & GCC",
+    title: "Tourist, Employment & Golden Visa",
+    lessons: 10,
+    minutes: 78,
+    level: "Core",
+    progress: 90,
+  },
+  {
+    flag: "🇸🇬",
+    region: "Singapore & SE Asia",
+    title: "Social Visit, EP, S-Pass & Thailand DTV",
+    lessons: 11,
+    minutes: 84,
+    level: "Intermediate",
+    progress: 15,
+  },
+  {
+    flag: "🇸🇦",
+    region: "Saudi Arabia",
+    title: "Umrah, Hajj, Visit & Work Permits",
+    lessons: 9,
+    minutes: 68,
+    level: "Core",
+    progress: 50,
+  },
+];
+
+const SPECIALIZATIONS = [
+  {
+    icon: "🛂",
+    title: "Rejection Recovery Playbook",
+    desc: "Diagnose 221(g), refusals under 214(b), and rebuild a stronger second-attempt file.",
+  },
+  {
+    icon: "📑",
+    title: "SOP & Cover Letter Writing",
+    desc: "Editorial structure, tone, and the 7 sections every approved SOP shares.",
+  },
+  {
+    icon: "💳",
+    title: "Financial Proofs & Sponsorship",
+    desc: "Bank statements, ITR, affidavits of support, and how officers actually read them.",
+  },
+  {
+    icon: "🧾",
+    title: "Appointments, DS-160 & Online Forms",
+    desc: "Walkthroughs for DS-160, CEAC, IRCC, VFS, BLS — without losing a draft.",
+  },
+  {
+    icon: "🌐",
+    title: "Country-Specific Compliance",
+    desc: "Per-country attestation chains, apostille, MEA, MOFA and embassy legalisation.",
+  },
+  {
+    icon: "⚖️",
+    title: "Ethics, GDPR & Client Data",
+    desc: "Handling passports, biometrics and client files within VisaHOBe policy.",
+  },
+];
+
 
 const PHASES = [
   { icon: BookOpen, title: "Learn", desc: "Lessons, video walkthroughs and interactive checkpoints." },
@@ -234,6 +363,122 @@ export default function Training() {
           ))}
         </div>
       </section>
+
+      {/* Visa Specialization Tracks — country playbooks */}
+      <section className="mx-auto max-w-5xl px-5 pt-14 sm:px-8">
+        <div className="mb-5 flex items-end justify-between">
+          <div>
+            <div className="text-[10px] font-semibold uppercase tracking-[0.24em] text-muted-foreground">
+              Specialization Tracks
+            </div>
+            <h2 className="mt-1 font-display text-2xl font-bold tracking-tight text-primary sm:text-3xl">
+              Country & visa-type playbooks
+            </h2>
+            <p className="mt-2 max-w-xl text-sm text-muted-foreground">
+              Deep dives per destination — entry types, fees, processing times, document chains and real case files.
+            </p>
+          </div>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {VISA_TRACKS.map((t, i) => (
+            <motion.button
+              key={t.region}
+              initial={{ opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, ease, delay: 0.05 * i }}
+              whileTap={{ scale: 0.98 }}
+              className="group relative overflow-hidden rounded-[1.5rem] border border-border bg-card p-5 text-left shadow-elegant transition hover:-translate-y-1 hover:shadow-premium"
+            >
+              <div className="absolute -right-6 -top-6 size-24 rounded-full bg-accent/15 blur-2xl transition group-hover:bg-accent/25" />
+              <div className="flex items-start justify-between">
+                <div className="grid size-12 place-items-center rounded-2xl bg-secondary text-2xl shadow-sm">
+                  {t.flag}
+                </div>
+                <span className="rounded-full border border-border bg-secondary/60 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  {t.level}
+                </span>
+              </div>
+              <div className="mt-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                {t.region}
+              </div>
+              <div className="mt-1 font-display text-base font-bold leading-tight tracking-tight text-primary">
+                {t.title}
+              </div>
+              <div className="mt-3 flex items-center justify-between text-[11px] text-muted-foreground">
+                <span className="inline-flex items-center gap-1.5">
+                  <PlayCircle className="size-3.5" /> {t.lessons} lessons
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <Clock className="size-3.5" /> {t.minutes} min
+                </span>
+              </div>
+              <div className="mt-3">
+                <div className="mb-1 flex items-center justify-between text-[10px] font-semibold">
+                  <span className="text-muted-foreground">Progress</span>
+                  <span className="text-primary">{t.progress}%</span>
+                </div>
+                <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                  <div
+                    className={cn(
+                      "h-full rounded-full transition-[width] duration-700",
+                      t.progress === 100 ? "bg-success" : "bg-gradient-blue"
+                    )}
+                    style={{ width: `${t.progress}%` }}
+                  />
+                </div>
+              </div>
+            </motion.button>
+          ))}
+        </div>
+      </section>
+
+      {/* Visa Specializations — skill modules */}
+      <section className="mx-auto max-w-5xl px-5 pt-14 sm:px-8">
+        <div className="mb-5">
+          <div className="text-[10px] font-semibold uppercase tracking-[0.24em] text-muted-foreground">
+            Visa Skill Workshops
+          </div>
+          <h2 className="mt-1 font-display text-2xl font-bold tracking-tight text-primary sm:text-3xl">
+            Sharpen the craft, case by case
+          </h2>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {SPECIALIZATIONS.map((s, i) => (
+            <motion.div
+              key={s.title}
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.45, ease, delay: 0.05 * i }}
+              className="group relative overflow-hidden rounded-[1.5rem] border border-border bg-gradient-card p-5 shadow-elegant transition hover:-translate-y-1 hover:shadow-premium"
+            >
+              <div className="flex items-start gap-4">
+                <div className="grid size-12 shrink-0 place-items-center rounded-2xl bg-accent/15 text-2xl">
+                  {s.icon}
+                </div>
+                <div className="min-w-0">
+                  <div className="font-display text-base font-bold leading-tight tracking-tight text-primary">
+                    {s.title}
+                  </div>
+                  <p className="mt-1.5 text-[13px] leading-relaxed text-muted-foreground">
+                    {s.desc}
+                  </p>
+                </div>
+              </div>
+              <div className="mt-4 flex items-center justify-between border-t border-border pt-3 text-[11px] font-semibold text-primary">
+                <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+                  <Sparkles className="size-3.5" /> Workshop
+                </span>
+                <span className="inline-flex items-center gap-1 transition group-hover:gap-2">
+                  Start <ChevronRight className="size-3.5" />
+                </span>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
 
       {/* Phases */}
       <section className="mx-auto max-w-5xl px-5 pt-14 sm:px-8">
