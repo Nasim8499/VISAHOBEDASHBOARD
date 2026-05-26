@@ -422,13 +422,36 @@ export default function Tasks() {
         {columns.map((col, i) => {
           const list = byCol[col];
           const accent = columnAccent[col];
+          const isOver = dragOverCol === col;
           return (
             <motion.section
               key={col}
               initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, ease, delay: reduce ? 0 : i * 0.05 }}
-              className="flex h-[calc(100vh-26rem)] min-h-[420px] w-72 shrink-0 flex-col rounded-2xl border border-border bg-gradient-to-b from-card to-card/60 shadow-sm"
+              onDragOver={(e) => {
+                e.preventDefault();
+                if (dragOverCol !== col) setDragOverCol(col);
+              }}
+              onDragLeave={(e) => {
+                if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragOverCol(null);
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                const id = dragId.current || e.dataTransfer.getData("text/plain");
+                if (id) {
+                  setTasks((prev) => prev.map((t) => (t.id === id && t.status !== col ? { ...t, status: col } : t)));
+                  const moved = tasks.find((t) => t.id === id);
+                  if (moved && moved.status !== col) toast.success(`Moved to ${col}`);
+                }
+                dragId.current = null;
+                setDraggingId(null);
+                setDragOverCol(null);
+              }}
+              className={cn(
+                "flex h-[calc(100vh-26rem)] min-h-[420px] w-72 shrink-0 flex-col rounded-2xl border bg-gradient-to-b from-card to-card/60 shadow-sm transition-colors",
+                isOver ? "border-accent ring-2 ring-accent/40" : "border-border",
+              )}
             >
               {/* Column header */}
               <div className="flex items-center justify-between gap-2 border-b border-border p-3">
@@ -476,6 +499,9 @@ export default function Tasks() {
                       onMove={moveTask}
                       onDelete={deleteTask}
                       onOpen={setDetailTask}
+                      isDragging={draggingId === t.id}
+                      onDragStart={(id) => { dragId.current = id; setDraggingId(id); }}
+                      onDragEnd={() => { dragId.current = null; setDraggingId(null); setDragOverCol(null); }}
                     />
                   ))}
                 </AnimatePresence>
@@ -484,10 +510,15 @@ export default function Tasks() {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     onClick={() => { setForm({ ...form, status: col }); setNewOpen(true); }}
-                    className="w-full rounded-xl border-2 border-dashed border-border p-5 text-center text-xs text-muted-foreground hover:border-accent hover:text-accent transition"
+                    className={cn(
+                      "w-full rounded-xl border-2 border-dashed p-5 text-center text-xs transition",
+                      isOver
+                        ? "border-accent bg-accent/5 text-accent"
+                        : "border-border text-muted-foreground hover:border-accent hover:text-accent",
+                    )}
                   >
                     <Plus className="mx-auto mb-1 size-4" />
-                    Add task
+                    {isOver ? "Drop here" : "Add task"}
                   </motion.button>
                 )}
               </div>
