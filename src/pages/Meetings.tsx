@@ -125,7 +125,7 @@ export default function Meetings() {
         subtitle="Schedule discovery calls, brand reviews, website walkthroughs and launch handoffs."
         actions={
           <MotionButton
-            onClick={() => setNewOpen(true)}
+            onClick={() => openNewSheet()}
             className="rounded-xl bg-gradient-blue px-4 py-2.5 text-sm font-semibold text-white shadow-elegant hover:shadow-glow"
           >
             <Plus className="size-4" /> New Meeting
@@ -183,7 +183,7 @@ export default function Meetings() {
               >
                 Today
               </button>
-              {(["month", "week"] as const).map((v) => (
+              {(["month", "week", "agenda"] as const).map((v) => (
                 <button
                   key={v}
                   onClick={() => setView(v)}
