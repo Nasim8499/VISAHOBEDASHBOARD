@@ -5,6 +5,7 @@ import { useLocation } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
 import { TopHeader } from "./TopHeader";
 import { WorkspaceProvider } from "@/context/WorkspaceContext";
+import { BottomNav } from "./BottomNav";
 
 export default function AppLayout() {
   const [open, setOpen] = useState(false);
