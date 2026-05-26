@@ -221,7 +221,10 @@ function TaskCard({
 /* ---------------- PAGE ---------------- */
 export default function Tasks() {
   const reduce = useReducedMotion();
-  const [tasks, setTasks] = useState<Task[]>(seedToTasks);
+  const [tasks, setTasks] = usePersistentState<Task[]>("vh-tasks-v1", seedToTasks);
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [dragOverCol, setDragOverCol] = useState<Status | null>(null);
+  const dragId = useRef<string | null>(null);
   const [search, setSearch] = useState("");
   const [priorityFilter, setPriorityFilter] = useState<Priority | "All">("All");
   const [newOpen, setNewOpen] = useState(false);
