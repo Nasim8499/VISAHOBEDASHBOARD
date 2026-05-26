@@ -325,18 +325,22 @@ export default function Dashboard() {
           </h1>
         </div>
         <div className="flex gap-2">
-          <Link
-            to="/clients/new"
-            className="inline-flex items-center gap-2 rounded-xl bg-gradient-blue px-4 py-2.5 text-sm font-semibold text-white shadow-elegant transition hover:shadow-glow"
-          >
-            <Plus className="size-4" /> Add Client Business
-          </Link>
-          <Link
-            to="/reports"
-            className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-semibold hover:bg-muted"
-          >
-            View Reports <ArrowUpRight className="size-4" />
-          </Link>
+          <motion.div whileHover={{ y: -2 }} whileTap={{ scale: 0.96 }} transition={{ type: "spring", stiffness: 380, damping: 24 }}>
+            <Link
+              to="/clients/new"
+              className="inline-flex items-center gap-2 rounded-xl bg-gradient-blue px-4 py-2.5 text-sm font-semibold text-white shadow-elegant transition hover:shadow-glow"
+            >
+              <Plus className="size-4" /> Add Client Business
+            </Link>
+          </motion.div>
+          <motion.div whileHover={{ y: -2 }} whileTap={{ scale: 0.96 }} transition={{ type: "spring", stiffness: 380, damping: 24 }}>
+            <Link
+              to="/reports"
+              className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-semibold hover:bg-muted"
+            >
+              View Reports <ArrowUpRight className="size-4" />
+            </Link>
+          </motion.div>
         </div>
       </div>
 
