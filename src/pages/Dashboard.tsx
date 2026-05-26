@@ -543,13 +543,22 @@ export default function Dashboard() {
                 >
                   Open Workspace <ChevronRight className="size-3.5" />
                 </Link>
-                <button className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:bg-muted">
+                <button
+                  onClick={() => navigate("/chat")}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:bg-muted"
+                >
                   <MessageSquare className="size-3.5" /> Chat with client
                 </button>
-                <button className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:bg-muted">
+                <button
+                  onClick={() => navigate("/calendar")}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:bg-muted"
+                >
                   <Video className="size-3.5" /> Schedule meeting
                 </button>
-                <button className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:bg-muted">
+                <button
+                  onClick={() => navigate("/billing")}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:bg-muted"
+                >
                   <FileText className="size-3.5" /> Generate invoice
                 </button>
               </div>
