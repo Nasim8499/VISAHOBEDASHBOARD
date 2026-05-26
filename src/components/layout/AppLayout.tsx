@@ -51,7 +51,7 @@ export default function AppLayout() {
 
         <div className="flex min-w-0 flex-1 flex-col">
           <TopHeader onOpenSidebar={() => setOpen(true)} />
-          <main className="flex-1 pb-10">
+          <main className="flex-1 pb-28 lg:pb-10">
             {/* Enter-only fade so switching sidebar tabs doesn't flash an empty
                 gap between the old page exiting and the new page entering. */}
             <motion.div
