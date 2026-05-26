@@ -200,7 +200,7 @@ export default function Meetings() {
           </div>
 
           <AnimatePresence mode="wait">
-            {view === "month" ? (
+            {view === "month" && (
               <motion.div
                 key={`month-${cursor.toISOString()}`}
                 initial={{ opacity: 0, y: 8 }}
@@ -242,7 +242,9 @@ export default function Meetings() {
                   })}
                 </div>
               </motion.div>
-            ) : (
+            )}
+
+            {view === "week" && (
               <motion.div
                 key="week"
                 initial={{ opacity: 0, x: 12 }}
@@ -281,6 +283,100 @@ export default function Meetings() {
                 })}
               </motion.div>
             )}
+
+            {view === "agenda" && (
+              <motion.div
+                key="agenda"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.22 }}
+                className="space-y-2"
+              >
+                {(() => {
+                  const allDays = Array.from(baseEventDays).sort((a, b) => a - b);
+                  if (allDays.length === 0) {
+                    return (
+                      <EmptyState
+                        icon={List}
+                        title="No agenda items"
+                        description="Your month is wide open. Schedule a meeting to fill it up."
+                        action={{ label: "New meeting", icon: Plus, onClick: () => openNewSheet() }}
+                      />
+                    );
+                  }
+                  return allDays.map((day, idx) => {
+                    const d = new Date(cursor.getFullYear(), cursor.getMonth(), day);
+                    const evts = eventsForDay(day);
+                    return (
+                      <motion.div
+                        key={day}
+                        initial={{ opacity: 0, x: -8 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: idx * 0.04 }}
+                        className="rounded-xl border border-border bg-card p-3"
+                      >
+                        <button
+                          onClick={() => openDay(day)}
+                          className="flex w-full items-center justify-between text-left"
+                        >
+                          <div>
+                            <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                              {d.toLocaleDateString(undefined, { weekday: "long" })}
+                            </div>
+                            <div className="font-display text-lg font-bold">
+                              {d.toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+                            </div>
+                          </div>
+                          <span className="rounded-full bg-accent/10 px-2 py-0.5 text-[10px] font-semibold text-accent">
+                            {evts.length} {evts.length === 1 ? "event" : "events"}
+                          </span>
+                        </button>
+                        <ul className="mt-2 space-y-1.5">
+                          {evts.map((e, i) => {
+                            const isLocal = (e as LocalEvent).id != null;
+                            return (
+                              <li key={i} className="flex items-center justify-between gap-2 rounded-lg bg-muted/40 px-2.5 py-1.5">
+                                <div className="min-w-0">
+                                  <div className="truncate text-xs font-semibold">{e.title}</div>
+                                  <div className="text-[10px] text-muted-foreground">{e.type} · {e.time}</div>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <button
+                                    onClick={() => join(e.title)}
+                                    className="tap rounded-md bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground"
+                                  >
+                                    Join
+                                  </button>
+                                  {isLocal && (
+                                    <>
+                                      <button
+                                        onClick={() => openEditSheet(e as LocalEvent)}
+                                        className="tap grid size-6 place-items-center rounded-md text-muted-foreground hover:bg-muted"
+                                        aria-label="Edit"
+                                      >
+                                        <Pencil className="size-3" />
+                                      </button>
+                                      <button
+                                        onClick={() => deleteEvent((e as LocalEvent).id)}
+                                        className="tap grid size-6 place-items-center rounded-md text-destructive hover:bg-destructive/10"
+                                        aria-label="Delete"
+                                      >
+                                        <Trash2 className="size-3" />
+                                      </button>
+                                    </>
+                                  )}
+                                </div>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      </motion.div>
+                    );
+                  });
+                })()}
+              </motion.div>
+            )}
           </AnimatePresence>
         </section>
 
@@ -293,7 +389,7 @@ export default function Meetings() {
                 icon={CalIcon}
                 title="No meetings yet"
                 description="Schedule your first call to get started."
-                action={{ label: "New meeting", onClick: () => setNewOpen(true), icon: Plus }}
+                action={{ label: "New meeting", onClick: () => openNewSheet(), icon: Plus }}
               />
             ) : (
               <ul className="space-y-3">
