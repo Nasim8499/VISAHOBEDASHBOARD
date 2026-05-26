@@ -31,7 +31,8 @@ import {
   CalendarClock,
   RotateCcw,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 
 import {
   BB_TEMPLATES,
@@ -236,6 +237,8 @@ function DashboardSkeleton() {
 
 export default function Dashboard() {
   const { workspace, all, loading } = useWorkspace();
+  const navigate = useNavigate();
+  const [quickReply, setQuickReply] = useState("");
 
   // Brand Builder: template (per workspace/category) + persisted stages + timeline.
   const initialTpl = pickTemplateForCategory(workspace?.category);
@@ -322,18 +325,22 @@ export default function Dashboard() {
           </h1>
         </div>
         <div className="flex gap-2">
-          <Link
-            to="/clients/new"
-            className="inline-flex items-center gap-2 rounded-xl bg-gradient-blue px-4 py-2.5 text-sm font-semibold text-white shadow-elegant transition hover:shadow-glow"
-          >
-            <Plus className="size-4" /> Add Client Business
-          </Link>
-          <Link
-            to="/reports"
-            className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-semibold hover:bg-muted"
-          >
-            View Reports <ArrowUpRight className="size-4" />
-          </Link>
+          <motion.div whileHover={{ y: -2 }} whileTap={{ scale: 0.96 }} transition={{ type: "spring", stiffness: 380, damping: 24 }}>
+            <Link
+              to="/clients/new"
+              className="inline-flex items-center gap-2 rounded-xl bg-gradient-blue px-4 py-2.5 text-sm font-semibold text-white shadow-elegant transition hover:shadow-glow"
+            >
+              <Plus className="size-4" /> Add Client Business
+            </Link>
+          </motion.div>
+          <motion.div whileHover={{ y: -2 }} whileTap={{ scale: 0.96 }} transition={{ type: "spring", stiffness: 380, damping: 24 }}>
+            <Link
+              to="/reports"
+              className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-semibold hover:bg-muted"
+            >
+              View Reports <ArrowUpRight className="size-4" />
+            </Link>
+          </motion.div>
         </div>
       </div>
 
@@ -536,13 +543,22 @@ export default function Dashboard() {
                 >
                   Open Workspace <ChevronRight className="size-3.5" />
                 </Link>
-                <button className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:bg-muted">
+                <button
+                  onClick={() => navigate("/chat")}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:bg-muted"
+                >
                   <MessageSquare className="size-3.5" /> Chat with client
                 </button>
-                <button className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:bg-muted">
+                <button
+                  onClick={() => navigate("/calendar")}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:bg-muted"
+                >
                   <Video className="size-3.5" /> Schedule meeting
                 </button>
-                <button className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:bg-muted">
+                <button
+                  onClick={() => navigate("/billing")}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:bg-muted"
+                >
                   <FileText className="size-3.5" /> Generate invoice
                 </button>
               </div>
@@ -1020,7 +1036,7 @@ export default function Dashboard() {
 
 
           {/* Deliverables overview — each card a distinct infographic */}
-          <Card title="Deliverables Overview" action={<button className="text-xs font-semibold text-accent">Filter →</button>}>
+          <Card title="Deliverables Overview" action={<button onClick={() => toast.message("Filter deliverables", { description: "Filter UI coming soon." })} className="text-xs font-semibold text-accent">Filter →</button>}>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {deliverables.map((d, i) => {
                 const tones = [
@@ -1444,15 +1460,30 @@ export default function Dashboard() {
             </ul>
 
             {/* Quick reply input */}
-            <div className="mt-3 flex items-center gap-2 rounded-xl border border-border bg-muted/40 p-1.5">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (!quickReply.trim()) return;
+                toast.success("Reply sent", { description: quickReply });
+                setQuickReply("");
+              }}
+              className="mt-3 flex items-center gap-2 rounded-xl border border-border bg-muted/40 p-1.5"
+            >
               <input
+                value={quickReply}
+                onChange={(e) => setQuickReply(e.target.value)}
                 placeholder="Quick reply…"
                 className="flex-1 bg-transparent px-2 text-[12px] outline-none placeholder:text-muted-foreground"
               />
-              <button className="grid size-7 place-items-center rounded-lg bg-gradient-blue text-white transition hover:scale-110">
+              <motion.button
+                type="submit"
+                whileTap={{ scale: 0.9 }}
+                whileHover={{ scale: 1.08 }}
+                className="grid size-7 place-items-center rounded-lg bg-gradient-blue text-white"
+              >
                 <ChevronRight className="size-3.5" />
-              </button>
-            </div>
+              </motion.button>
+            </form>
           </Card>
 
           <Card title="Upcoming Meetings" action={<Link to="/meetings" className="text-xs font-semibold text-accent">Calendar →</Link>}>
@@ -1467,7 +1498,10 @@ export default function Dashboard() {
                     <div className="truncate text-xs text-muted-foreground">{m.business}</div>
                     <div className="text-[11px] text-accent">{m.time}</div>
                   </div>
-                  <button className="rounded-lg border border-border px-2.5 py-1.5 text-xs font-semibold hover:bg-muted">
+                  <button
+                    onClick={() => toast.success(`Joining ${m.title}…`, { description: "Opening secure room." })}
+                    className="rounded-lg border border-border px-2.5 py-1.5 text-xs font-semibold hover:bg-muted"
+                  >
                     Join
                   </button>
                 </li>
@@ -1535,11 +1569,17 @@ export default function Dashboard() {
                 ))}
               </div>
 
-              <button className="group relative mt-3 inline-flex w-full items-center justify-center gap-1.5 overflow-hidden rounded-xl bg-white px-3 py-2 text-xs font-bold text-primary shadow-elegant transition hover:-translate-y-0.5">
+              <motion.button
+                onClick={() => navigate("/ai-assistant")}
+                whileHover={{ y: -2, scale: 1.01 }}
+                whileTap={{ scale: 0.97 }}
+                transition={{ type: "spring", stiffness: 380, damping: 22 }}
+                className="group relative mt-3 inline-flex w-full items-center justify-center gap-1.5 overflow-hidden rounded-xl bg-white px-3 py-2 text-xs font-bold text-primary shadow-elegant"
+              >
                 <span className="relative z-10">Generate now</span>
                 <Wand2 className="relative z-10 size-3.5 transition-transform group-hover:rotate-12" />
                 <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-accent/30 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
-              </button>
+              </motion.button>
             </div>
           </Card>
 
