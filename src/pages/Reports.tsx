@@ -155,7 +155,7 @@ export default function Reports() {
         <ChartCard title="Revenue Trend" subtitle="This year vs last year" icon={TrendingUp} span="lg:col-span-2">
           <div className="h-72">
             <ResponsiveContainer>
-              <AreaChart data={revenue} margin={{ top: 10, right: 12, left: -10, bottom: 0 }}>
+              <AreaChart data={slicedRevenue} margin={{ top: 10, right: 12, left: -10, bottom: 0 }}>
                 <defs>
                   <linearGradient id="rev" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="#177BBB" stopOpacity={0.6} />
