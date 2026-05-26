@@ -1,11 +1,13 @@
+import { useMemo, useState } from "react";
 import { PageContainer, PageHeader } from "@/components/layout/Page";
 import {
   BarChart, Bar, ResponsiveContainer, XAxis, YAxis, Tooltip,
   PieChart, Pie, Cell, AreaChart, Area, RadialBarChart, RadialBar, LineChart, Line, CartesianGrid, Legend,
 } from "recharts";
 import { motion } from "framer-motion";
-import { DollarSign, Users, CheckCircle2, Timer, TrendingUp, Activity } from "lucide-react";
+import { DollarSign, Users, CheckCircle2, Timer, TrendingUp, Activity, Download, RefreshCw } from "lucide-react";
 import { KpiCard } from "@/components/charts/MiniCharts";
+import { toast } from "sonner";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
@@ -91,9 +93,59 @@ function ChartCard({ title, subtitle, icon: Icon, children, span = "" }: any) {
 }
 
 export default function Reports() {
+  const [range, setRange] = useState<"1M" | "3M" | "6M" | "1Y">("6M");
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const slicedRevenue = useMemo(() => {
+    const n = range === "1M" ? 1 : range === "3M" ? 3 : range === "6M" ? 6 : revenue.length;
+    return revenue.slice(-n);
+  }, [range, refreshKey]);
+
+  const exportCSV = () => {
+    const rows = [["Month", "ThisYear", "LastYear"], ...slicedRevenue.map((r) => [r.m, r.v, r.last])];
+    const csv = rows.map((r) => r.join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `visahobe-revenue-${range}.csv`; a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Report exported", { description: `visahobe-revenue-${range}.csv` });
+  };
+
+  const refresh = () => {
+    setRefreshKey((k) => k + 1);
+    toast.message("Analytics refreshed", { description: "Latest data loaded." });
+  };
+
   return (
     <PageContainer>
-      <PageHeader title="Reports & Analytics" subtitle="Operational insight across every workspace." />
+      <PageHeader
+        title="Reports & Analytics"
+        subtitle="Operational insight across every workspace."
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center rounded-xl border border-border bg-card p-1 shadow-sm">
+              {(["1M", "3M", "6M", "1Y"] as const).map((r) => (
+                <button
+                  key={r}
+                  onClick={() => setRange(r)}
+                  className={`tap rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+                    range === r ? "bg-gradient-blue text-white shadow-sm" : "text-muted-foreground hover:bg-muted"
+                  }`}
+                >
+                  {r}
+                </button>
+              ))}
+            </div>
+            <button onClick={refresh} className="tap inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2 text-xs font-semibold shadow-sm hover:bg-muted">
+              <RefreshCw className="size-3.5" /> Refresh
+            </button>
+            <button onClick={exportCSV} className="tap inline-flex items-center gap-1.5 rounded-xl bg-gradient-blue px-3 py-2 text-xs font-semibold text-white shadow-elegant hover:shadow-glow">
+              <Download className="size-3.5" /> Export CSV
+            </button>
+          </div>
+        }
+      />
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {kpis.map((k, i) => <KpiCard key={k.label} {...k} index={i} />)}
