@@ -1460,15 +1460,30 @@ export default function Dashboard() {
             </ul>
 
             {/* Quick reply input */}
-            <div className="mt-3 flex items-center gap-2 rounded-xl border border-border bg-muted/40 p-1.5">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (!quickReply.trim()) return;
+                toast.success("Reply sent", { description: quickReply });
+                setQuickReply("");
+              }}
+              className="mt-3 flex items-center gap-2 rounded-xl border border-border bg-muted/40 p-1.5"
+            >
               <input
+                value={quickReply}
+                onChange={(e) => setQuickReply(e.target.value)}
                 placeholder="Quick reply…"
                 className="flex-1 bg-transparent px-2 text-[12px] outline-none placeholder:text-muted-foreground"
               />
-              <button className="grid size-7 place-items-center rounded-lg bg-gradient-blue text-white transition hover:scale-110">
+              <motion.button
+                type="submit"
+                whileTap={{ scale: 0.9 }}
+                whileHover={{ scale: 1.08 }}
+                className="grid size-7 place-items-center rounded-lg bg-gradient-blue text-white"
+              >
                 <ChevronRight className="size-3.5" />
-              </button>
-            </div>
+              </motion.button>
+            </form>
           </Card>
 
           <Card title="Upcoming Meetings" action={<Link to="/meetings" className="text-xs font-semibold text-accent">Calendar →</Link>}>
