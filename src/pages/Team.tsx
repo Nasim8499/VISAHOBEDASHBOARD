@@ -97,8 +97,18 @@ export default function Team() {
               </div>
 
               <div className="relative mt-4 flex gap-2">
-                <button className="flex-1 rounded-lg border border-border px-3 py-2 text-xs font-semibold transition hover:bg-muted">View profile</button>
-                <button className="rounded-lg border border-border px-3 py-2 text-xs font-semibold transition hover:bg-muted">Permissions</button>
+                <button
+                  onClick={() => toast.success(`Opening ${e.name}'s profile`, { description: `${e.role} · ${e.clients} clients · ${e.load} tasks` })}
+                  className="tap flex-1 rounded-lg border border-border bg-card px-3 py-2 text-xs font-semibold transition hover:bg-muted"
+                >
+                  View profile
+                </button>
+                <button
+                  onClick={() => toast.message(`Permissions · ${e.name}`, { description: "Role-based access editor coming next." })}
+                  className="tap rounded-lg border border-border bg-card px-3 py-2 text-xs font-semibold transition hover:bg-muted"
+                >
+                  Permissions
+                </button>
               </div>
             </motion.article>
           );
