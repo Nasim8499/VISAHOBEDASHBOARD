@@ -237,6 +237,8 @@ function DashboardSkeleton() {
 
 export default function Dashboard() {
   const { workspace, all, loading } = useWorkspace();
+  const navigate = useNavigate();
+  const [quickReply, setQuickReply] = useState("");
 
   // Brand Builder: template (per workspace/category) + persisted stages + timeline.
   const initialTpl = pickTemplateForCategory(workspace?.category);
