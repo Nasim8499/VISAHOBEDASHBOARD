@@ -5,6 +5,7 @@ import { useLocation } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
 import { TopHeader } from "./TopHeader";
 import { WorkspaceProvider } from "@/context/WorkspaceContext";
+import { BottomNav } from "./BottomNav";
 
 export default function AppLayout() {
   const [open, setOpen] = useState(false);
@@ -50,7 +51,7 @@ export default function AppLayout() {
 
         <div className="flex min-w-0 flex-1 flex-col">
           <TopHeader onOpenSidebar={() => setOpen(true)} />
-          <main className="flex-1 pb-10">
+          <main className="flex-1 pb-28 lg:pb-10">
             {/* Enter-only fade so switching sidebar tabs doesn't flash an empty
                 gap between the old page exiting and the new page entering. */}
             <motion.div
@@ -63,6 +64,7 @@ export default function AppLayout() {
               <Outlet />
             </motion.div>
           </main>
+          <BottomNav />
         </div>
       </div>
     </WorkspaceProvider>

@@ -62,15 +62,15 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
   const can = (it: Item) => !it.roles || (role && it.roles.includes(role));
 
   return (
-    <aside className="flex h-full w-72 flex-col bg-sidebar text-sidebar-foreground">
+    <aside className="flex h-full w-72 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground">
       <div className="flex items-center justify-between px-5 pt-5 pb-4">
         <div className="flex items-center gap-3">
-          <div className="grid size-10 place-items-center rounded-xl bg-gradient-blue text-white shadow-glow">
+          <div className="grid size-10 place-items-center rounded-xl bg-gradient-blue text-primary-foreground shadow-glow">
             <span className="font-display text-base font-bold">V</span>
           </div>
           <div className="leading-tight">
-            <div className="text-sm font-semibold text-white">VisaHOBe</div>
-            <div className="text-[11px] uppercase tracking-wider text-sidebar-foreground/70">Business OS</div>
+            <div className="font-display text-sm font-bold tracking-tight text-sidebar-primary">VisaHOBe</div>
+            <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-sidebar-foreground/60">Business OS</div>
           </div>
         </div>
         {onClose && (
@@ -86,7 +86,7 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
           if (!items.length) return null;
           return (
             <div key={group.label} className="mb-5">
-              <div className="px-3 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-sidebar-foreground/50">
+              <div className="px-3 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-sidebar-foreground/55">
                 {group.label}
               </div>
               <ul className="space-y-0.5">
@@ -98,10 +98,10 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
                       onClick={onClose}
                       className={({ isActive }) =>
                         cn(
-                          "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all duration-200",
+                          "group flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition-all duration-200",
                           isActive
-                            ? "bg-gradient-to-r from-accent/25 to-transparent text-white shadow-[inset_2px_0_0_0_hsl(var(--accent))]"
-                            : "text-sidebar-foreground/85 hover:translate-x-0.5 hover:bg-sidebar-accent hover:text-white"
+                            ? "bg-sidebar-accent text-sidebar-primary font-semibold shadow-[inset_2px_0_0_0_hsl(var(--accent))]"
+                            : "text-sidebar-foreground/80 hover:translate-x-0.5 hover:bg-sidebar-accent/70 hover:text-sidebar-primary"
                         )
                       }
                     >
@@ -116,18 +116,18 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
         })}
       </nav>
 
-      <div className="mx-3 mb-4 rounded-xl bg-sidebar-accent/60 p-3">
+      <div className="mx-3 mb-4 rounded-2xl border border-sidebar-border bg-sidebar-accent/60 p-3">
         <div className="flex items-center gap-3">
-          <div className="grid size-9 place-items-center rounded-full bg-gradient-red text-white text-xs font-semibold">
+          <div className="grid size-9 place-items-center rounded-full bg-gradient-blue text-primary-foreground text-xs font-semibold">
             {(fullName || "VH").split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()}
           </div>
           <div className="min-w-0 flex-1">
-            <div className="truncate text-sm font-medium text-white">{fullName || "VisaHOBe Admin"}</div>
+            <div className="truncate text-sm font-semibold text-sidebar-primary">{fullName || "VisaHOBe Admin"}</div>
             <div className="truncate text-xs capitalize text-sidebar-foreground/70">
               {role ? role.replace("_", " ") : "Guest"}
             </div>
           </div>
-          <button onClick={signOut} className="rounded-md p-1.5 text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-white">
+          <button onClick={signOut} className="rounded-lg p-1.5 text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-primary">
             <LogOut className="size-4" />
           </button>
         </div>
