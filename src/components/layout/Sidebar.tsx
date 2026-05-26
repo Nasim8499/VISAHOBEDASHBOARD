@@ -62,7 +62,13 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
   const can = (it: Item) => !it.roles || (role && it.roles.includes(role));
 
   return (
-    <aside className="flex h-full w-72 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground">
+    <aside
+      className="relative flex h-full w-72 flex-col overflow-hidden border-r border-sidebar-border text-sidebar-foreground"
+      style={{
+        backgroundImage:
+          "radial-gradient(900px 500px at -10% -10%, hsl(235 90% 88% / 0.85) 0%, transparent 55%), radial-gradient(700px 500px at 110% 110%, hsl(260 80% 90% / 0.7) 0%, transparent 55%), linear-gradient(180deg, hsl(240 60% 98%) 0%, hsl(235 70% 95%) 50%, hsl(245 75% 94%) 100%)",
+      }}
+    >
       <div className="flex items-center justify-between px-5 pt-5 pb-4">
         <div className="flex items-center gap-3">
           <div className="grid size-10 place-items-center rounded-xl bg-gradient-blue text-primary-foreground shadow-glow">
@@ -80,7 +86,7 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
         )}
       </div>
 
-      <nav className="scrollbar-thin mt-2 flex-1 overflow-y-auto px-3 pb-6">
+      <nav className="scrollbar-thin relative mt-2 flex-1 overflow-y-auto px-3 pb-6">
         {navGroups.map((group) => {
           const items = group.items.filter(can);
           if (!items.length) return null;
