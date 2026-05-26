@@ -2,21 +2,26 @@ import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { PageContainer, PageHeader } from "@/components/layout/Page";
 import { meetings } from "@/data/mock";
-import { Video, Plus, Calendar as CalIcon, ChevronLeft, ChevronRight, X } from "lucide-react";
+import { Video, Plus, Calendar as CalIcon, ChevronLeft, ChevronRight, X, Pencil, Trash2, List } from "lucide-react";
 import { toast } from "sonner";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { MotionButton, FadeIn } from "@/components/ui/motion";
 import { EmptyState } from "@/components/ui/empty-state";
+import { usePersistentState } from "@/hooks/usePersistentState";
 
-type View = "month" | "week";
+type View = "month" | "week" | "agenda";
 
 type LocalEvent = {
+  id: string;
   day: number;
   title: string;
   type: string;
   time: string;
   business?: string;
 };
+
+const uid = () => Math.random().toString(36).slice(2, 9);
+const TIME_RE = /^([01]?\d|2[0-3]):[0-5]\d\s?(AM|PM|am|pm)?$/;
 
 export default function Meetings() {
   const today = useMemo(() => new Date(), []);
@@ -25,8 +30,10 @@ export default function Meetings() {
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [open, setOpen] = useState(false);
   const [newOpen, setNewOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState({ title: "", type: "Discovery Call", time: "10:00 AM", day: today.getDate() });
-  const [localEvents, setLocalEvents] = useState<LocalEvent[]>([]);
+  const [localEvents, setLocalEvents] = usePersistentState<LocalEvent[]>("vh-meetings-v1", []);
+  const [errors, setErrors] = useState<{ title?: string; time?: string }>({});
 
   const monthLabel = cursor.toLocaleString("default", { month: "long", year: "numeric" });
   const firstDow = new Date(cursor.getFullYear(), cursor.getMonth(), 1).getDay();
@@ -59,15 +66,47 @@ export default function Meetings() {
     setOpen(true);
   };
 
+  const validate = () => {
+    const e: { title?: string; time?: string } = {};
+    if (!form.title.trim()) e.title = "Title is required";
+    if (!form.time.trim()) e.time = "Time is required";
+    else if (!TIME_RE.test(form.time.trim())) e.time = "Use a format like 10:00 AM";
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  };
+
+  const openNewSheet = (preset?: Partial<typeof form>) => {
+    setEditingId(null);
+    setErrors({});
+    setForm({ title: "", type: "Discovery Call", time: "10:00 AM", day: today.getDate(), ...preset });
+    setNewOpen(true);
+  };
+
+  const openEditSheet = (ev: LocalEvent) => {
+    setEditingId(ev.id);
+    setErrors({});
+    setForm({ title: ev.title, type: ev.type, time: ev.time, day: ev.day });
+    setOpen(false);
+    setNewOpen(true);
+  };
+
   const handleCreate = () => {
-    if (!form.title.trim()) {
-      toast.error("Please add a meeting title");
-      return;
+    if (!validate()) return;
+    if (editingId) {
+      setLocalEvents((p) => p.map((e) => (e.id === editingId ? { ...e, ...form } : e)));
+      toast.success(`Meeting updated · ${form.title}`);
+    } else {
+      setLocalEvents((p) => [...p, { id: uid(), ...form }]);
+      toast.success(`Meeting scheduled · ${form.title}`, { description: `${form.type} · ${form.time}` });
     }
-    setLocalEvents((p) => [...p, { ...form }]);
-    toast.success(`Meeting scheduled · ${form.title}`, { description: `${form.type} · ${form.time}` });
+    setEditingId(null);
     setForm({ ...form, title: "" });
     setNewOpen(false);
+  };
+
+  const deleteEvent = (id: string) => {
+    setLocalEvents((p) => p.filter((e) => e.id !== id));
+    toast.message("Meeting deleted");
   };
 
   const join = (title: string) => toast.success(`Joining ${title}…`, { description: "Opening secure room." });
@@ -86,7 +125,7 @@ export default function Meetings() {
         subtitle="Schedule discovery calls, brand reviews, website walkthroughs and launch handoffs."
         actions={
           <MotionButton
-            onClick={() => setNewOpen(true)}
+            onClick={() => openNewSheet()}
             className="rounded-xl bg-gradient-blue px-4 py-2.5 text-sm font-semibold text-white shadow-elegant hover:shadow-glow"
           >
             <Plus className="size-4" /> New Meeting
@@ -144,7 +183,7 @@ export default function Meetings() {
               >
                 Today
               </button>
-              {(["month", "week"] as const).map((v) => (
+              {(["month", "week", "agenda"] as const).map((v) => (
                 <button
                   key={v}
                   onClick={() => setView(v)}
@@ -161,7 +200,7 @@ export default function Meetings() {
           </div>
 
           <AnimatePresence mode="wait">
-            {view === "month" ? (
+            {view === "month" && (
               <motion.div
                 key={`month-${cursor.toISOString()}`}
                 initial={{ opacity: 0, y: 8 }}
@@ -203,7 +242,9 @@ export default function Meetings() {
                   })}
                 </div>
               </motion.div>
-            ) : (
+            )}
+
+            {view === "week" && (
               <motion.div
                 key="week"
                 initial={{ opacity: 0, x: 12 }}
@@ -242,6 +283,100 @@ export default function Meetings() {
                 })}
               </motion.div>
             )}
+
+            {view === "agenda" && (
+              <motion.div
+                key="agenda"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.22 }}
+                className="space-y-2"
+              >
+                {(() => {
+                  const allDays = Array.from(baseEventDays).sort((a, b) => a - b);
+                  if (allDays.length === 0) {
+                    return (
+                      <EmptyState
+                        icon={List}
+                        title="No agenda items"
+                        description="Your month is wide open. Schedule a meeting to fill it up."
+                        action={{ label: "New meeting", icon: Plus, onClick: () => openNewSheet() }}
+                      />
+                    );
+                  }
+                  return allDays.map((day, idx) => {
+                    const d = new Date(cursor.getFullYear(), cursor.getMonth(), day);
+                    const evts = eventsForDay(day);
+                    return (
+                      <motion.div
+                        key={day}
+                        initial={{ opacity: 0, x: -8 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: idx * 0.04 }}
+                        className="rounded-xl border border-border bg-card p-3"
+                      >
+                        <button
+                          onClick={() => openDay(day)}
+                          className="flex w-full items-center justify-between text-left"
+                        >
+                          <div>
+                            <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                              {d.toLocaleDateString(undefined, { weekday: "long" })}
+                            </div>
+                            <div className="font-display text-lg font-bold">
+                              {d.toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+                            </div>
+                          </div>
+                          <span className="rounded-full bg-accent/10 px-2 py-0.5 text-[10px] font-semibold text-accent">
+                            {evts.length} {evts.length === 1 ? "event" : "events"}
+                          </span>
+                        </button>
+                        <ul className="mt-2 space-y-1.5">
+                          {evts.map((e, i) => {
+                            const isLocal = (e as LocalEvent).id != null;
+                            return (
+                              <li key={i} className="flex items-center justify-between gap-2 rounded-lg bg-muted/40 px-2.5 py-1.5">
+                                <div className="min-w-0">
+                                  <div className="truncate text-xs font-semibold">{e.title}</div>
+                                  <div className="text-[10px] text-muted-foreground">{e.type} · {e.time}</div>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <button
+                                    onClick={() => join(e.title)}
+                                    className="tap rounded-md bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground"
+                                  >
+                                    Join
+                                  </button>
+                                  {isLocal && (
+                                    <>
+                                      <button
+                                        onClick={() => openEditSheet(e as LocalEvent)}
+                                        className="tap grid size-6 place-items-center rounded-md text-muted-foreground hover:bg-muted"
+                                        aria-label="Edit"
+                                      >
+                                        <Pencil className="size-3" />
+                                      </button>
+                                      <button
+                                        onClick={() => deleteEvent((e as LocalEvent).id)}
+                                        className="tap grid size-6 place-items-center rounded-md text-destructive hover:bg-destructive/10"
+                                        aria-label="Delete"
+                                      >
+                                        <Trash2 className="size-3" />
+                                      </button>
+                                    </>
+                                  )}
+                                </div>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      </motion.div>
+                    );
+                  });
+                })()}
+              </motion.div>
+            )}
           </AnimatePresence>
         </section>
 
@@ -254,7 +389,7 @@ export default function Meetings() {
                 icon={CalIcon}
                 title="No meetings yet"
                 description="Schedule your first call to get started."
-                action={{ label: "New meeting", onClick: () => setNewOpen(true), icon: Plus }}
+                action={{ label: "New meeting", onClick: () => openNewSheet(), icon: Plus }}
               />
             ) : (
               <ul className="space-y-3">
@@ -299,10 +434,7 @@ export default function Meetings() {
               {["Discovery Call", "Brand Review", "Website Review", "Final Delivery", "Support"].map((t) => (
                 <li key={t}>
                   <button
-                    onClick={() => {
-                      setForm({ ...form, type: t });
-                      setNewOpen(true);
-                    }}
+                    onClick={() => openNewSheet({ type: t })}
                     className="tap flex w-full items-center gap-1.5 rounded-lg border border-border p-2 hover:border-accent hover:bg-muted/50"
                   >
                     <CalIcon className="size-3.5 text-accent" /> {t}
@@ -340,44 +472,63 @@ export default function Meetings() {
                   icon: Plus,
                   onClick: () => {
                     setOpen(false);
-                    setForm({ ...form, day: selectedDay });
-                    setNewOpen(true);
+                    openNewSheet({ day: selectedDay });
                   },
                 }}
               />
             ) : (
               selectedDay &&
-              eventsForDay(selectedDay).map((e, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, x: 12 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.05 }}
-                  className="rounded-xl border border-border p-3"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="text-sm font-semibold">{e.title}</div>
-                    <span className="rounded-full bg-accent/10 px-2 py-0.5 text-[10px] font-semibold text-accent">
-                      {e.type}
-                    </span>
-                  </div>
-                  <div className="mt-1 text-xs text-muted-foreground">{e.time}</div>
-                  <div className="mt-2 flex gap-2">
-                    <MotionButton
-                      onClick={() => join(e.title)}
-                      className="rounded-lg bg-primary px-2.5 py-1 text-[11px] font-semibold text-primary-foreground"
-                    >
-                      Join
-                    </MotionButton>
-                    <MotionButton
-                      onClick={() => toast.message("Reschedule", { description: "Pick a new time slot." })}
-                      className="rounded-lg border border-border px-2.5 py-1 text-[11px] font-semibold hover:bg-muted"
-                    >
-                      Reschedule
-                    </MotionButton>
-                  </div>
-                </motion.div>
-              ))
+              eventsForDay(selectedDay).map((e, i) => {
+                const isLocal = (e as LocalEvent).id != null;
+                return (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, x: 12 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.05 }}
+                    className="rounded-xl border border-border p-3"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="text-sm font-semibold">{e.title}</div>
+                      <span className="rounded-full bg-accent/10 px-2 py-0.5 text-[10px] font-semibold text-accent">
+                        {e.type}
+                      </span>
+                    </div>
+                    <div className="mt-1 text-xs text-muted-foreground">{e.time}</div>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      <MotionButton
+                        onClick={() => join(e.title)}
+                        className="rounded-lg bg-primary px-2.5 py-1 text-[11px] font-semibold text-primary-foreground"
+                      >
+                        Join
+                      </MotionButton>
+                      {isLocal ? (
+                        <>
+                          <MotionButton
+                            onClick={() => openEditSheet(e as LocalEvent)}
+                            className="rounded-lg border border-border px-2.5 py-1 text-[11px] font-semibold hover:bg-muted"
+                          >
+                            <Pencil className="size-3" /> Edit
+                          </MotionButton>
+                          <MotionButton
+                            onClick={() => deleteEvent((e as LocalEvent).id)}
+                            className="rounded-lg border border-destructive/40 px-2.5 py-1 text-[11px] font-semibold text-destructive hover:bg-destructive/10"
+                          >
+                            <Trash2 className="size-3" /> Delete
+                          </MotionButton>
+                        </>
+                      ) : (
+                        <MotionButton
+                          onClick={() => toast.message("Reschedule", { description: "Pick a new time slot." })}
+                          className="rounded-lg border border-border px-2.5 py-1 text-[11px] font-semibold hover:bg-muted"
+                        >
+                          Reschedule
+                        </MotionButton>
+                      )}
+                    </div>
+                  </motion.div>
+                );
+              })
             )}
           </div>
         </SheetContent>
@@ -387,8 +538,10 @@ export default function Meetings() {
       <Sheet open={newOpen} onOpenChange={setNewOpen}>
         <SheetContent>
           <SheetHeader>
-            <SheetTitle>New Meeting</SheetTitle>
-            <SheetDescription>Quickly schedule a call with a client or your team.</SheetDescription>
+            <SheetTitle>{editingId ? "Edit Meeting" : "New Meeting"}</SheetTitle>
+            <SheetDescription>
+              {editingId ? "Update title, type, day or time." : "Quickly schedule a call with a client or your team."}
+            </SheetDescription>
           </SheetHeader>
           <div className="mt-5 space-y-4">
             <label className="block">
@@ -397,8 +550,9 @@ export default function Meetings() {
                 value={form.title}
                 onChange={(e) => setForm({ ...form, title: e.target.value })}
                 placeholder="Discovery call with Acme"
-                className="w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm outline-none focus:border-accent"
+                className={`w-full rounded-xl border bg-card px-3 py-2.5 text-sm outline-none focus:border-accent ${errors.title ? "border-destructive" : "border-border"}`}
               />
+              {errors.title && <span className="mt-1 block text-[11px] font-semibold text-destructive">{errors.title}</span>}
             </label>
             <label className="block">
               <span className="mb-1 block text-xs font-semibold text-muted-foreground">Type</span>
@@ -430,8 +584,9 @@ export default function Meetings() {
                   value={form.time}
                   onChange={(e) => setForm({ ...form, time: e.target.value })}
                   placeholder="10:00 AM"
-                  className="w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm outline-none focus:border-accent"
+                  className={`w-full rounded-xl border bg-card px-3 py-2.5 text-sm outline-none focus:border-accent ${errors.time ? "border-destructive" : "border-border"}`}
                 />
+                {errors.time && <span className="mt-1 block text-[11px] font-semibold text-destructive">{errors.time}</span>}
               </label>
             </div>
             <div className="flex gap-2 pt-2">
@@ -439,10 +594,18 @@ export default function Meetings() {
                 onClick={handleCreate}
                 className="flex-1 rounded-xl bg-gradient-blue px-4 py-2.5 text-sm font-semibold text-white shadow-elegant hover:shadow-glow"
               >
-                <Plus className="size-4" /> Schedule
+                <Plus className="size-4" /> {editingId ? "Save changes" : "Schedule"}
               </MotionButton>
+              {editingId && (
+                <MotionButton
+                  onClick={() => { deleteEvent(editingId); setNewOpen(false); setEditingId(null); }}
+                  className="rounded-xl border border-destructive/40 bg-card px-4 py-2.5 text-sm font-semibold text-destructive hover:bg-destructive/10"
+                >
+                  <Trash2 className="size-4" /> Delete
+                </MotionButton>
+              )}
               <MotionButton
-                onClick={() => setNewOpen(false)}
+                onClick={() => { setNewOpen(false); setEditingId(null); }}
                 className="rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-semibold hover:bg-muted"
               >
                 <X className="size-4" /> Cancel
