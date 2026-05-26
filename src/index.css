@@ -114,6 +114,22 @@
   }
   .scrollbar-thin::-webkit-scrollbar { width: 6px; height: 6px; }
   .scrollbar-thin::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 999px; }
+
+  /* Global interactive polish */
+  .tap { transition: transform 180ms cubic-bezier(0.34, 1.4, 0.64, 1), box-shadow 220ms ease, background-color 200ms ease, color 200ms ease, opacity 180ms ease; }
+  .tap:hover { transform: translateY(-1px); }
+  .tap:active { transform: scale(0.96); }
+
+  .lift { transition: transform 260ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 260ms ease; }
+  .lift:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
+}
+
+@layer base {
+  button, [role="button"] {
+    transition: transform 180ms cubic-bezier(0.34, 1.4, 0.64, 1), color 200ms ease, background-color 200ms ease, opacity 180ms ease, box-shadow 220ms ease, border-color 200ms ease;
+  }
+  button:active:not(:disabled), [role="button"]:active { transform: scale(0.97); }
+  a { transition: color 200ms ease, opacity 180ms ease; }
 }
 
 /* ===== Calm motion ===== */
