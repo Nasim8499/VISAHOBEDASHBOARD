@@ -125,18 +125,18 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
 
 
 
-      <div className="mx-3 mb-4 rounded-2xl border border-sidebar-border bg-sidebar-accent/60 p-3">
+      <div className="mx-3 mb-4 rounded-2xl border border-white/15 bg-white/10 p-3 backdrop-blur-md">
         <div className="flex items-center gap-3">
-          <div className="grid size-9 place-items-center rounded-full bg-gradient-blue text-primary-foreground text-xs font-semibold">
+          <div className="grid size-9 place-items-center rounded-full bg-white/20 text-white text-xs font-semibold ring-1 ring-white/30">
             {(fullName || "VH").split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()}
           </div>
           <div className="min-w-0 flex-1">
-            <div className="truncate text-sm font-semibold text-sidebar-primary">{fullName || "VisaHOBe Admin"}</div>
-            <div className="truncate text-xs capitalize text-sidebar-foreground/70">
+            <div className="truncate text-sm font-semibold text-white">{fullName || "VisaHOBe Admin"}</div>
+            <div className="truncate text-xs capitalize text-white/70">
               {role ? role.replace("_", " ") : "Guest"}
             </div>
           </div>
-          <button onClick={signOut} className="rounded-lg p-1.5 text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-primary">
+          <button onClick={signOut} className="rounded-lg p-1.5 text-white/80 hover:bg-white/15 hover:text-white">
             <LogOut className="size-4" />
           </button>
         </div>
