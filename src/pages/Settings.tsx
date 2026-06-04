@@ -82,9 +82,28 @@ export default function Settings() {
     );
   };
 
+  // Live-apply brand theme as user tweaks colors
+  const brand = groups.find((g) => g.title === "Brand Theme");
+  const primary = (brand?.fields[0].v as string) || "#003B73";
+  const accent = (brand?.fields[1].v as string) || "#177BBB";
+  useEffect(() => { applyBrandTheme({ primary, accent }); }, [primary, accent]);
+
+  const applyPreset = (p: { primary: string; accent: string }) => {
+    setGroups((prev) =>
+      prev.map((g) =>
+        g.title === "Brand Theme"
+          ? { ...g, fields: g.fields.map((f) =>
+              f.l === "Primary Color" ? { ...f, v: p.primary } as Field :
+              f.l === "Accent Color"  ? { ...f, v: p.accent  } as Field : f) }
+          : g,
+      ),
+    );
+  };
+
   const save = () => {
+    saveBrandTheme({ primary, accent });
     setSavedAt(Date.now());
-    toast.success("Settings saved", { description: "Your changes are live." });
+    toast.success("Settings saved", { description: "Theme applied across the app." });
   };
 
   return (
