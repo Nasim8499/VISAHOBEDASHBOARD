@@ -208,6 +208,34 @@ export default function Settings() {
                   </div>
                 ))}
               </div>
+              {g.title === "Brand Theme" && (
+                <div className="mt-5 border-t border-border pt-4">
+                  <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Quick palettes
+                  </div>
+                  <div className="grid grid-cols-4 gap-2">
+                    {BRAND_PRESETS.map((p) => (
+                      <button
+                        key={p.name}
+                        onClick={() => applyPreset(p)}
+                        title={p.name}
+                        className="group flex flex-col items-center gap-1 rounded-xl border border-border p-2 transition hover:-translate-y-0.5 hover:shadow-elegant"
+                      >
+                        <span className="flex h-6 w-full overflow-hidden rounded-md ring-1 ring-border">
+                          <span className="flex-1" style={{ background: p.primary }} />
+                          <span className="flex-1" style={{ background: p.accent }} />
+                        </span>
+                        <span className="text-[10px] font-semibold text-muted-foreground group-hover:text-foreground">
+                          {p.name}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                  <p className="mt-3 text-[11px] text-muted-foreground">
+                    Pick any color — changes apply live across sidebar, buttons, and gradients.
+                  </p>
+                </div>
+              )}
             </motion.section>
           );
         })}
