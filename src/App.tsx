@@ -18,6 +18,7 @@ import LogoMaker from "./pages/LogoMaker";
 import PostDesigner from "./pages/PostDesigner";
 import WebsiteBuilder from "./pages/WebsiteBuilder";
 import Documents from "./pages/Documents";
+import VisaDocuments from "./pages/VisaDocuments";
 import Chat from "./pages/Chat";
 import Meetings from "./pages/Meetings";
 import Tasks from "./pages/Tasks";
@@ -82,6 +83,7 @@ function AnimatedRoutes() {
           <Route path="/templates" element={<ProtectedRoute allow={["super_admin", "employee"]}><Templates /></ProtectedRoute>} />
           <Route path="/brand-kit" element={<BrandKit />} />
           <Route path="/documents" element={<Documents />} />
+          <Route path="/visa-documents" element={<VisaDocuments />} />
           <Route path="/files" element={<Documents />} />
           <Route path="/chat" element={<Chat />} />
           <Route path="/meetings" element={<Meetings />} />
