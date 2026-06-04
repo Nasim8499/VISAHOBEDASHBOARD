@@ -3,7 +3,7 @@ import {
   LayoutDashboard, Building2, FolderKanban, ListChecks, CalendarDays,
   CheckSquare, Palette, Wand2, Globe2, ImageIcon, LayoutTemplate, Package,
   FileText, MessageSquare, Video, FolderOpen, Workflow, Sparkles, BarChart3,
-  Users, ScrollText, Receipt, Settings, LogOut, X,
+  Users, ScrollText, Receipt, Settings, LogOut, X, Stamp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth, AppRole } from "@/context/AuthContext";
@@ -38,6 +38,7 @@ export const navGroups: Group[] = [
     label: "Operations",
     items: [
       { to: "/documents", label: "Documents", icon: FileText },
+      { to: "/visa-documents", label: "Visa Documents", icon: Stamp },
       { to: "/chat", label: "Live Chat", icon: MessageSquare },
       { to: "/meetings", label: "Meetings", icon: Video },
       { to: "/files", label: "File Manager", icon: FolderOpen },
@@ -66,7 +67,7 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
       className="relative flex h-full w-72 flex-col overflow-hidden border-r border-sidebar-border text-sidebar-foreground"
       style={{
         backgroundImage:
-          "radial-gradient(900px 520px at -10% -10%, hsl(var(--primary) / 0.45) 0%, transparent 55%), radial-gradient(700px 520px at 110% 110%, hsl(var(--accent) / 0.40) 0%, transparent 55%), linear-gradient(180deg, hsl(var(--primary) / 0.92) 0%, hsl(var(--primary-glow) / 0.85) 55%, hsl(var(--accent) / 0.80) 100%)",
+          "radial-gradient(900px 520px at -10% -10%, hsl(220 85% 28% / 0.85) 0%, transparent 55%), radial-gradient(700px 520px at 110% 110%, hsl(225 75% 18% / 0.95) 0%, transparent 55%), linear-gradient(180deg, hsl(222 80% 10%) 0%, hsl(220 75% 14%) 55%, hsl(225 70% 18%) 100%)",
         color: "hsl(0 0% 100%)",
       }}
     >
