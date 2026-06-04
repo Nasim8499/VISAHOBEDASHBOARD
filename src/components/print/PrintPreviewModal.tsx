@@ -17,6 +17,10 @@ interface Props extends Omit<PrintSheetProps, "lang"> {
   defaultLang?: DocLang;
 }
 
+// The preview is always rendered at A4 source; download() re-scales to the
+// chosen paper size/orientation/margin selected by the user.
+const PAGE_W_MM = 210;
+const PAGE_H_MM = 297;
 const GAP_MM = 2;
 const MIN_SLICE_RATIO = 0.35;
 
