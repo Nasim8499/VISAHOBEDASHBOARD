@@ -318,10 +318,10 @@ export function PrintPreviewModal({ open, onClose, defaultLang = "en", ...sheet 
             <button
               onClick={download}
               disabled={busy}
-              className="inline-flex items-center gap-2 rounded-xl bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground transition hover:opacity-90 disabled:opacity-60"
+              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[hsl(220_85%_22%)] to-[hsl(225_80%_42%)] px-4 py-2 text-sm font-bold text-white shadow-elegant transition hover:shadow-glow disabled:opacity-60"
             >
               {busy ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />}
-              {busy ? "Generating…" : tr("download", lang)}
+              {busy ? "Generating PDF…" : "Download PDF"}
             </button>
             <button
               onClick={onClose}
@@ -334,7 +334,18 @@ export function PrintPreviewModal({ open, onClose, defaultLang = "en", ...sheet 
           </div>
         </div>
 
-        <div className="relative flex-1 overflow-auto bg-muted/40 p-6">
+        <div className="relative flex-1 overflow-auto bg-muted/40 p-6 pb-24">
+          {/* Floating prominent Download PDF CTA */}
+          <button
+            onClick={download}
+            disabled={busy}
+            className="sticky bottom-4 z-20 ml-auto flex w-fit items-center gap-2 rounded-2xl bg-gradient-to-r from-[hsl(220_85%_22%)] to-[hsl(225_80%_42%)] px-5 py-3 text-sm font-bold text-white shadow-2xl ring-1 ring-white/10 transition hover:-translate-y-0.5 hover:shadow-glow disabled:opacity-60"
+            style={{ float: "right" }}
+          >
+            {busy ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />}
+            {busy ? "Generating PDF…" : "Download PDF"}
+          </button>
+
           {notice && (
             <div
               className={`mx-auto mb-4 flex max-w-[210mm] items-start gap-3 rounded-xl border p-4 text-sm ${
