@@ -1,11 +1,15 @@
 import { PageContainer, PageHeader } from "@/components/layout/Page";
 import { motion } from "framer-motion";
 import { useState } from "react";
+import { toast } from "sonner";
 import {
   Plane, Briefcase, GraduationCap, Globe2, FileCheck2,
   ClipboardList, Mail, Building2, ShieldCheck, Stamp, Eye, Download, Search,
+  CheckSquare, Square, FileArchive, X, Loader2,
 } from "lucide-react";
 import { PrintPreviewModal } from "@/components/print/PrintPreviewModal";
+import { BatchExportModal } from "@/components/print/BatchExportModal";
+import { renderSheetToPdfBlob, saveBlob, sanitizeFilename } from "@/lib/pdfExport";
 import { useWorkspace } from "@/context/WorkspaceContext";
 
 type VisaDoc = {
@@ -342,11 +346,54 @@ export default function VisaDocuments() {
   const [filter, setFilter] = useState<(typeof CATEGORIES)[number]>("All");
   const [q, setQ] = useState("");
   const [selected, setSelected] = useState<VisaDoc | null>(null);
+  const [picked, setPicked] = useState<Set<string>>(new Set());
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [batchOpen, setBatchOpen] = useState(false);
 
   const docs = VISA_DOCS.filter((d) =>
     (filter === "All" || d.category === filter) &&
     (q === "" || d.title.toLowerCase().includes(q.toLowerCase()) || d.ref.toLowerCase().includes(q.toLowerCase()))
   );
+
+  const sheetCommon = {
+    workspaceName: workspace?.name || "VisaHOBe",
+    workspaceLogo: workspace?.logo || "🛂",
+    preparedFor: workspace?.name || "Client",
+    preparedBy: (workspace as any)?.manager_name || "VisaHOBe Consultant",
+    workspace: workspace as any,
+  };
+
+  const togglePick = (id: string) => {
+    setPicked((p) => {
+      const n = new Set(p);
+      if (n.has(id)) n.delete(id); else n.add(id);
+      return n;
+    });
+  };
+  const pickAllVisible = () => setPicked(new Set(docs.map((d) => d.id)));
+  const clearPicks = () => setPicked(new Set());
+
+  async function quickDownload(d: VisaDoc) {
+    setDownloadingId(d.id);
+    const t = toast.loading(`Preparing ${d.title}…`);
+    try {
+      const { blob, filename } = await renderSheetToPdfBlob(
+        {
+          ...sheetCommon, lang: "en", title: d.title, reference: d.ref, category: d.category,
+          body: d.body, size: `A4 · ${d.pages}p`, status: "Print Ready",
+        } as any,
+        { paperSize: "A4", orientation: "portrait", marginMm: 0, filename: sanitizeFilename(`${d.ref}-${d.title}`) },
+      );
+      saveBlob(blob, filename);
+      toast.success("PDF downloaded", { id: t });
+    } catch (err: any) {
+      toast.error("Download failed", { id: t, description: err?.message || String(err) });
+    } finally {
+      setDownloadingId(null);
+    }
+  }
+
+  const pickedDocs = VISA_DOCS.filter((d) => picked.has(d.id));
 
   return (
     <PageContainer>
