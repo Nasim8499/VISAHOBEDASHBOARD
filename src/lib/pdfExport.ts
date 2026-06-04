@@ -84,11 +84,13 @@ async function mountSheetOffscreen(sheetProps: PrintSheetProps): Promise<{
   };
 }
 
-/** Render a PrintSheet headlessly and return a paginated PDF blob. */
-export async function renderSheetToPdfBlob(
+export type PageImage = { dataUrl: string; widthMm: number; heightMm: number; marginMm: number };
+
+/** Headlessly render a PrintSheet to per-page JPEG data URLs. */
+export async function renderSheetToPageImages(
   sheetProps: PrintSheetProps,
   opts: PrintOptions = DEFAULT_PRINT_OPTIONS,
-): Promise<{ blob: Blob; pages: number; filename: string }> {
+): Promise<PageImage[]> {
   const { el: sheetEl, cleanup } = await mountSheetOffscreen(sheetProps);
   try {
     const headerEl = sheetEl.querySelector<HTMLElement>("[data-print-header]");
@@ -122,12 +124,7 @@ export async function renderSheetToPdfBlob(
     const pageBodyHpx    = Math.floor(availBodySrcMm * pxPerMm);
     const composeHpx     = Math.round((innerH / scale) * pxPerMm);
 
-    const pdf = new jsPDF({
-      unit: "mm",
-      format: [pageWmm, pageHmm],
-      orientation: opts.orientation,
-    });
-
+    const pages: PageImage[] = [];
     let cursor = 0, pageIdx = 0;
     while (cursor < bodyCanvas.height) {
       const end    = Math.min(cursor + pageBodyHpx, bodyCanvas.height);
@@ -147,22 +144,43 @@ export async function renderSheetToPdfBlob(
       const footerTopPx = page.height - footerCanvas.height;
       ctx.drawImage(footerCanvas, 0, footerTopPx);
 
-      const img = page.toDataURL("image/jpeg", 0.95);
-      if (pageIdx > 0) pdf.addPage([pageWmm, pageHmm], opts.orientation);
-      pdf.addImage(img, "JPEG", m, m, innerW, innerH);
+      pages.push({
+        dataUrl: page.toDataURL("image/jpeg", 0.95),
+        widthMm: pageWmm,
+        heightMm: pageHmm,
+        marginMm: m,
+      });
 
       cursor = end;
       pageIdx += 1;
       if (pageIdx > 80) break;
     }
-
-    const blob     = pdf.output("blob");
-    const filename = `${sanitizeFilename(opts.filename || sheetProps.reference || sheetProps.title || "document")}.pdf`;
-    return { blob, pages: pageIdx, filename };
+    return pages;
   } finally {
     cleanup();
   }
 }
+
+/** Render a PrintSheet headlessly and return a paginated PDF blob. */
+export async function renderSheetToPdfBlob(
+  sheetProps: PrintSheetProps,
+  opts: PrintOptions = DEFAULT_PRINT_OPTIONS,
+): Promise<{ blob: Blob; pages: number; filename: string }> {
+  const images = await renderSheetToPageImages(sheetProps, opts);
+  if (!images.length) throw new Error("No pages produced");
+  const { widthMm, heightMm, marginMm } = images[0];
+  const innerW = widthMm - marginMm * 2;
+  const innerH = heightMm - marginMm * 2;
+  const pdf = new jsPDF({ unit: "mm", format: [widthMm, heightMm], orientation: opts.orientation });
+  images.forEach((p, i) => {
+    if (i > 0) pdf.addPage([widthMm, heightMm], opts.orientation);
+    pdf.addImage(p.dataUrl, "JPEG", marginMm, marginMm, innerW, innerH);
+  });
+  const blob     = pdf.output("blob");
+  const filename = `${sanitizeFilename(opts.filename || sheetProps.reference || sheetProps.title || "document")}.pdf`;
+  return { blob, pages: images.length, filename };
+}
+
 
 export function saveBlob(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob);
