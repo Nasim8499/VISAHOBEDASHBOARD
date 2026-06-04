@@ -2,15 +2,21 @@
 // Converts hex -> HSL string ("H S% L%") suitable for Tailwind hsl(var(--token)) usage.
 
 export type BrandTheme = {
-  primary: string; // hex
-  accent: string;  // hex
+  primary: string;     // Brand core (deep blue)
+  accent: string;      // Secondary accent (lighter blue)
+  red1: string;        // Gradient red 1
+  red2: string;        // Gradient red 2 (warmer)
+  text: string;        // Body/typography gray
 };
 
 const STORAGE_KEY = "vh.brandTheme";
 
 export const DEFAULT_THEME: BrandTheme = {
-  primary: "#003B73",
-  accent: "#177BBB",
+  primary: "#003B73", // Primary Blue
+  accent:  "#177BBB", // Gradient Blue / Secondary Accent
+  red1:    "#E63946", // Gradient Red 1
+  red2:    "#F1573D", // Gradient Red 2
+  text:    "#6E7580", // Typography / Body gray
 };
 
 export function hexToHsl(hex: string): string {
@@ -47,16 +53,34 @@ export function applyBrandTheme(theme: BrandTheme) {
   const root = document.documentElement;
   const p = hexToHsl(theme.primary);
   const a = hexToHsl(theme.accent);
+  const r1 = hexToHsl(theme.red1);
+  const r2 = hexToHsl(theme.red2);
+  const tx = hexToHsl(theme.text);
   const pGlow = shift(p, 18, -5);
   const aGlow = shift(a, 15, -5);
 
+  // Core brand tokens
   root.style.setProperty("--primary", p);
   root.style.setProperty("--primary-glow", pGlow);
   root.style.setProperty("--accent", a);
   root.style.setProperty("--accent-glow", aGlow);
   root.style.setProperty("--ring", a);
+
+  // Extended brand palette
+  root.style.setProperty("--brand-red", r1);
+  root.style.setProperty("--brand-red-2", r2);
+  root.style.setProperty("--brand-blue-light", a);
+  root.style.setProperty("--brand-text", tx);
+  root.style.setProperty("--muted-foreground", tx);
+
+  // Sidebar — derives from brand so super admin color changes flow through
   root.style.setProperty("--sidebar-primary", p);
   root.style.setProperty("--sidebar-ring", a);
+  root.style.setProperty("--sidebar-background", shift(p, -8));
+  root.style.setProperty("--sidebar-foreground", "0 0% 100%");
+  root.style.setProperty("--sidebar-accent", shift(p, 6));
+  root.style.setProperty("--sidebar-accent-foreground", "0 0% 100%");
+  root.style.setProperty("--sidebar-border", shift(p, 10, -10));
 
   // Recompose gradients that depend on brand
   root.style.setProperty(
@@ -66,6 +90,18 @@ export function applyBrandTheme(theme: BrandTheme) {
   root.style.setProperty(
     "--gradient-hero",
     `linear-gradient(125deg, hsl(${p}) 0%, hsl(${shift(p, 8)}) 40%, hsl(${a}) 100%)`
+  );
+  root.style.setProperty(
+    "--gradient-red",
+    `linear-gradient(135deg, hsl(${r1}) 0%, hsl(${r2}) 100%)`
+  );
+  root.style.setProperty(
+    "--gradient-brand",
+    `linear-gradient(135deg, hsl(${p}) 0%, hsl(${a}) 55%, hsl(${r2}) 100%)`
+  );
+  root.style.setProperty(
+    "--gradient-sidebar",
+    `radial-gradient(900px 520px at -10% -10%, hsl(${shift(p, 16)} / 0.85) 0%, transparent 55%), radial-gradient(700px 520px at 110% 110%, hsl(${shift(p, -4)} / 0.95) 0%, transparent 55%), linear-gradient(180deg, hsl(${shift(p, -10)}) 0%, hsl(${shift(p, -4)}) 55%, hsl(${shift(p, 4)}) 100%)`
   );
 }
 

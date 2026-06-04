@@ -6,14 +6,14 @@ import { Building2, Palette, Bell, Shield, Save, Check } from "lucide-react";
 import { applyBrandTheme, loadBrandTheme, saveBrandTheme } from "@/lib/brandTheme";
 
 const BRAND_PRESETS = [
-  { name: "Ocean", primary: "#003B73", accent: "#177BBB" },
-  { name: "Emerald", primary: "#064e3b", accent: "#10b981" },
-  { name: "Sunset", primary: "#7c2d12", accent: "#f97316" },
-  { name: "Royal", primary: "#312e81", accent: "#8b5cf6" },
-  { name: "Rose", primary: "#831843", accent: "#ec4899" },
-  { name: "Noir Gold", primary: "#0d0d0d", accent: "#c9a84c" },
-  { name: "Cyber", primary: "#0c2340", accent: "#2dd4a8" },
-  { name: "Coral", primary: "#574b90", accent: "#ff6b6b" },
+  { name: "VisaHOBe", primary: "#003B73", accent: "#177BBB", red1: "#E63946", red2: "#F1573D", text: "#6E7580" },
+  { name: "Ocean", primary: "#003B73", accent: "#177BBB", red1: "#E63946", red2: "#F1573D", text: "#6E7580" },
+  { name: "Emerald", primary: "#064e3b", accent: "#10b981", red1: "#dc2626", red2: "#f97316", text: "#6E7580" },
+  { name: "Sunset", primary: "#7c2d12", accent: "#f97316", red1: "#E63946", red2: "#F1573D", text: "#6E7580" },
+  { name: "Royal", primary: "#312e81", accent: "#8b5cf6", red1: "#ec4899", red2: "#f43f5e", text: "#6E7580" },
+  { name: "Rose", primary: "#831843", accent: "#ec4899", red1: "#E63946", red2: "#F1573D", text: "#6E7580" },
+  { name: "Noir Gold", primary: "#0d0d0d", accent: "#c9a84c", red1: "#b91c1c", red2: "#f59e0b", text: "#6E7580" },
+  { name: "Cyber", primary: "#0c2340", accent: "#2dd4a8", red1: "#ff6b6b", red2: "#f97316", text: "#6E7580" },
 ];
 
 const ease = [0.22, 1, 0.36, 1] as const;
@@ -42,8 +42,11 @@ const initial: Group[] = [
     icon: Palette,
     tone: "bg-accent",
     fields: [
-      { l: "Primary Color", v: loadBrandTheme().primary, type: "color" },
-      { l: "Accent Color", v: loadBrandTheme().accent, type: "color" },
+      { l: "Primary Blue", v: loadBrandTheme().primary, type: "color" },
+      { l: "Secondary Blue", v: loadBrandTheme().accent, type: "color" },
+      { l: "Gradient Red 1", v: loadBrandTheme().red1, type: "color" },
+      { l: "Gradient Red 2", v: loadBrandTheme().red2, type: "color" },
+      { l: "Body Text Gray", v: loadBrandTheme().text, type: "color" },
       { l: "Font", v: "Inter" },
     ],
   },
@@ -84,24 +87,34 @@ export default function Settings() {
 
   // Live-apply brand theme as user tweaks colors
   const brand = groups.find((g) => g.title === "Brand Theme");
-  const primary = (brand?.fields[0].v as string) || "#003B73";
-  const accent = (brand?.fields[1].v as string) || "#177BBB";
-  useEffect(() => { applyBrandTheme({ primary, accent }); }, [primary, accent]);
+  const fv = (label: string, fb: string) =>
+    (brand?.fields.find((f) => f.l === label)?.v as string) || fb;
+  const primary = fv("Primary Blue", "#003B73");
+  const accent  = fv("Secondary Blue", "#177BBB");
+  const red1    = fv("Gradient Red 1", "#E63946");
+  const red2    = fv("Gradient Red 2", "#F1573D");
+  const text    = fv("Body Text Gray", "#6E7580");
+  useEffect(() => {
+    applyBrandTheme({ primary, accent, red1, red2, text });
+  }, [primary, accent, red1, red2, text]);
 
-  const applyPreset = (p: { primary: string; accent: string }) => {
+  const applyPreset = (p: { primary: string; accent: string; red1: string; red2: string; text: string }) => {
     setGroups((prev) =>
       prev.map((g) =>
         g.title === "Brand Theme"
           ? { ...g, fields: g.fields.map((f) =>
-              f.l === "Primary Color" ? { ...f, v: p.primary } as Field :
-              f.l === "Accent Color"  ? { ...f, v: p.accent  } as Field : f) }
+              f.l === "Primary Blue"   ? { ...f, v: p.primary } as Field :
+              f.l === "Secondary Blue" ? { ...f, v: p.accent  } as Field :
+              f.l === "Gradient Red 1" ? { ...f, v: p.red1    } as Field :
+              f.l === "Gradient Red 2" ? { ...f, v: p.red2    } as Field :
+              f.l === "Body Text Gray" ? { ...f, v: p.text    } as Field : f) }
           : g,
       ),
     );
   };
 
   const save = () => {
-    saveBrandTheme({ primary, accent });
+    saveBrandTheme({ primary, accent, red1, red2, text });
     setSavedAt(Date.now());
     toast.success("Settings saved", { description: "Theme applied across the app." });
   };
@@ -224,6 +237,8 @@ export default function Settings() {
                         <span className="flex h-6 w-full overflow-hidden rounded-md ring-1 ring-border">
                           <span className="flex-1" style={{ background: p.primary }} />
                           <span className="flex-1" style={{ background: p.accent }} />
+                          <span className="flex-1" style={{ background: p.red1 }} />
+                          <span className="flex-1" style={{ background: p.red2 }} />
                         </span>
                         <span className="text-[10px] font-semibold text-muted-foreground group-hover:text-foreground">
                           {p.name}
