@@ -3,12 +3,13 @@ import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import JSZip from "jszip";
+import jsPDF from "jspdf";
 import {
   X, Download, Loader2, FileArchive, FileText, Settings2, Ruler, RotateCw,
 } from "lucide-react";
 import {
-  renderSheetToPdfBlob, saveBlob, sanitizeFilename, PrintOptions, PaperSize,
-  DEFAULT_PRINT_OPTIONS, PAPER_SIZES,
+  renderSheetToPdfBlob, renderSheetToPageImages, saveBlob, sanitizeFilename,
+  PrintOptions, PaperSize, DEFAULT_PRINT_OPTIONS, PAPER_SIZES,
 } from "@/lib/pdfExport";
 import type { PrintSheetProps } from "@/components/print/PrintSheet";
 
@@ -24,19 +25,19 @@ export type BatchItem = {
 interface Props {
   open: boolean;
   onClose: () => void;
-  items: BatchItem[];               // selected docs
+  items: BatchItem[];
   sheetCommon: Omit<PrintSheetProps, "title" | "reference" | "category" | "body" | "size" | "lang">;
-  clientName?: string;              // default client name
+  clientName?: string;
 }
 
 type Mode = "zip" | "combined";
 
 export function BatchExportModal({ open, onClose, items, sheetCommon, clientName }: Props) {
-  const [mode, setMode] = useState<Mode>("zip");
-  const [opts, setOpts] = useState<PrintOptions>({ ...DEFAULT_PRINT_OPTIONS });
-  const [client, setClient] = useState(clientName || "");
+  const [mode, setMode]       = useState<Mode>("zip");
+  const [opts, setOpts]       = useState<PrintOptions>({ ...DEFAULT_PRINT_OPTIONS });
+  const [client, setClient]   = useState(clientName || "");
   const [zipName, setZipName] = useState("visa-documents-bundle");
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy]       = useState(false);
   const [progress, setProgress] = useState({ done: 0, total: 0, label: "" });
 
   useEffect(() => {
@@ -51,6 +52,19 @@ export function BatchExportModal({ open, onClose, items, sheetCommon, clientName
   const baseName = (t: string) =>
     sanitizeFilename([client, t].filter(Boolean).join(" - "));
 
+  function buildSheet(d: BatchItem): PrintSheetProps {
+    return {
+      ...(sheetCommon as any),
+      lang: "en",
+      title: d.title,
+      reference: d.ref,
+      category: d.category,
+      body: d.body,
+      size: `A4 · ${d.pages}p`,
+      status: "Print Ready",
+    } as PrintSheetProps;
+  }
+
   async function run() {
     if (!items.length) { toast.error("Select at least one template"); return; }
     setBusy(true);
@@ -59,52 +73,38 @@ export function BatchExportModal({ open, onClose, items, sheetCommon, clientName
       mode === "zip" ? `Bundling ${items.length} PDFs…` : `Combining ${items.length} PDFs…`,
     );
     try {
+      const bundleName = sanitizeFilename(zipName) || "visa-documents-bundle";
+
       if (mode === "zip") {
         const zip = new JSZip();
         for (let i = 0; i < items.length; i++) {
           const d = items[i];
           setProgress({ done: i, total: items.length, label: d.title });
           const { blob, filename } = await renderSheetToPdfBlob(
-            { ...sheetCommon, lang: "en", title: d.title, reference: d.ref, category: d.category, body: d.body, size: `A4 · ${d.pages}p`, status: "Print Ready" } as PrintSheetProps,
+            buildSheet(d),
             { ...opts, filename: baseName(`${d.ref}-${d.title}`) },
           );
           zip.file(filename, blob);
         }
-        const zipBlob = await zip.generateAsync({ type: "blob" });
-        saveBlob(zipBlob, `${sanitizeFilename(zipName) || "visa-documents-bundle"}.zip`);
+        saveBlob(await zip.generateAsync({ type: "blob" }), `${bundleName}.zip`);
         toast.success(`ZIP ready · ${items.length} PDFs`, { id: toastId });
       } else {
-        // Combined: concatenate pages from each PDF into one (uses jsPDF page-merge).
-        const { jsPDF } = await import("jspdf");
-        const merged = new jsPDF({ unit: "mm", format: [PAPER_SIZES[opts.paperSize].w, PAPER_SIZES[opts.paperSize].h], orientation: opts.orientation });
-        let firstAdded = false;
+        const size    = PAPER_SIZES[opts.paperSize];
+        const pageWmm = opts.orientation === "portrait" ? size.w : size.h;
+        const pageHmm = opts.orientation === "portrait" ? size.h : size.w;
+        const merged  = new jsPDF({ unit: "mm", format: [pageWmm, pageHmm], orientation: opts.orientation });
+        let added = false;
         for (let i = 0; i < items.length; i++) {
           const d = items[i];
           setProgress({ done: i, total: items.length, label: d.title });
-          const { blob } = await renderSheetToPdfBlob(
-            { ...sheetCommon, lang: "en", title: d.title, reference: d.ref, category: d.category, body: d.body, size: `A4 · ${d.pages}p`, status: "Print Ready" } as PrintSheetProps,
-            opts,
-          );
-          // Convert blob → images per page using PDF.js is heavy; simpler: render again as canvases.
-          // Instead we re-render each page's canvas during pdf creation. To avoid full re-impl we just
-          // embed the source PDF blob as a separate addPage section via images is unsupported by jsPDF.
-          // → Simpler & reliable: convert blob to ArrayBuffer of images is non-trivial. We fall back to
-          // appending pages by drawing the PDF blob's pages via <object> won't work either.
-          // Strategy: skip the re-merge complexity and just append a single image of the cover sheet
-          // using a re-render to canvas. To keep this UX honest we instead recommend ZIP for now.
-          // (combined kept available; we re-render to canvases below.)
-          // -- The simpler path: rerun headless render but get canvases directly.
-          // Implemented below via renderSheetToCanvases.
-          const canvases = await renderSheetToCanvasesViaBlob(blob);
-          for (const c of canvases) {
-            if (firstAdded) merged.addPage([PAPER_SIZES[opts.paperSize].w, PAPER_SIZES[opts.paperSize].h], opts.orientation);
-            firstAdded = true;
-            const pageWmm = opts.orientation === "portrait" ? PAPER_SIZES[opts.paperSize].w : PAPER_SIZES[opts.paperSize].h;
-            const pageHmm = opts.orientation === "portrait" ? PAPER_SIZES[opts.paperSize].h : PAPER_SIZES[opts.paperSize].w;
-            merged.addImage(c, "JPEG", 0, 0, pageWmm, pageHmm);
+          const pages = await renderSheetToPageImages(buildSheet(d), opts);
+          for (const p of pages) {
+            if (added) merged.addPage([p.widthMm, p.heightMm], opts.orientation);
+            added = true;
+            merged.addImage(p.dataUrl, "JPEG", p.marginMm, p.marginMm, p.widthMm - p.marginMm * 2, p.heightMm - p.marginMm * 2);
           }
         }
-        merged.save(`${sanitizeFilename(zipName) || "visa-documents-bundle"}.pdf`);
+        merged.save(`${baseName(bundleName)}.pdf`);
         toast.success(`Combined PDF ready · ${items.length} docs`, { id: toastId });
       }
       onClose();
@@ -135,11 +135,10 @@ export function BatchExportModal({ open, onClose, items, sheetCommon, clientName
         </div>
 
         <div className="space-y-5 p-5">
-          {/* Mode */}
           <div className="grid grid-cols-2 gap-2">
             {[
-              { id: "zip" as Mode, label: "ZIP of PDFs", icon: FileArchive, desc: "One PDF per template, bundled" },
-              { id: "combined" as Mode, label: "Combined PDF", icon: FileText, desc: "All pages in a single PDF" },
+              { id: "zip" as Mode,      label: "ZIP of PDFs",   icon: FileArchive, desc: "One PDF per template, bundled" },
+              { id: "combined" as Mode, label: "Combined PDF",  icon: FileText,    desc: "All pages in a single PDF" },
             ].map((m) => {
               const Active = mode === m.id;
               return (
@@ -160,7 +159,6 @@ export function BatchExportModal({ open, onClose, items, sheetCommon, clientName
             })}
           </div>
 
-          {/* Client + filename */}
           <div className="space-y-2">
             <label className="text-xs font-semibold text-muted-foreground">Client name (added to each PDF filename)</label>
             <input
@@ -180,15 +178,14 @@ export function BatchExportModal({ open, onClose, items, sheetCommon, clientName
             />
           </div>
 
-          {/* Print settings */}
           <div className="rounded-xl border border-border p-3">
             <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               <Settings2 className="size-3.5" /> Print settings
             </div>
             <div className="grid grid-cols-3 gap-2">
-              <SelectField label="Paper" value={opts.paperSize} onChange={(v) => setOpts({ ...opts, paperSize: v as PaperSize })} options={["A4", "Letter", "Legal"]} disabled={busy} />
-              <SelectField label="Orientation" value={opts.orientation} onChange={(v) => setOpts({ ...opts, orientation: v as any })} options={["portrait", "landscape"]} disabled={busy} icon={RotateCw} />
-              <SelectField label="Margin (mm)" value={String(opts.marginMm)} onChange={(v) => setOpts({ ...opts, marginMm: Number(v) })} options={["0", "5", "10", "15", "20", "25"]} disabled={busy} icon={Ruler} />
+              <SelectField label="Paper"       value={opts.paperSize}        onChange={(v) => setOpts({ ...opts, paperSize: v as PaperSize })} options={["A4", "Letter", "Legal"]} disabled={busy} />
+              <SelectField label="Orientation" value={opts.orientation}      onChange={(v) => setOpts({ ...opts, orientation: v as any })}     options={["portrait", "landscape"]} disabled={busy} icon={RotateCw} />
+              <SelectField label="Margin (mm)" value={String(opts.marginMm)} onChange={(v) => setOpts({ ...opts, marginMm: Number(v) })}       options={["0", "5", "10", "15", "20", "25"]} disabled={busy} icon={Ruler} />
             </div>
           </div>
 
@@ -249,34 +246,4 @@ function SelectField({
       </select>
     </label>
   );
-}
-
-/* ---------- combined-PDF helper: re-paginate by re-rendering a blob into images ---------- */
-// We embed the rendered PDF blob inside an <embed> isn't reliable; instead we re-render
-// the sheet to canvases lightweight via a dataURL roundtrip through pdf.js would be heavy.
-// As a pragmatic alternative, we read the rendered PDF blob through the browser by rendering
-// each page back to an image using a hidden <embed> is impossible. So we cheat: combined mode
-// re-uses the same headless renderer per template, then captures each composed page as a JPEG
-// directly. Implementation below is a compatibility wrapper that just returns the JPEGs by
-// re-running html2canvas isn't necessary — we already produce per-page JPEGs inside
-// renderSheetToPdfBlob, but they are baked into the PDF.
-//
-// Trade-off: for "combined", we accept one PDF per doc and merge by re-converting to PNGs via
-// an OffscreenCanvas roundtrip on the rendered PDF using pdf.js, which is not bundled here.
-// To keep behaviour reliable, we fall back to producing a multi-page PDF by re-rendering the
-// sheet using the existing renderer, then opening the produced blob into an <img> via
-// URL.createObjectURL — but PDFs cannot be drawn to canvas without pdf.js.
-//
-// Hence: we use a much simpler route: call renderSheetToPdfBlob once per template, then for
-// combined we use jsPDF's `getNumberOfPages` trick by re-rendering each template using the
-// internal canvas pipeline directly here (importing it would create a cycle).
-//
-// To keep this PR small & correct, the combined mode simply rerenders each template using the
-// pdfExport API and assembles a multi-doc PDF by drawing every produced PDF's first-page-only
-// fallback. To avoid surprising users we therefore use ZIP as the recommended mode (default).
-async function renderSheetToCanvasesViaBlob(_blob: Blob): Promise<string[]> {
-  // No pdf.js bundled — return empty so caller falls back to single-page placeholder.
-  // (Combined export will still produce a valid PDF using the ZIP path; we kept this stub
-  // so the "Combined PDF" button works for typical use without bundling pdf.js.)
-  return [];
 }
