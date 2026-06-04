@@ -1613,15 +1613,21 @@ export default function Dashboard() {
         </aside>
       </div>
 
-      {/* Bottom banner — graphic-rich CTA */}
-      <div className="relative mt-8 overflow-hidden rounded-3xl bg-gradient-hero p-6 text-white shadow-premium sm:p-10">
-        {/* Animated orbs */}
-        <span className="pointer-events-none absolute -left-16 -top-16 size-64 rounded-full bg-white/20 blur-3xl vh-float" />
-        <span className="pointer-events-none absolute -bottom-20 right-1/4 size-72 rounded-full bg-accent/40 blur-3xl vh-float" style={{ animationDelay: "1.2s" }} />
-        <span className="pointer-events-none absolute right-10 top-6 size-32 rounded-full bg-warning/30 blur-2xl vh-float" style={{ animationDelay: "0.6s" }} />
+      {/* ============ Bottom banner — colorful, premium, infographic CTA ============ */}
+      <div className="relative mt-8 overflow-hidden rounded-[2rem] p-6 text-white shadow-premium sm:p-10"
+        style={{
+          backgroundImage:
+            "linear-gradient(125deg, hsl(260 75% 35%) 0%, hsl(235 75% 42%) 28%, hsl(195 85% 48%) 58%, hsl(158 70% 50%) 85%, hsl(48 95% 60%) 100%)",
+        }}
+      >
+        {/* Animated colorful orbs */}
+        <span className="pointer-events-none absolute -left-20 -top-20 size-72 rounded-full bg-[hsl(340_85%_65%)]/60 blur-3xl vh-float" />
+        <span className="pointer-events-none absolute -bottom-24 right-1/4 size-80 rounded-full bg-[hsl(48_95%_60%)]/50 blur-3xl vh-float" style={{ animationDelay: "1.2s" }} />
+        <span className="pointer-events-none absolute right-6 top-4 size-40 rounded-full bg-[hsl(195_85%_70%)]/50 blur-2xl vh-float" style={{ animationDelay: "0.6s" }} />
+        <span className="pointer-events-none absolute left-1/3 top-1/2 size-28 rounded-full bg-[hsl(280_85%_70%)]/40 blur-2xl vh-float" style={{ animationDelay: "2s" }} />
 
         {/* Grid pattern overlay */}
-        <svg className="pointer-events-none absolute inset-0 h-full w-full opacity-[0.12]" xmlns="http://www.w3.org/2000/svg">
+        <svg className="pointer-events-none absolute inset-0 h-full w-full opacity-[0.14]" xmlns="http://www.w3.org/2000/svg">
           <defs>
             <pattern id="vh-grid" width="32" height="32" patternUnits="userSpaceOnUse">
               <path d="M32 0H0V32" fill="none" stroke="white" strokeWidth="0.6" />
@@ -1630,53 +1636,75 @@ export default function Dashboard() {
           <rect width="100%" height="100%" fill="url(#vh-grid)" />
         </svg>
 
-        {/* Decorative dotted arcs (desktop only) */}
-        <svg className="pointer-events-none absolute -right-10 top-1/2 hidden -translate-y-1/2 opacity-30 md:block" width="260" height="260" viewBox="0 0 260 260">
-          <circle cx="130" cy="130" r="120" fill="none" stroke="white" strokeWidth="1" strokeDasharray="2 6" />
-          <circle cx="130" cy="130" r="90" fill="none" stroke="white" strokeWidth="1" strokeDasharray="2 6" />
-          <circle cx="130" cy="130" r="60" fill="none" stroke="white" strokeWidth="1" strokeDasharray="2 6" />
+        {/* Decorative dotted arcs */}
+        <svg className="pointer-events-none absolute -right-10 top-1/2 hidden -translate-y-1/2 opacity-40 md:block" width="300" height="300" viewBox="0 0 300 300">
+          <circle cx="150" cy="150" r="140" fill="none" stroke="white" strokeWidth="1" strokeDasharray="2 6" />
+          <circle cx="150" cy="150" r="105" fill="none" stroke="white" strokeWidth="1" strokeDasharray="2 6" />
+          <circle cx="150" cy="150" r="70" fill="none" stroke="white" strokeWidth="1" strokeDasharray="2 6" />
+          <circle cx="150" cy="150" r="35" fill="none" stroke="white" strokeWidth="1.5" />
         </svg>
 
-        <div className="relative flex flex-col items-start gap-5 md:flex-row md:items-center md:justify-between">
+        {/* Floating sparkles */}
+        {[
+          { top: "12%", left: "8%", d: 0 },
+          { top: "75%", left: "12%", d: 1.2 },
+          { top: "18%", left: "55%", d: 0.6 },
+          { top: "82%", left: "62%", d: 1.8 },
+        ].map((s, i) => (
+          <span key={i} className="pointer-events-none absolute hidden vh-float md:block"
+            style={{ top: s.top, left: s.left, animationDelay: `${s.d}s` }}>
+            <span className="block size-2 rotate-45 bg-white shadow-[0_0_18px_rgba(255,255,255,0.9)]" />
+          </span>
+        ))}
+
+        <div className="relative flex flex-col items-start gap-6 md:flex-row md:items-center md:justify-between">
           <div className="max-w-2xl">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/90 backdrop-blur">
-              <span className="size-1.5 animate-pulse rounded-full bg-success" />
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/15 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-white backdrop-blur-md">
+              <span className="relative grid size-2 place-items-center">
+                <span className="absolute inset-0 animate-ping rounded-full bg-[hsl(48_95%_60%)]" />
+                <span className="relative size-2 rounded-full bg-[hsl(48_95%_60%)]" />
+              </span>
               VisaHOBe Operating OS
             </div>
-            <h3 className="mt-3 font-display text-2xl font-bold leading-tight sm:text-3xl md:text-4xl">
-              Build, manage & grow your client businesses
-              <span className="block bg-gradient-to-r from-white via-warning to-white bg-clip-text text-transparent">
-                — all in one place.
+            <h3 className="mt-4 font-display text-2xl font-bold leading-tight sm:text-3xl md:text-[2.6rem]">
+              Build, manage & grow{" "}
+              <span className="bg-gradient-to-r from-[hsl(48_95%_75%)] via-white to-[hsl(340_85%_85%)] bg-clip-text text-transparent">
+                your client businesses
               </span>
+              <span className="block text-white/90">— all in one beautiful place.</span>
             </h3>
 
-            {/* Mini stat strip */}
-            <div className="mt-4 grid grid-cols-3 gap-2 sm:max-w-md">
+            {/* Infographic mini stat strip — colorful tiles */}
+            <div className="mt-5 grid grid-cols-3 gap-2.5 sm:max-w-lg">
               {[
-                { v: "12+", l: "Workspaces" },
-                { v: "98%", l: "On-time" },
-                { v: "24/7", l: "AI Support" },
+                { v: "12+",  l: "Workspaces", tone: "from-[hsl(340_85%_65%)] to-[hsl(20_85%_60%)]",  icon: "▲" },
+                { v: "98%",  l: "On-time",    tone: "from-[hsl(158_70%_50%)] to-[hsl(195_85%_55%)]", icon: "✓" },
+                { v: "24/7", l: "AI Support", tone: "from-[hsl(48_95%_60%)] to-[hsl(20_85%_60%)]",   icon: "✦" },
               ].map((s) => (
-                <div key={s.l} className="rounded-xl border border-white/20 bg-white/10 p-2 text-center backdrop-blur">
-                  <div className="font-display text-lg font-bold leading-none">{s.v}</div>
-                  <div className="mt-1 text-[9px] uppercase tracking-wider text-white/70">{s.l}</div>
+                <div key={s.l} className="group relative overflow-hidden rounded-2xl border border-white/25 bg-white/10 p-3 text-center backdrop-blur-md transition hover:-translate-y-0.5 hover:bg-white/15">
+                  <span className={`absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r ${s.tone}`} />
+                  <div className="flex items-center justify-center gap-1.5">
+                    <span className={`bg-gradient-to-br ${s.tone} bg-clip-text text-sm font-bold text-transparent`}>{s.icon}</span>
+                    <span className="font-display text-xl font-bold leading-none">{s.v}</span>
+                  </div>
+                  <div className="mt-1.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-white/75">{s.l}</div>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="flex w-full flex-col gap-2 sm:flex-row md:w-auto md:flex-col lg:flex-row">
+          <div className="flex w-full flex-col gap-2.5 sm:flex-row md:w-auto md:flex-col lg:flex-row">
             <Link
               to="/clients/new"
-              className="group relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-xl bg-white px-5 py-3 text-sm font-semibold text-primary shadow-elegant transition hover:-translate-y-0.5 hover:shadow-glow"
+              className="group relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-2xl bg-white px-6 py-3.5 text-sm font-bold text-primary shadow-premium transition hover:-translate-y-0.5 hover:shadow-glow"
             >
               <span className="relative z-10">+ New Workspace</span>
-              <ChevronRight className="size-4 transition-transform group-hover:translate-x-1" />
-              <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-accent/20 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
+              <ChevronRight className="relative z-10 size-4 transition-transform group-hover:translate-x-1" />
+              <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-[hsl(48_95%_60%)]/40 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
             </Link>
             <Link
               to="/brand-builder"
-              className="group inline-flex items-center justify-center gap-2 rounded-xl border border-white/30 bg-white/10 px-5 py-3 text-sm font-semibold backdrop-blur transition hover:-translate-y-0.5 hover:bg-white/20"
+              className="group inline-flex items-center justify-center gap-2 rounded-2xl border border-white/35 bg-white/10 px-6 py-3.5 text-sm font-bold backdrop-blur-md transition hover:-translate-y-0.5 hover:bg-white/20"
             >
               <Palette className="size-4" />
               Open Brand Builder
