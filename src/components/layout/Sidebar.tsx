@@ -76,12 +76,12 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
             <span className="font-display text-base font-bold">V</span>
           </div>
           <div className="leading-tight">
-            <div className="font-display text-sm font-bold tracking-tight text-sidebar-primary">VisaHOBe</div>
-            <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-sidebar-foreground/60">Business OS</div>
+            <div className="font-display text-sm font-bold tracking-tight text-white">VisaHOBe</div>
+            <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/70">Business OS</div>
           </div>
         </div>
         {onClose && (
-          <button onClick={onClose} className="rounded-md p-1.5 text-sidebar-foreground/70 hover:bg-sidebar-accent lg:hidden">
+          <button onClick={onClose} className="rounded-md p-1.5 text-white/80 hover:bg-white/10 lg:hidden">
             <X className="size-4" />
           </button>
         )}
@@ -93,7 +93,7 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
           if (!items.length) return null;
           return (
             <div key={group.label} className="mb-5">
-              <div className="px-3 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-sidebar-foreground/55">
+              <div className="px-3 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/60">
                 {group.label}
               </div>
               <ul className="space-y-0.5">
@@ -107,12 +107,12 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
                         cn(
                           "group flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition-all duration-200",
                           isActive
-                            ? "bg-sidebar-accent text-sidebar-primary font-semibold shadow-[inset_2px_0_0_0_hsl(var(--accent))]"
-                            : "text-sidebar-foreground/80 hover:translate-x-0.5 hover:bg-sidebar-accent/70 hover:text-sidebar-primary"
+                            ? "bg-white/15 text-white font-semibold shadow-[inset_2px_0_0_0_hsl(var(--accent))] backdrop-blur"
+                            : "text-white/85 hover:translate-x-0.5 hover:bg-white/10 hover:text-white"
                         )
                       }
                     >
-                      <item.icon className="size-4 shrink-0 opacity-90" />
+                      <item.icon className="size-4 shrink-0 opacity-95" />
                       <span className="truncate">{item.label}</span>
                     </NavLink>
                   </li>
@@ -122,6 +122,8 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
           );
         })}
       </nav>
+
+
 
       <div className="mx-3 mb-4 rounded-2xl border border-sidebar-border bg-sidebar-accent/60 p-3">
         <div className="flex items-center gap-3">
