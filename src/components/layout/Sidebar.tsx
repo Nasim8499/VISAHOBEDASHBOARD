@@ -66,7 +66,8 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
       className="relative flex h-full w-72 flex-col overflow-hidden border-r border-sidebar-border text-sidebar-foreground"
       style={{
         backgroundImage:
-          "radial-gradient(900px 500px at -10% -10%, hsl(235 90% 88% / 0.85) 0%, transparent 55%), radial-gradient(700px 500px at 110% 110%, hsl(260 80% 90% / 0.7) 0%, transparent 55%), linear-gradient(180deg, hsl(240 60% 98%) 0%, hsl(235 70% 95%) 50%, hsl(245 75% 94%) 100%)",
+          "radial-gradient(900px 520px at -10% -10%, hsl(var(--primary) / 0.45) 0%, transparent 55%), radial-gradient(700px 520px at 110% 110%, hsl(var(--accent) / 0.40) 0%, transparent 55%), linear-gradient(180deg, hsl(var(--primary) / 0.92) 0%, hsl(var(--primary-glow) / 0.85) 55%, hsl(var(--accent) / 0.80) 100%)",
+        color: "hsl(0 0% 100%)",
       }}
     >
       <div className="flex items-center justify-between px-5 pt-5 pb-4">
