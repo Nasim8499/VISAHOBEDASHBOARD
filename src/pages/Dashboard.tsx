@@ -1372,7 +1372,8 @@ export default function Dashboard() {
         </div>
 
         {/* Right panel */}
-        <aside className="space-y-6">
+        <aside className="space-y-5">
+          {/* ============ CLIENT COMMUNICATION — premium chat hub ============ */}
           <Card
             title="Client Communication"
             action={
@@ -1381,27 +1382,30 @@ export default function Dashboard() {
               </Link>
             }
           >
-            {/* Live header strip */}
-            <div className="mb-3 flex items-center justify-between rounded-xl border border-border bg-gradient-card p-2.5">
-              <div className="flex items-center gap-2 text-[11px] font-semibold">
-                <span className="relative grid size-2 place-items-center">
-                  <span className="absolute inset-0 animate-ping rounded-full bg-success/60" />
-                  <span className="relative size-2 rounded-full bg-success" />
-                </span>
-                3 active chats
+            {/* Animated stat ribbon */}
+            <div className="relative mb-3 overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-[hsl(235_75%_96%)] via-card to-[hsl(260_70%_97%)] p-3">
+              <span className="pointer-events-none absolute -right-6 -top-6 size-20 rounded-full bg-accent/20 blur-2xl" />
+              <div className="relative flex items-center justify-between">
+                <div>
+                  <div className="text-[9px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Live inbox</div>
+                  <div className="mt-1 flex items-baseline gap-1.5">
+                    <span className="font-display text-xl font-bold">3</span>
+                    <span className="text-[10px] font-medium text-muted-foreground">active chats</span>
+                  </div>
+                </div>
+                <div className="flex -space-x-2">
+                  {["R", "A", "D"].map((l, i) => (
+                    <span key={l} className={`grid size-7 place-items-center rounded-full text-[10px] font-bold text-white ring-2 ring-card ${["bg-accent", "bg-warning", "bg-success"][i]}`}>
+                      {l}
+                    </span>
+                  ))}
+                </div>
               </div>
-              <div className="flex -space-x-2">
-                {["R", "A", "D"].map((l, i) => (
-                  <span
-                    key={l}
-                    className={`grid size-6 place-items-center rounded-full text-[10px] font-bold text-white ring-2 ring-card ${
-                      ["bg-accent", "bg-warning", "bg-success"][i]
-                    }`}
-                  >
-                    {l}
-                  </span>
-                ))}
-              </div>
+              {/* Sparkline */}
+              <svg viewBox="0 0 120 24" className="mt-2 h-6 w-full">
+                <polyline points="0,18 15,14 30,16 45,8 60,12 75,4 90,9 105,6 120,2"
+                  fill="none" stroke="hsl(235 75% 60%)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
             </div>
 
             <ul className="space-y-2">
@@ -1410,21 +1414,12 @@ export default function Dashboard() {
                 { name: "Aaliyah (GlowBeauty)", msg: "Can we tweak the banner copy?", t: "1h", unread: 1, tone: "bg-warning", emoji: "✏️" },
                 { name: "Daniel (Elite Travel)", msg: "Approved the social kit ✅", t: "3h", unread: 0, tone: "bg-success", emoji: "✅" },
               ].map((m, i) => (
-                <li
-                  key={i}
-                  className="group relative flex items-start gap-3 overflow-hidden rounded-2xl border border-border bg-card p-2.5 transition-all hover:-translate-y-0.5 hover:shadow-elegant"
-                >
-                  {/* Left accent rail */}
+                <li key={i} className="group relative flex items-start gap-3 overflow-hidden rounded-2xl border border-border bg-card p-2.5 transition-all hover:-translate-y-0.5 hover:shadow-elegant">
                   <span className={`absolute left-0 top-0 h-full w-1 ${m.tone}`} />
-
-                  {/* Avatar with status dot */}
                   <span className="relative shrink-0">
-                    <span className={`grid size-10 place-items-center rounded-full text-sm font-bold text-white ${m.tone}`}>
-                      {m.name[0]}
-                    </span>
+                    <span className={`grid size-10 place-items-center rounded-full text-sm font-bold text-white ${m.tone}`}>{m.name[0]}</span>
                     <span className="absolute -bottom-0.5 -right-0.5 size-3 rounded-full border-2 border-card bg-success" />
                   </span>
-
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-2">
                       <span className="truncate text-[13px] font-bold">{m.name}</span>
@@ -1432,24 +1427,16 @@ export default function Dashboard() {
                     </div>
                     <div className="mt-0.5 flex items-center justify-between gap-2">
                       <p className="truncate text-[11px] text-muted-foreground">
-                        <span className="mr-1">{m.emoji}</span>
-                        {m.msg}
+                        <span className="mr-1">{m.emoji}</span>{m.msg}
                       </p>
                       {m.unread > 0 && (
-                        <span className="grid size-4 shrink-0 animate-pulse place-items-center rounded-full bg-destructive text-[9px] font-bold text-white">
-                          {m.unread}
-                        </span>
+                        <span className="grid size-4 shrink-0 animate-pulse place-items-center rounded-full bg-destructive text-[9px] font-bold text-white">{m.unread}</span>
                       )}
                     </div>
-                    {/* Typing wave for first item */}
                     {i === 0 && (
                       <div className="mt-1 flex items-center gap-0.5">
                         {[0, 1, 2].map((d) => (
-                          <span
-                            key={d}
-                            className="size-1 animate-bounce rounded-full bg-accent"
-                            style={{ animationDelay: `${d * 0.15}s` }}
-                          />
+                          <span key={d} className="size-1 animate-bounce rounded-full bg-accent" style={{ animationDelay: `${d * 0.15}s` }} />
                         ))}
                         <span className="ml-1 text-[9px] font-medium text-accent">typing…</span>
                       </div>
@@ -1459,7 +1446,6 @@ export default function Dashboard() {
               ))}
             </ul>
 
-            {/* Quick reply input */}
             <form
               onSubmit={(e) => {
                 e.preventDefault();
@@ -1475,59 +1461,69 @@ export default function Dashboard() {
                 placeholder="Quick reply…"
                 className="flex-1 bg-transparent px-2 text-[12px] outline-none placeholder:text-muted-foreground"
               />
-              <motion.button
-                type="submit"
-                whileTap={{ scale: 0.9 }}
-                whileHover={{ scale: 1.08 }}
-                className="grid size-7 place-items-center rounded-lg bg-gradient-blue text-white"
-              >
+              <motion.button type="submit" whileTap={{ scale: 0.9 }} whileHover={{ scale: 1.08 }} className="grid size-7 place-items-center rounded-lg bg-gradient-blue text-white">
                 <ChevronRight className="size-3.5" />
               </motion.button>
             </form>
           </Card>
 
+          {/* ============ UPCOMING MEETINGS — timeline rail ============ */}
           <Card title="Upcoming Meetings" action={<Link to="/meetings" className="text-xs font-semibold text-accent">Calendar →</Link>}>
-            <ul className="space-y-3">
-              {meetings.map((m, i) => (
-                <li key={i} className="flex items-center gap-3 rounded-xl border border-border p-3">
-                  <div className="grid size-11 place-items-center rounded-xl bg-gradient-blue text-white">
-                    <Calendar className="size-4" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="truncate text-sm font-semibold">{m.title}</div>
-                    <div className="truncate text-xs text-muted-foreground">{m.business}</div>
-                    <div className="text-[11px] text-accent">{m.time}</div>
-                  </div>
-                  <button
-                    onClick={() => toast.success(`Joining ${m.title}…`, { description: "Opening secure room." })}
-                    className="rounded-lg border border-border px-2.5 py-1.5 text-xs font-semibold hover:bg-muted"
-                  >
-                    Join
-                  </button>
-                </li>
-              ))}
-            </ul>
+            <div className="relative pl-5">
+              {/* Vertical timeline */}
+              <span className="absolute left-1.5 top-2 bottom-2 w-px bg-gradient-to-b from-accent via-border to-transparent" />
+              <ul className="space-y-3">
+                {meetings.map((m, i) => (
+                  <li key={i} className="relative">
+                    <span className={`absolute -left-[18px] top-3 grid size-3 place-items-center rounded-full ring-4 ring-card ${i === 0 ? "bg-accent" : "bg-muted-foreground/40"}`}>
+                      {i === 0 && <span className="size-1.5 animate-ping rounded-full bg-accent" />}
+                    </span>
+                    <div className="group flex items-center gap-3 rounded-2xl border border-border bg-card p-3 transition hover:-translate-y-0.5 hover:shadow-elegant">
+                      <div className="grid size-11 place-items-center rounded-xl bg-gradient-to-br from-[hsl(230_55%_18%)] to-[hsl(235_75%_55%)] text-white shadow-elegant">
+                        <Calendar className="size-4" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate text-sm font-bold">{m.title}</div>
+                        <div className="truncate text-[11px] text-muted-foreground">{m.business}</div>
+                        <div className="mt-0.5 inline-flex items-center gap-1 text-[10px] font-semibold text-accent">
+                          <span className="size-1 rounded-full bg-accent" /> {m.time}
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => toast.success(`Joining ${m.title}…`, { description: "Opening secure room." })}
+                        className="rounded-lg bg-primary px-2.5 py-1.5 text-[11px] font-bold text-primary-foreground transition group-hover:bg-accent group-hover:text-accent-foreground"
+                      >
+                        Join
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </Card>
 
+          {/* ============ AI ASSISTANT — premium glass panel ============ */}
           <Card title="AI Assistant">
-            <div className="relative overflow-hidden rounded-2xl bg-gradient-hero p-4 text-white">
-              {/* Animated orbs */}
-              <span className="pointer-events-none absolute -right-10 -top-10 size-32 rounded-full bg-accent/40 blur-2xl vh-float" />
-              <span className="pointer-events-none absolute -bottom-12 -left-8 size-28 rounded-full bg-warning/30 blur-2xl vh-float" style={{ animationDelay: "1s" }} />
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[hsl(230_55%_14%)] via-[hsl(235_60%_22%)] to-[hsl(260_70%_30%)] p-4 text-white">
+              {/* Parallax orbs */}
+              <span className="pointer-events-none absolute -right-10 -top-10 size-32 rounded-full bg-accent/50 blur-2xl vh-float" />
+              <span className="pointer-events-none absolute -bottom-12 -left-8 size-28 rounded-full bg-[hsl(260_75%_60%)]/40 blur-2xl vh-float" style={{ animationDelay: "1s" }} />
 
-              {/* Soundwave SVG */}
+              {/* Grid backdrop */}
+              <svg className="pointer-events-none absolute inset-0 size-full opacity-[0.08]" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <pattern id="ai-grid" width="20" height="20" patternUnits="userSpaceOnUse">
+                    <path d="M20 0H0V20" fill="none" stroke="white" strokeWidth="0.5" />
+                  </pattern>
+                </defs>
+                <rect width="100%" height="100%" fill="url(#ai-grid)" />
+              </svg>
+
+              {/* Soundwave */}
               <svg className="pointer-events-none absolute bottom-2 right-3 opacity-40" width="80" height="32" viewBox="0 0 80 32">
                 {Array.from({ length: 12 }).map((_, i) => (
-                  <rect
-                    key={i}
-                    x={i * 7}
-                    y={16 - (4 + (i % 4) * 4)}
-                    width="3"
-                    height={8 + (i % 4) * 8}
-                    rx="1.5"
-                    fill="white"
-                    style={{ animation: `vh-rise 1.${i}s ease-in-out ${i * 0.08}s infinite alternate` }}
-                  />
+                  <rect key={i} x={i * 7} y={16 - (4 + (i % 4) * 4)} width="3" height={8 + (i % 4) * 8} rx="1.5" fill="white"
+                    style={{ animation: `vh-rise 1.${i}s ease-in-out ${i * 0.08}s infinite alternate` }} />
                 ))}
               </svg>
 
@@ -1535,12 +1531,11 @@ export default function Dashboard() {
                 <div className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider backdrop-blur">
                   <Sparkles className="size-3 animate-pulse" /> VisaHOBe AI
                 </div>
-                <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-success">
+                <span className="inline-flex items-center gap-1 rounded-full bg-success/20 px-2 py-0.5 text-[10px] font-semibold text-success">
                   <span className="size-1.5 animate-pulse rounded-full bg-success" /> Online
                 </span>
               </div>
 
-              {/* Avatar + bubble */}
               <div className="relative mt-3 flex items-start gap-2.5">
                 <span className="relative grid size-9 shrink-0 place-items-center rounded-full bg-white/15 backdrop-blur">
                   <span className="absolute inset-0 animate-ping rounded-full bg-white/20" />
@@ -1549,23 +1544,15 @@ export default function Dashboard() {
                 <div className="relative rounded-2xl rounded-tl-sm border border-white/15 bg-white/10 p-2.5 backdrop-blur">
                   <p className="text-[13px] leading-relaxed">
                     Want me to draft a launch caption for{" "}
-                    <span className="font-semibold underline decoration-warning decoration-2 underline-offset-2">
-                      {workspace.name}
-                    </span>{" "}
+                    <span className="font-semibold underline decoration-warning decoration-2 underline-offset-2">{workspace.name}</span>{" "}
                     and 3 ad variations?
                   </p>
                 </div>
               </div>
 
-              {/* Suggestion chips */}
               <div className="relative mt-3 flex flex-wrap gap-1.5">
                 {["Captions", "Ad Copy", "Hashtags"].map((c) => (
-                  <span
-                    key={c}
-                    className="rounded-full border border-white/20 bg-white/10 px-2 py-0.5 text-[10px] font-medium backdrop-blur"
-                  >
-                    {c}
-                  </span>
+                  <span key={c} className="rounded-full border border-white/20 bg-white/10 px-2 py-0.5 text-[10px] font-medium backdrop-blur">{c}</span>
                 ))}
               </div>
 
@@ -1583,55 +1570,21 @@ export default function Dashboard() {
             </div>
           </Card>
 
+          {/* ============ QUICK SHORTCUTS — bento tiles ============ */}
           <Card title="Quick Shortcuts" action={<span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">4 tools</span>}>
             <div className="grid grid-cols-2 gap-2.5">
               {[
-                {
-                  to: "/logo-maker",
-                  label: "Logo Maker",
-                  hint: "Brand marks",
-                  icon: Wand2,
-                  grad: "from-accent to-primary",
-                  glow: "bg-accent/40",
-                  badge: "AI",
-                },
-                {
-                  to: "/post-designer",
-                  label: "Post Designer",
-                  hint: "Social posts",
-                  icon: Sparkles,
-                  grad: "from-warning to-destructive",
-                  glow: "bg-warning/40",
-                  badge: "New",
-                },
-                {
-                  to: "/website-builder",
-                  label: "Website",
-                  hint: "Landing page",
-                  icon: Rocket,
-                  grad: "from-success to-accent",
-                  glow: "bg-success/40",
-                  badge: "Live",
-                },
-                {
-                  to: "/documents",
-                  label: "Documents",
-                  hint: "Files & PDFs",
-                  icon: FileText,
-                  grad: "from-primary to-accent",
-                  glow: "bg-primary/40",
-                  badge: "12",
-                },
+                { to: "/logo-maker",      label: "Logo Maker",    hint: "Brand marks",  icon: Wand2,     grad: "from-[hsl(235_75%_60%)] to-[hsl(260_75%_55%)]", glow: "bg-accent/40",     badge: "AI" },
+                { to: "/post-designer",   label: "Post Designer", hint: "Social posts", icon: Sparkles,  grad: "from-[hsl(20_85%_60%)] to-[hsl(340_75%_60%)]",  glow: "bg-warning/40",    badge: "New" },
+                { to: "/website-builder", label: "Website",       hint: "Landing page", icon: Rocket,    grad: "from-[hsl(158_60%_45%)] to-[hsl(195_75%_50%)]", glow: "bg-success/40",    badge: "Live" },
+                { to: "/documents",       label: "Documents",     hint: "Files & PDFs", icon: FileText,  grad: "from-[hsl(230_55%_18%)] to-[hsl(235_75%_55%)]", glow: "bg-primary/40",    badge: "12" },
               ].map((s) => (
                 <Link
                   key={s.label}
                   to={s.to}
-                  className="group relative overflow-hidden rounded-2xl border border-border bg-card p-3 transition-all hover:-translate-y-1 hover:shadow-elegant"
+                  className="group relative overflow-hidden rounded-2xl border border-border bg-card p-3 transition-all hover:-translate-y-1 hover:shadow-premium"
                 >
-                  {/* corner glow */}
-                  <span className={`pointer-events-none absolute -right-6 -top-6 size-16 rounded-full blur-2xl ${s.glow} opacity-60 transition-opacity group-hover:opacity-100`} />
-
-                  {/* dotted pattern */}
+                  <span className={`pointer-events-none absolute -right-6 -top-6 size-20 rounded-full blur-2xl ${s.glow} opacity-70 transition-opacity group-hover:opacity-100`} />
                   <svg className="pointer-events-none absolute inset-0 h-full w-full opacity-[0.05]" xmlns="http://www.w3.org/2000/svg">
                     <defs>
                       <pattern id={`dots-${s.label}`} width="10" height="10" patternUnits="userSpaceOnUse">
@@ -1640,24 +1593,18 @@ export default function Dashboard() {
                     </defs>
                     <rect width="100%" height="100%" fill={`url(#dots-${s.label})`} />
                   </svg>
-
                   <div className="relative flex items-start justify-between">
                     <span className={`grid size-10 place-items-center rounded-xl bg-gradient-to-br ${s.grad} text-white shadow-elegant transition-transform group-hover:scale-110 group-hover:rotate-6`}>
                       <s.icon className="size-5" />
                     </span>
-                    <span className="rounded-full bg-muted px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
-                      {s.badge}
-                    </span>
+                    <span className="rounded-full bg-muted px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-muted-foreground">{s.badge}</span>
                   </div>
-
                   <div className="relative mt-3">
                     <div className="text-[13px] font-bold leading-tight">{s.label}</div>
                     <div className="mt-0.5 text-[10px] text-muted-foreground">{s.hint}</div>
                   </div>
-
                   <div className="relative mt-2 flex items-center gap-1 text-[10px] font-semibold text-accent">
-                    Open
-                    <ChevronRight className="size-3 transition-transform group-hover:translate-x-1" />
+                    Open <ChevronRight className="size-3 transition-transform group-hover:translate-x-1" />
                   </div>
                 </Link>
               ))}
