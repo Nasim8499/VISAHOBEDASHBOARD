@@ -1,8 +1,20 @@
 import { PageContainer, PageHeader } from "@/components/layout/Page";
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Building2, Palette, Bell, Shield, Save, Check } from "lucide-react";
+import { applyBrandTheme, loadBrandTheme, saveBrandTheme } from "@/lib/brandTheme";
+
+const BRAND_PRESETS = [
+  { name: "Ocean", primary: "#003B73", accent: "#177BBB" },
+  { name: "Emerald", primary: "#064e3b", accent: "#10b981" },
+  { name: "Sunset", primary: "#7c2d12", accent: "#f97316" },
+  { name: "Royal", primary: "#312e81", accent: "#8b5cf6" },
+  { name: "Rose", primary: "#831843", accent: "#ec4899" },
+  { name: "Noir Gold", primary: "#0d0d0d", accent: "#c9a84c" },
+  { name: "Cyber", primary: "#0c2340", accent: "#2dd4a8" },
+  { name: "Coral", primary: "#574b90", accent: "#ff6b6b" },
+];
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
@@ -30,8 +42,8 @@ const initial: Group[] = [
     icon: Palette,
     tone: "bg-accent",
     fields: [
-      { l: "Primary Color", v: "#003B73", type: "color" },
-      { l: "Accent Color", v: "#177BBB", type: "color" },
+      { l: "Primary Color", v: loadBrandTheme().primary, type: "color" },
+      { l: "Accent Color", v: loadBrandTheme().accent, type: "color" },
       { l: "Font", v: "Inter" },
     ],
   },
@@ -70,9 +82,28 @@ export default function Settings() {
     );
   };
 
+  // Live-apply brand theme as user tweaks colors
+  const brand = groups.find((g) => g.title === "Brand Theme");
+  const primary = (brand?.fields[0].v as string) || "#003B73";
+  const accent = (brand?.fields[1].v as string) || "#177BBB";
+  useEffect(() => { applyBrandTheme({ primary, accent }); }, [primary, accent]);
+
+  const applyPreset = (p: { primary: string; accent: string }) => {
+    setGroups((prev) =>
+      prev.map((g) =>
+        g.title === "Brand Theme"
+          ? { ...g, fields: g.fields.map((f) =>
+              f.l === "Primary Color" ? { ...f, v: p.primary } as Field :
+              f.l === "Accent Color"  ? { ...f, v: p.accent  } as Field : f) }
+          : g,
+      ),
+    );
+  };
+
   const save = () => {
+    saveBrandTheme({ primary, accent });
     setSavedAt(Date.now());
-    toast.success("Settings saved", { description: "Your changes are live." });
+    toast.success("Settings saved", { description: "Theme applied across the app." });
   };
 
   return (
@@ -177,6 +208,34 @@ export default function Settings() {
                   </div>
                 ))}
               </div>
+              {g.title === "Brand Theme" && (
+                <div className="mt-5 border-t border-border pt-4">
+                  <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Quick palettes
+                  </div>
+                  <div className="grid grid-cols-4 gap-2">
+                    {BRAND_PRESETS.map((p) => (
+                      <button
+                        key={p.name}
+                        onClick={() => applyPreset(p)}
+                        title={p.name}
+                        className="group flex flex-col items-center gap-1 rounded-xl border border-border p-2 transition hover:-translate-y-0.5 hover:shadow-elegant"
+                      >
+                        <span className="flex h-6 w-full overflow-hidden rounded-md ring-1 ring-border">
+                          <span className="flex-1" style={{ background: p.primary }} />
+                          <span className="flex-1" style={{ background: p.accent }} />
+                        </span>
+                        <span className="text-[10px] font-semibold text-muted-foreground group-hover:text-foreground">
+                          {p.name}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                  <p className="mt-3 text-[11px] text-muted-foreground">
+                    Pick any color — changes apply live across sidebar, buttons, and gradients.
+                  </p>
+                </div>
+              )}
             </motion.section>
           );
         })}

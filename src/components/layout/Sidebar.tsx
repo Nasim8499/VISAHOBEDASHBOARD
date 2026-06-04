@@ -66,7 +66,8 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
       className="relative flex h-full w-72 flex-col overflow-hidden border-r border-sidebar-border text-sidebar-foreground"
       style={{
         backgroundImage:
-          "radial-gradient(900px 500px at -10% -10%, hsl(235 90% 88% / 0.85) 0%, transparent 55%), radial-gradient(700px 500px at 110% 110%, hsl(260 80% 90% / 0.7) 0%, transparent 55%), linear-gradient(180deg, hsl(240 60% 98%) 0%, hsl(235 70% 95%) 50%, hsl(245 75% 94%) 100%)",
+          "radial-gradient(900px 520px at -10% -10%, hsl(var(--primary) / 0.45) 0%, transparent 55%), radial-gradient(700px 520px at 110% 110%, hsl(var(--accent) / 0.40) 0%, transparent 55%), linear-gradient(180deg, hsl(var(--primary) / 0.92) 0%, hsl(var(--primary-glow) / 0.85) 55%, hsl(var(--accent) / 0.80) 100%)",
+        color: "hsl(0 0% 100%)",
       }}
     >
       <div className="flex items-center justify-between px-5 pt-5 pb-4">
@@ -75,12 +76,12 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
             <span className="font-display text-base font-bold">V</span>
           </div>
           <div className="leading-tight">
-            <div className="font-display text-sm font-bold tracking-tight text-sidebar-primary">VisaHOBe</div>
-            <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-sidebar-foreground/60">Business OS</div>
+            <div className="font-display text-sm font-bold tracking-tight text-white">VisaHOBe</div>
+            <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/70">Business OS</div>
           </div>
         </div>
         {onClose && (
-          <button onClick={onClose} className="rounded-md p-1.5 text-sidebar-foreground/70 hover:bg-sidebar-accent lg:hidden">
+          <button onClick={onClose} className="rounded-md p-1.5 text-white/80 hover:bg-white/10 lg:hidden">
             <X className="size-4" />
           </button>
         )}
@@ -92,7 +93,7 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
           if (!items.length) return null;
           return (
             <div key={group.label} className="mb-5">
-              <div className="px-3 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-sidebar-foreground/55">
+              <div className="px-3 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/60">
                 {group.label}
               </div>
               <ul className="space-y-0.5">
@@ -106,12 +107,12 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
                         cn(
                           "group flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition-all duration-200",
                           isActive
-                            ? "bg-sidebar-accent text-sidebar-primary font-semibold shadow-[inset_2px_0_0_0_hsl(var(--accent))]"
-                            : "text-sidebar-foreground/80 hover:translate-x-0.5 hover:bg-sidebar-accent/70 hover:text-sidebar-primary"
+                            ? "bg-white/15 text-white font-semibold shadow-[inset_2px_0_0_0_hsl(var(--accent))] backdrop-blur"
+                            : "text-white/85 hover:translate-x-0.5 hover:bg-white/10 hover:text-white"
                         )
                       }
                     >
-                      <item.icon className="size-4 shrink-0 opacity-90" />
+                      <item.icon className="size-4 shrink-0 opacity-95" />
                       <span className="truncate">{item.label}</span>
                     </NavLink>
                   </li>
@@ -122,18 +123,20 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
         })}
       </nav>
 
-      <div className="mx-3 mb-4 rounded-2xl border border-sidebar-border bg-sidebar-accent/60 p-3">
+
+
+      <div className="mx-3 mb-4 rounded-2xl border border-white/15 bg-white/10 p-3 backdrop-blur-md">
         <div className="flex items-center gap-3">
-          <div className="grid size-9 place-items-center rounded-full bg-gradient-blue text-primary-foreground text-xs font-semibold">
+          <div className="grid size-9 place-items-center rounded-full bg-white/20 text-white text-xs font-semibold ring-1 ring-white/30">
             {(fullName || "VH").split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()}
           </div>
           <div className="min-w-0 flex-1">
-            <div className="truncate text-sm font-semibold text-sidebar-primary">{fullName || "VisaHOBe Admin"}</div>
-            <div className="truncate text-xs capitalize text-sidebar-foreground/70">
+            <div className="truncate text-sm font-semibold text-white">{fullName || "VisaHOBe Admin"}</div>
+            <div className="truncate text-xs capitalize text-white/70">
               {role ? role.replace("_", " ") : "Guest"}
             </div>
           </div>
-          <button onClick={signOut} className="rounded-lg p-1.5 text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-primary">
+          <button onClick={signOut} className="rounded-lg p-1.5 text-white/80 hover:bg-white/15 hover:text-white">
             <LogOut className="size-4" />
           </button>
         </div>
