@@ -5,7 +5,11 @@ import html2canvas from "html2canvas";
 import { toast } from "sonner";
 import { DocLang, DOC_LANGS, tr } from "@/lib/i18n-docs";
 import { PrintSheet, PrintSheetProps } from "./PrintSheet";
-import { X, Download, Globe, Loader2, RefreshCw, AlertTriangle, Ruler, Info, FileJson } from "lucide-react";
+import {
+  X, Download, Globe, Loader2, RefreshCw, AlertTriangle, Ruler, Info, FileJson,
+  Settings2, RotateCw,
+} from "lucide-react";
+import { PAPER_SIZES, PaperSize, Orientation, sanitizeFilename } from "@/lib/pdfExport";
 
 interface Props extends Omit<PrintSheetProps, "lang"> {
   open: boolean;
@@ -13,8 +17,6 @@ interface Props extends Omit<PrintSheetProps, "lang"> {
   defaultLang?: DocLang;
 }
 
-const PAGE_W_MM = 210;
-const PAGE_H_MM = 297;
 const GAP_MM = 2;
 const MIN_SLICE_RATIO = 0.35;
 
