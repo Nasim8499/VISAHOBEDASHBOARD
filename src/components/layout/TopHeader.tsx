@@ -247,8 +247,8 @@ export function TopHeader({ onOpenSidebar }: { onOpenSidebar: () => void }) {
                 VH
               </div>
               <div className="min-w-0">
-                <div className="truncate text-sm font-bold">{profile?.full_name || "Super Admin"}</div>
-                <div className="truncate text-[11px] text-muted-foreground">{profile?.username || "admin"}@visahobe</div>
+                <div className="truncate text-sm font-bold">{fullName || "Super Admin"}</div>
+                <div className="truncate text-[11px] text-muted-foreground">{user?.email || "admin@visahobe"}</div>
               </div>
             </div>
             <div className="space-y-0.5 p-1.5">
