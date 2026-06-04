@@ -348,9 +348,22 @@ export function PrintPreviewModal({ open, onClose, defaultLang = "en", ...sheet 
             </div>
 
             <button
+              onClick={() => setShowSettings((s) => !s)}
+              disabled={busy}
+              className={`inline-flex items-center gap-1.5 rounded-xl border px-2.5 py-1.5 text-xs font-semibold transition disabled:opacity-60 ${
+                showSettings
+                  ? "border-accent/40 bg-accent/10 text-accent-foreground"
+                  : "border-border bg-background text-muted-foreground hover:bg-muted"
+              }`}
+              title="Print & export settings"
+            >
+              <Settings2 className="size-3.5" /> {paperSize} · {orientation === "portrait" ? "P" : "L"} · {marginMm}mm
+            </button>
+
+            <button
               onClick={download}
               disabled={busy}
-              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[hsl(220_85%_22%)] to-[hsl(225_80%_42%)] px-4 py-2 text-sm font-bold text-white shadow-elegant transition hover:shadow-glow disabled:opacity-60"
+              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--accent))] px-4 py-2 text-sm font-bold text-white shadow-elegant transition hover:shadow-glow disabled:opacity-60"
             >
               {busy ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />}
               {busy ? "Generating PDF…" : "Download PDF"}
