@@ -66,8 +66,7 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
     <aside
       className="relative flex h-full w-72 flex-col overflow-hidden border-r border-sidebar-border text-sidebar-foreground"
       style={{
-        backgroundImage:
-          "radial-gradient(900px 520px at -10% -10%, hsl(220 85% 28% / 0.85) 0%, transparent 55%), radial-gradient(700px 520px at 110% 110%, hsl(225 75% 18% / 0.95) 0%, transparent 55%), linear-gradient(180deg, hsl(222 80% 10%) 0%, hsl(220 75% 14%) 55%, hsl(225 70% 18%) 100%)",
+        backgroundImage: "var(--gradient-sidebar)",
         color: "hsl(0 0% 100%)",
       }}
     >
