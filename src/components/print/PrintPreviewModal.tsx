@@ -5,7 +5,11 @@ import html2canvas from "html2canvas";
 import { toast } from "sonner";
 import { DocLang, DOC_LANGS, tr } from "@/lib/i18n-docs";
 import { PrintSheet, PrintSheetProps } from "./PrintSheet";
-import { X, Download, Globe, Loader2, RefreshCw, AlertTriangle, Ruler, Info, FileJson } from "lucide-react";
+import {
+  X, Download, Globe, Loader2, RefreshCw, AlertTriangle, Ruler, Info, FileJson,
+  Settings2, RotateCw,
+} from "lucide-react";
+import { PAPER_SIZES, PaperSize, Orientation, sanitizeFilename } from "@/lib/pdfExport";
 
 interface Props extends Omit<PrintSheetProps, "lang"> {
   open: boolean;
@@ -13,6 +17,8 @@ interface Props extends Omit<PrintSheetProps, "lang"> {
   defaultLang?: DocLang;
 }
 
+// The preview is always rendered at A4 source; download() re-scales to the
+// chosen paper size/orientation/margin selected by the user.
 const PAGE_W_MM = 210;
 const PAGE_H_MM = 297;
 const GAP_MM = 2;
@@ -57,7 +63,18 @@ export function PrintPreviewModal({ open, onClose, defaultLang = "en", ...sheet 
   const [debugInfo, setDebugInfo] = useState<DebugInfo | null>(null);
   const [lastLog, setLastLog] = useState<ExportLog | null>(null);
   const [previewPlaceholders, setPreviewPlaceholders] = useState<string[]>([]);
+  // Print/export settings
+  const [paperSize, setPaperSize] = useState<PaperSize>("A4");
+  const [orientation, setOrientation] = useState<Orientation>("portrait");
+  const [marginMm, setMarginMm] = useState<number>(0);
+  const [filename, setFilename] = useState<string>("");
+  const [showSettings, setShowSettings] = useState(false);
   const sheetRef = useRef<HTMLDivElement>(null);
+
+  // Reset filename when the underlying doc changes
+  useEffect(() => {
+    if (open) setFilename(sanitizeFilename(`${sheet.reference || ""}-${sheet.title || "document"}`));
+  }, [open, sheet.reference, sheet.title]);
 
   // Preview-side image fallback: detect blocked images on render and swap them
   // in-place with branded placeholders so what the user sees matches the PDF.
@@ -138,17 +155,31 @@ export function PrintPreviewModal({ open, onClose, defaultLang = "en", ...sheet 
         html2canvas(footerEl, baseOpts),
       ]);
 
+      // Source canvas is rendered at A4 (210mm). Target page can be any size/orientation
+      // with an outer margin; we rescale uniformly to fit innerW × innerH.
+      const size = PAPER_SIZES[paperSize];
+      const targetWmm = orientation === "portrait" ? size.w : size.h;
+      const targetHmm = orientation === "portrait" ? size.h : size.w;
+      const m = Math.max(0, Math.min(25, marginMm));
+      const innerW = targetWmm - m * 2;
+      const innerH = targetHmm - m * 2;
+      const scale = innerW / PAGE_W_MM;
+
       const pxPerMm = bodyCanvas.width / PAGE_W_MM;
       const headerHmm = headerCanvas.height / pxPerMm;
       const footerHmm = footerCanvas.height / pxPerMm;
-      const availableBodyHmm = PAGE_H_MM - headerHmm - footerHmm - GAP_MM * 2;
-      if (availableBodyHmm < 40) throw new Error("Page header/footer leave too little room for body content.");
+      const headerHmmOut = headerHmm * scale;
+      const footerHmmOut = footerHmm * scale;
+      const availableBodyHmmOut = innerH - headerHmmOut - footerHmmOut - GAP_MM * 2;
+      if (availableBodyHmmOut < 30) throw new Error("Page header/footer leave too little room for body content at this size/margin.");
+      const availableBodyHmmSrc = availableBodyHmmOut / scale;
 
       const bodyRect = bodyEl.getBoundingClientRect();
       const ranges = collectAvoidRanges(bodyEl, bodyRect, bodyCanvas.height);
 
-      const pageHpxBody = Math.floor(availableBodyHmm * pxPerMm);
-      const pdf = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
+      const pageHpxBody = Math.floor(availableBodyHmmSrc * pxPerMm);
+      const composeHpx = Math.round((innerH / scale) * pxPerMm);
+      const pdf = new jsPDF({ unit: "mm", format: [targetWmm, targetHmm], orientation });
 
       let cursorPx = 0;
       let pageIndex = 0;
@@ -177,7 +208,7 @@ export function PrintPreviewModal({ open, onClose, defaultLang = "en", ...sheet 
         const sliceH = endPx - cursorPx;
         const page = document.createElement("canvas");
         page.width = bodyCanvas.width;
-        page.height = Math.round(PAGE_H_MM * pxPerMm);
+        page.height = composeHpx;
         const ctx = page.getContext("2d");
         if (!ctx) throw new Error("Canvas 2D context unavailable");
         ctx.fillStyle = "#ffffff";
@@ -196,8 +227,8 @@ export function PrintPreviewModal({ open, onClose, defaultLang = "en", ...sheet 
         ctx.fillText(pageLabel, page.width / 2, footerTopPx - Math.round(2 * pxPerMm));
 
         const img = page.toDataURL("image/jpeg", 0.95);
-        if (pageIndex > 0) pdf.addPage();
-        pdf.addImage(img, "JPEG", 0, 0, PAGE_W_MM, PAGE_H_MM);
+        if (pageIndex > 0) pdf.addPage([targetWmm, targetHmm], orientation);
+        pdf.addImage(img, "JPEG", m, m, innerW, innerH);
 
         logPages.push({ index: pageIndex, startPx: Math.round(cursorPx), endPx: Math.round(endPx), heightPx: Math.round(sliceH) });
         logBreaks.push(Math.round(endPx));
@@ -207,16 +238,17 @@ export function PrintPreviewModal({ open, onClose, defaultLang = "en", ...sheet 
         if (pageIndex > 50) break;
       }
 
-      pdf.save(`${sheet.reference || "document"}-${lang}.pdf`);
+      const outName = `${sanitizeFilename(filename || `${sheet.reference || "document"}-${lang}`)}.pdf`;
+      pdf.save(outName);
 
       const log: ExportLog = {
         generatedAt: new Date().toISOString(),
         reference: sheet.reference,
         language: lang,
-        page: { widthMm: PAGE_W_MM, heightMm: PAGE_H_MM, gapMm: GAP_MM },
+        page: { widthMm: targetWmm, heightMm: targetHmm, gapMm: GAP_MM },
         pxPerMm,
         bodyCanvasHeightPx: bodyCanvas.height,
-        availableBodyHeightMm: availableBodyHmm,
+        availableBodyHeightMm: availableBodyHmmOut,
         pageBreaksPx: logBreaks,
         avoidedRanges: ranges.map((r) => ({
           startPx: Math.round(r.startPx),
@@ -316,9 +348,22 @@ export function PrintPreviewModal({ open, onClose, defaultLang = "en", ...sheet 
             </div>
 
             <button
+              onClick={() => setShowSettings((s) => !s)}
+              disabled={busy}
+              className={`inline-flex items-center gap-1.5 rounded-xl border px-2.5 py-1.5 text-xs font-semibold transition disabled:opacity-60 ${
+                showSettings
+                  ? "border-accent/40 bg-accent/10 text-accent-foreground"
+                  : "border-border bg-background text-muted-foreground hover:bg-muted"
+              }`}
+              title="Print & export settings"
+            >
+              <Settings2 className="size-3.5" /> {paperSize} · {orientation === "portrait" ? "P" : "L"} · {marginMm}mm
+            </button>
+
+            <button
               onClick={download}
               disabled={busy}
-              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[hsl(220_85%_22%)] to-[hsl(225_80%_42%)] px-4 py-2 text-sm font-bold text-white shadow-elegant transition hover:shadow-glow disabled:opacity-60"
+              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--accent))] px-4 py-2 text-sm font-bold text-white shadow-elegant transition hover:shadow-glow disabled:opacity-60"
             >
               {busy ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />}
               {busy ? "Generating PDF…" : "Download PDF"}
@@ -333,6 +378,61 @@ export function PrintPreviewModal({ open, onClose, defaultLang = "en", ...sheet 
             </button>
           </div>
         </div>
+
+        {showSettings && (
+          <div className="border-b border-border bg-card px-4 py-3">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
+              <label className="block">
+                <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Paper size</span>
+                <select
+                  value={paperSize}
+                  onChange={(e) => setPaperSize(e.target.value as PaperSize)}
+                  disabled={busy}
+                  className="h-9 w-full rounded-lg border border-border bg-background px-2 text-sm outline-none focus:border-accent disabled:opacity-60"
+                >
+                  {(["A4", "Letter", "Legal"] as PaperSize[]).map((s) => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </label>
+              <label className="block">
+                <span className="mb-1 flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  <RotateCw className="size-3" /> Orientation
+                </span>
+                <select
+                  value={orientation}
+                  onChange={(e) => setOrientation(e.target.value as Orientation)}
+                  disabled={busy}
+                  className="h-9 w-full rounded-lg border border-border bg-background px-2 text-sm capitalize outline-none focus:border-accent disabled:opacity-60"
+                >
+                  <option value="portrait">Portrait</option>
+                  <option value="landscape">Landscape</option>
+                </select>
+              </label>
+              <label className="block">
+                <span className="mb-1 flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  <Ruler className="size-3" /> Margin
+                </span>
+                <select
+                  value={String(marginMm)}
+                  onChange={(e) => setMarginMm(Number(e.target.value))}
+                  disabled={busy}
+                  className="h-9 w-full rounded-lg border border-border bg-background px-2 text-sm outline-none focus:border-accent disabled:opacity-60"
+                >
+                  {[0, 5, 10, 15, 20, 25].map((v) => <option key={v} value={v}>{v} mm</option>)}
+                </select>
+              </label>
+              <label className="block md:col-span-1">
+                <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">PDF filename</span>
+                <input
+                  value={filename}
+                  onChange={(e) => setFilename(e.target.value)}
+                  disabled={busy}
+                  placeholder="visa-type-client-name"
+                  className="h-9 w-full rounded-lg border border-border bg-background px-2 text-sm outline-none focus:border-accent disabled:opacity-60"
+                />
+              </label>
+            </div>
+          </div>
+        )}
 
         <div className="relative flex-1 overflow-auto bg-muted/40 p-6 pb-24">
           {/* Floating prominent Download PDF CTA */}

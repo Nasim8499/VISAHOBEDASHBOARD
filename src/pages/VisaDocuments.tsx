@@ -1,11 +1,15 @@
 import { PageContainer, PageHeader } from "@/components/layout/Page";
 import { motion } from "framer-motion";
 import { useState } from "react";
+import { toast } from "sonner";
 import {
   Plane, Briefcase, GraduationCap, Globe2, FileCheck2,
   ClipboardList, Mail, Building2, ShieldCheck, Stamp, Eye, Download, Search,
+  CheckSquare, Square, FileArchive, X, Loader2,
 } from "lucide-react";
 import { PrintPreviewModal } from "@/components/print/PrintPreviewModal";
+import { BatchExportModal } from "@/components/print/BatchExportModal";
+import { renderSheetToPdfBlob, saveBlob, sanitizeFilename } from "@/lib/pdfExport";
 import { useWorkspace } from "@/context/WorkspaceContext";
 
 type VisaDoc = {
@@ -342,11 +346,54 @@ export default function VisaDocuments() {
   const [filter, setFilter] = useState<(typeof CATEGORIES)[number]>("All");
   const [q, setQ] = useState("");
   const [selected, setSelected] = useState<VisaDoc | null>(null);
+  const [picked, setPicked] = useState<Set<string>>(new Set());
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [batchOpen, setBatchOpen] = useState(false);
 
   const docs = VISA_DOCS.filter((d) =>
     (filter === "All" || d.category === filter) &&
     (q === "" || d.title.toLowerCase().includes(q.toLowerCase()) || d.ref.toLowerCase().includes(q.toLowerCase()))
   );
+
+  const sheetCommon = {
+    workspaceName: workspace?.name || "VisaHOBe",
+    workspaceLogo: workspace?.logo || "🛂",
+    preparedFor: workspace?.name || "Client",
+    preparedBy: (workspace as any)?.manager_name || "VisaHOBe Consultant",
+    workspace: workspace as any,
+  };
+
+  const togglePick = (id: string) => {
+    setPicked((p) => {
+      const n = new Set(p);
+      if (n.has(id)) n.delete(id); else n.add(id);
+      return n;
+    });
+  };
+  const pickAllVisible = () => setPicked(new Set(docs.map((d) => d.id)));
+  const clearPicks = () => setPicked(new Set());
+
+  async function quickDownload(d: VisaDoc) {
+    setDownloadingId(d.id);
+    const t = toast.loading(`Preparing ${d.title}…`);
+    try {
+      const { blob, filename } = await renderSheetToPdfBlob(
+        {
+          ...sheetCommon, lang: "en", title: d.title, reference: d.ref, category: d.category,
+          body: d.body, size: `A4 · ${d.pages}p`, status: "Print Ready",
+        } as any,
+        { paperSize: "A4", orientation: "portrait", marginMm: 0, filename: sanitizeFilename(`${d.ref}-${d.title}`) },
+      );
+      saveBlob(blob, filename);
+      toast.success("PDF downloaded", { id: t });
+    } catch (err: any) {
+      toast.error("Download failed", { id: t, description: err?.message || String(err) });
+    } finally {
+      setDownloadingId(null);
+    }
+  }
+
+  const pickedDocs = VISA_DOCS.filter((d) => picked.has(d.id));
 
   return (
     <PageContainer>
@@ -419,6 +466,39 @@ export default function VisaDocuments() {
         ))}
       </div>
 
+      {/* Batch selection toolbar */}
+      {picked.size > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: -6 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-accent/40 bg-gradient-to-r from-[hsl(var(--primary))/0.08] to-[hsl(var(--accent))/0.10] p-3 shadow-sm"
+        >
+          <div className="flex items-center gap-2 text-sm">
+            <CheckSquare className="size-4 text-[hsl(var(--accent))]" />
+            <span className="font-bold">{picked.size}</span> template{picked.size === 1 ? "" : "s"} selected
+            <button onClick={pickAllVisible} className="ml-2 text-xs font-semibold text-[hsl(var(--accent))] hover:underline">
+              Select all visible
+            </button>
+          </div>
+          <div className="flex items-center gap-2">
+            <motion.button
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.96 }}
+              onClick={() => setBatchOpen(true)}
+              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--accent))] px-4 py-2 text-xs font-bold text-white shadow-elegant hover:shadow-glow"
+            >
+              <FileArchive className="size-3.5" /> Batch download
+            </motion.button>
+            <button
+              onClick={clearPicks}
+              className="inline-flex items-center gap-1 rounded-xl border border-border bg-card px-3 py-2 text-xs font-semibold text-muted-foreground hover:bg-muted"
+            >
+              <X className="size-3.5" /> Clear
+            </button>
+          </div>
+        </motion.div>
+      )}
+
       {/* Card grid */}
       <motion.div
         layout
@@ -426,6 +506,8 @@ export default function VisaDocuments() {
       >
         {docs.map((d, i) => {
           const Icon = d.icon;
+          const isPicked = picked.has(d.id);
+          const isDownloading = downloadingId === d.id;
           return (
             <motion.div
               key={d.id}
@@ -434,8 +516,21 @@ export default function VisaDocuments() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.45, delay: i * 0.04 }}
               whileHover={{ y: -4 }}
-              className="group relative overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition hover:shadow-elegant"
+              className={`group relative overflow-hidden rounded-2xl border bg-card shadow-sm transition hover:shadow-elegant ${
+                isPicked ? "border-[hsl(var(--accent))] ring-2 ring-[hsl(var(--accent))]/30" : "border-border"
+              }`}
             >
+              {/* Selection checkbox */}
+              <button
+                onClick={() => togglePick(d.id)}
+                title={isPicked ? "Deselect" : "Select for batch download"}
+                className={`absolute left-3 top-3 z-10 grid size-7 place-items-center rounded-lg backdrop-blur transition ${
+                  isPicked ? "bg-[hsl(var(--accent))] text-white shadow-elegant" : "bg-white/80 text-foreground/80 hover:bg-white"
+                }`}
+              >
+                {isPicked ? <CheckSquare className="size-4" /> : <Square className="size-4" />}
+              </button>
+
               {/* Cover */}
               <div className="relative h-32 overflow-hidden" style={{ background: d.tone }}>
                 <div className="absolute inset-0 opacity-30" style={{
@@ -468,18 +563,20 @@ export default function VisaDocuments() {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.97 }}
                     onClick={() => setSelected(d)}
-                    className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-[hsl(220_85%_22%)] to-[hsl(225_80%_35%)] px-3 py-2 text-xs font-bold text-white shadow-sm transition hover:shadow-elegant"
+                    className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2 text-xs font-bold text-foreground transition hover:bg-muted"
                   >
                     <Eye className="size-3.5" /> Preview
                   </motion.button>
                   <motion.button
-                    whileHover={{ scale: 1.03 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setSelected(d)}
-                    className="grid size-9 place-items-center rounded-xl border border-border text-foreground transition hover:bg-muted"
-                    title="Download A4 PDF"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.97 }}
+                    disabled={isDownloading}
+                    onClick={() => quickDownload(d)}
+                    title="Download PDF directly"
+                    className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--accent))] px-3 py-2 text-xs font-bold text-white shadow-sm transition hover:shadow-elegant disabled:opacity-70"
                   >
-                    <Download className="size-4" />
+                    {isDownloading ? <Loader2 className="size-3.5 animate-spin" /> : <Download className="size-3.5" />}
+                    {isDownloading ? "Saving…" : "PDF"}
                   </motion.button>
                 </div>
               </div>
@@ -508,6 +605,16 @@ export default function VisaDocuments() {
         status="Print Ready"
         workspace={workspace as any}
         body={selected?.body}
+      />
+
+      <BatchExportModal
+        open={batchOpen}
+        onClose={() => setBatchOpen(false)}
+        items={pickedDocs.map((d) => ({
+          id: d.id, ref: d.ref, title: d.title, category: d.category, pages: d.pages, body: d.body,
+        }))}
+        sheetCommon={sheetCommon as any}
+        clientName={workspace?.name}
       />
     </PageContainer>
   );
