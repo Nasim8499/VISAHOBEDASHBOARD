@@ -1,8 +1,20 @@
 import { PageContainer, PageHeader } from "@/components/layout/Page";
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Building2, Palette, Bell, Shield, Save, Check } from "lucide-react";
+import { applyBrandTheme, loadBrandTheme, saveBrandTheme } from "@/lib/brandTheme";
+
+const BRAND_PRESETS = [
+  { name: "Ocean", primary: "#003B73", accent: "#177BBB" },
+  { name: "Emerald", primary: "#064e3b", accent: "#10b981" },
+  { name: "Sunset", primary: "#7c2d12", accent: "#f97316" },
+  { name: "Royal", primary: "#312e81", accent: "#8b5cf6" },
+  { name: "Rose", primary: "#831843", accent: "#ec4899" },
+  { name: "Noir Gold", primary: "#0d0d0d", accent: "#c9a84c" },
+  { name: "Cyber", primary: "#0c2340", accent: "#2dd4a8" },
+  { name: "Coral", primary: "#574b90", accent: "#ff6b6b" },
+];
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
@@ -30,8 +42,8 @@ const initial: Group[] = [
     icon: Palette,
     tone: "bg-accent",
     fields: [
-      { l: "Primary Color", v: "#003B73", type: "color" },
-      { l: "Accent Color", v: "#177BBB", type: "color" },
+      { l: "Primary Color", v: loadBrandTheme().primary, type: "color" },
+      { l: "Accent Color", v: loadBrandTheme().accent, type: "color" },
       { l: "Font", v: "Inter" },
     ],
   },
