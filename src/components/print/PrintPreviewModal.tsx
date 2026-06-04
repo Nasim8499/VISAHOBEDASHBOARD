@@ -318,10 +318,10 @@ export function PrintPreviewModal({ open, onClose, defaultLang = "en", ...sheet 
             <button
               onClick={download}
               disabled={busy}
-              className="inline-flex items-center gap-2 rounded-xl bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground transition hover:opacity-90 disabled:opacity-60"
+              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[hsl(220_85%_22%)] to-[hsl(225_80%_42%)] px-4 py-2 text-sm font-bold text-white shadow-elegant transition hover:shadow-glow disabled:opacity-60"
             >
               {busy ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />}
-              {busy ? "Generating…" : tr("download", lang)}
+              {busy ? "Generating PDF…" : "Download PDF"}
             </button>
             <button
               onClick={onClose}
