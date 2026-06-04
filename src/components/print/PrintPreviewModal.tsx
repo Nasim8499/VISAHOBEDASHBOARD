@@ -155,17 +155,31 @@ export function PrintPreviewModal({ open, onClose, defaultLang = "en", ...sheet 
         html2canvas(footerEl, baseOpts),
       ]);
 
+      // Source canvas is rendered at A4 (210mm). Target page can be any size/orientation
+      // with an outer margin; we rescale uniformly to fit innerW × innerH.
+      const size = PAPER_SIZES[paperSize];
+      const targetWmm = orientation === "portrait" ? size.w : size.h;
+      const targetHmm = orientation === "portrait" ? size.h : size.w;
+      const m = Math.max(0, Math.min(25, marginMm));
+      const innerW = targetWmm - m * 2;
+      const innerH = targetHmm - m * 2;
+      const scale = innerW / PAGE_W_MM;
+
       const pxPerMm = bodyCanvas.width / PAGE_W_MM;
       const headerHmm = headerCanvas.height / pxPerMm;
       const footerHmm = footerCanvas.height / pxPerMm;
-      const availableBodyHmm = PAGE_H_MM - headerHmm - footerHmm - GAP_MM * 2;
-      if (availableBodyHmm < 40) throw new Error("Page header/footer leave too little room for body content.");
+      const headerHmmOut = headerHmm * scale;
+      const footerHmmOut = footerHmm * scale;
+      const availableBodyHmmOut = innerH - headerHmmOut - footerHmmOut - GAP_MM * 2;
+      if (availableBodyHmmOut < 30) throw new Error("Page header/footer leave too little room for body content at this size/margin.");
+      const availableBodyHmmSrc = availableBodyHmmOut / scale;
 
       const bodyRect = bodyEl.getBoundingClientRect();
       const ranges = collectAvoidRanges(bodyEl, bodyRect, bodyCanvas.height);
 
-      const pageHpxBody = Math.floor(availableBodyHmm * pxPerMm);
-      const pdf = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
+      const pageHpxBody = Math.floor(availableBodyHmmSrc * pxPerMm);
+      const composeHpx = Math.round((innerH / scale) * pxPerMm);
+      const pdf = new jsPDF({ unit: "mm", format: [targetWmm, targetHmm], orientation });
 
       let cursorPx = 0;
       let pageIndex = 0;
@@ -194,7 +208,7 @@ export function PrintPreviewModal({ open, onClose, defaultLang = "en", ...sheet 
         const sliceH = endPx - cursorPx;
         const page = document.createElement("canvas");
         page.width = bodyCanvas.width;
-        page.height = Math.round(PAGE_H_MM * pxPerMm);
+        page.height = composeHpx;
         const ctx = page.getContext("2d");
         if (!ctx) throw new Error("Canvas 2D context unavailable");
         ctx.fillStyle = "#ffffff";
@@ -213,8 +227,8 @@ export function PrintPreviewModal({ open, onClose, defaultLang = "en", ...sheet 
         ctx.fillText(pageLabel, page.width / 2, footerTopPx - Math.round(2 * pxPerMm));
 
         const img = page.toDataURL("image/jpeg", 0.95);
-        if (pageIndex > 0) pdf.addPage();
-        pdf.addImage(img, "JPEG", 0, 0, PAGE_W_MM, PAGE_H_MM);
+        if (pageIndex > 0) pdf.addPage([targetWmm, targetHmm], orientation);
+        pdf.addImage(img, "JPEG", m, m, innerW, innerH);
 
         logPages.push({ index: pageIndex, startPx: Math.round(cursorPx), endPx: Math.round(endPx), heightPx: Math.round(sliceH) });
         logBreaks.push(Math.round(endPx));
@@ -224,13 +238,14 @@ export function PrintPreviewModal({ open, onClose, defaultLang = "en", ...sheet 
         if (pageIndex > 50) break;
       }
 
-      pdf.save(`${sheet.reference || "document"}-${lang}.pdf`);
+      const outName = `${sanitizeFilename(filename || `${sheet.reference || "document"}-${lang}`)}.pdf`;
+      pdf.save(outName);
 
       const log: ExportLog = {
         generatedAt: new Date().toISOString(),
         reference: sheet.reference,
         language: lang,
-        page: { widthMm: PAGE_W_MM, heightMm: PAGE_H_MM, gapMm: GAP_MM },
+        page: { widthMm: targetWmm, heightMm: targetHmm, gapMm: GAP_MM },
         pxPerMm,
         bodyCanvasHeightPx: bodyCanvas.height,
         availableBodyHeightMm: availableBodyHmm,
