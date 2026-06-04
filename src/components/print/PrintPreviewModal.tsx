@@ -248,7 +248,7 @@ export function PrintPreviewModal({ open, onClose, defaultLang = "en", ...sheet 
         page: { widthMm: targetWmm, heightMm: targetHmm, gapMm: GAP_MM },
         pxPerMm,
         bodyCanvasHeightPx: bodyCanvas.height,
-        availableBodyHeightMm: availableBodyHmm,
+        availableBodyHeightMm: availableBodyHmmOut,
         pageBreaksPx: logBreaks,
         avoidedRanges: ranges.map((r) => ({
           startPx: Math.round(r.startPx),
