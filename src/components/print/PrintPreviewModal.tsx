@@ -63,7 +63,18 @@ export function PrintPreviewModal({ open, onClose, defaultLang = "en", ...sheet 
   const [debugInfo, setDebugInfo] = useState<DebugInfo | null>(null);
   const [lastLog, setLastLog] = useState<ExportLog | null>(null);
   const [previewPlaceholders, setPreviewPlaceholders] = useState<string[]>([]);
+  // Print/export settings
+  const [paperSize, setPaperSize] = useState<PaperSize>("A4");
+  const [orientation, setOrientation] = useState<Orientation>("portrait");
+  const [marginMm, setMarginMm] = useState<number>(0);
+  const [filename, setFilename] = useState<string>("");
+  const [showSettings, setShowSettings] = useState(false);
   const sheetRef = useRef<HTMLDivElement>(null);
+
+  // Reset filename when the underlying doc changes
+  useEffect(() => {
+    if (open) setFilename(sanitizeFilename(`${sheet.reference || ""}-${sheet.title || "document"}`));
+  }, [open, sheet.reference, sheet.title]);
 
   // Preview-side image fallback: detect blocked images on render and swap them
   // in-place with branded placeholders so what the user sees matches the PDF.
