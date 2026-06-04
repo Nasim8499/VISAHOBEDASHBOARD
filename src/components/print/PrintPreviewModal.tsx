@@ -379,6 +379,61 @@ export function PrintPreviewModal({ open, onClose, defaultLang = "en", ...sheet 
           </div>
         </div>
 
+        {showSettings && (
+          <div className="border-b border-border bg-card px-4 py-3">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
+              <label className="block">
+                <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Paper size</span>
+                <select
+                  value={paperSize}
+                  onChange={(e) => setPaperSize(e.target.value as PaperSize)}
+                  disabled={busy}
+                  className="h-9 w-full rounded-lg border border-border bg-background px-2 text-sm outline-none focus:border-accent disabled:opacity-60"
+                >
+                  {(["A4", "Letter", "Legal"] as PaperSize[]).map((s) => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </label>
+              <label className="block">
+                <span className="mb-1 flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  <RotateCw className="size-3" /> Orientation
+                </span>
+                <select
+                  value={orientation}
+                  onChange={(e) => setOrientation(e.target.value as Orientation)}
+                  disabled={busy}
+                  className="h-9 w-full rounded-lg border border-border bg-background px-2 text-sm capitalize outline-none focus:border-accent disabled:opacity-60"
+                >
+                  <option value="portrait">Portrait</option>
+                  <option value="landscape">Landscape</option>
+                </select>
+              </label>
+              <label className="block">
+                <span className="mb-1 flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  <Ruler className="size-3" /> Margin
+                </span>
+                <select
+                  value={String(marginMm)}
+                  onChange={(e) => setMarginMm(Number(e.target.value))}
+                  disabled={busy}
+                  className="h-9 w-full rounded-lg border border-border bg-background px-2 text-sm outline-none focus:border-accent disabled:opacity-60"
+                >
+                  {[0, 5, 10, 15, 20, 25].map((v) => <option key={v} value={v}>{v} mm</option>)}
+                </select>
+              </label>
+              <label className="block md:col-span-1">
+                <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">PDF filename</span>
+                <input
+                  value={filename}
+                  onChange={(e) => setFilename(e.target.value)}
+                  disabled={busy}
+                  placeholder="visa-type-client-name"
+                  className="h-9 w-full rounded-lg border border-border bg-background px-2 text-sm outline-none focus:border-accent disabled:opacity-60"
+                />
+              </label>
+            </div>
+          </div>
+        )}
+
         <div className="relative flex-1 overflow-auto bg-muted/40 p-6 pb-24">
           {/* Floating prominent Download PDF CTA */}
           <button
