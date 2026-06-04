@@ -18,7 +18,7 @@ type PanelKey = "ws" | "mail" | "bell" | "help" | "user" | null;
 export function TopHeader({ onOpenSidebar }: { onOpenSidebar: () => void }) {
   const navigate = useNavigate();
   const { workspace, setWorkspaceId, all } = useWorkspace();
-  const { signOut, profile } = useAuth() as any;
+  const { signOut, fullName, user } = useAuth() as any;
   const [open, setOpen] = useState<PanelKey>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
 
