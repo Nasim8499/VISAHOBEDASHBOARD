@@ -6,8 +6,11 @@ import { motion, AnimatePresence, useScroll, useTransform, useMotionValue, useSp
 import {
   Lock, User2, ArrowRight, ShieldCheck, Shield,
   Briefcase, GraduationCap, ArrowLeft, Sparkles,
-  TrendingUp, Users, Globe2, Zap, BarChart3, Activity,
+  TrendingUp, Users, Globe2, Zap, BarChart3, Activity, Star,
 } from "lucide-react";
+import dashboardHero from "@/assets/auth-dashboard-hero.jpg";
+import workspaceImg from "@/assets/auth-workspace.jpg";
+import trainingImg from "@/assets/auth-training.jpg";
 
 const ADMIN_USERNAME = "admin";
 const ADMIN_PASSWORD = "666085";
