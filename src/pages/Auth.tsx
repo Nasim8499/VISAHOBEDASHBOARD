@@ -18,7 +18,7 @@ const ADMIN_PASSWORD = "666085";
 type Role = "admin" | "employee" | "training";
 
 const ROLES: {
-  id: Role; title: string; subtitle: string; desc: string; icon: any; tone: string; stat: string; statLabel: string;
+  id: Role; title: string; subtitle: string; desc: string; icon: any; tone: string; stat: string; statLabel: string; image: string;
 }[] = [
   {
     id: "admin",
@@ -29,6 +29,7 @@ const ROLES: {
     tone: "from-[hsl(230_55%_18%)] via-[hsl(232_55%_28%)] to-[hsl(235_60%_42%)]",
     stat: "100%",
     statLabel: "Access",
+    image: dashboardHero,
   },
   {
     id: "employee",
@@ -39,6 +40,7 @@ const ROLES: {
     tone: "from-[hsl(235_75%_72%)] via-[hsl(228_75%_78%)] to-[hsl(220_70%_82%)]",
     stat: "12k+",
     statLabel: "Actions / mo",
+    image: workspaceImg,
   },
   {
     id: "training",
@@ -49,6 +51,7 @@ const ROLES: {
     tone: "from-[hsl(245_80%_92%)] via-[hsl(232_75%_88%)] to-[hsl(220_70%_82%)]",
     stat: "98%",
     statLabel: "Pass rate",
+    image: trainingImg,
   },
 ];
 
