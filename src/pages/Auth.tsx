@@ -471,56 +471,35 @@ function InfographicPanel() {
       transition={{ delay: 0.25, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
       className="relative mx-auto hidden w-full max-w-md lg:block"
     >
-      {/* Floating card stack */}
+      {/* Hero dashboard image with tilt + glow */}
       <motion.div
-        animate={{ y: [0, -6, 0] }}
-        transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-        className="relative overflow-hidden rounded-3xl border border-border bg-card/90 p-6 shadow-premium backdrop-blur-xl"
+        initial={{ rotateY: -8, rotateX: 6 }}
+        whileHover={{ rotateY: 0, rotateX: 0, scale: 1.02 }}
+        transition={{ type: "spring", stiffness: 80, damping: 14 }}
+        style={{ transformStyle: "preserve-3d", perspective: 1200 }}
+        className="relative overflow-hidden rounded-3xl border border-border shadow-premium"
       >
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Weekly performance</div>
-            <div className="mt-1 font-display text-2xl font-bold">+24.6%</div>
-          </div>
-          <div className="rounded-full bg-[hsl(158_60%_45%)]/15 px-2.5 py-1 text-[10px] font-semibold text-[hsl(158_60%_38%)]">
-            ▲ on track
-          </div>
-        </div>
-
-        {/* Animated bar chart */}
-        <div className="mt-6 flex h-32 items-end gap-2">
-          {bars.map((h, i) => (
-            <motion.div
-              key={i}
-              initial={{ height: 0 }}
-              animate={{ height: `${h}%` }}
-              transition={{ delay: 0.5 + i * 0.08, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-              className="flex-1 rounded-t-lg bg-gradient-to-t from-[hsl(235_75%_72%)] to-[hsl(260_75%_82%)]"
-            />
-          ))}
-        </div>
-
-        <div className="mt-4 grid grid-cols-7 gap-2 text-center text-[9px] uppercase tracking-wider text-muted-foreground">
-          {["M","T","W","T","F","S","S"].map((d, i) => <span key={i}>{d}</span>)}
-        </div>
-
-        {/* Donut */}
-        <div className="mt-6 flex items-center gap-4 rounded-2xl bg-muted/50 p-4">
-          <svg viewBox="0 0 36 36" className="size-16 -rotate-90">
-            <circle cx="18" cy="18" r="15.9" fill="none" stroke="hsl(var(--border))" strokeWidth="3" />
-            <motion.circle
-              cx="18" cy="18" r="15.9" fill="none"
-              stroke="hsl(235 75% 60%)" strokeWidth="3" strokeLinecap="round"
-              strokeDasharray="100 100"
-              initial={{ strokeDashoffset: 100 }}
-              animate={{ strokeDashoffset: 22 }}
-              transition={{ delay: 0.8, duration: 1.4, ease: [0.22, 1, 0.36, 1] }}
-            />
-          </svg>
-          <div>
-            <div className="font-display text-xl font-bold">78%</div>
-            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Goal completion</div>
-          </div>
+        <motion.img
+          src={dashboardHero}
+          alt="VisaHOBe analytics dashboard"
+          width={1024}
+          height={1024}
+          className="block size-full object-cover"
+          initial={{ scale: 1.1, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
+        />
+        {/* Sheen sweep */}
+        <motion.div
+          initial={{ x: "-120%" }}
+          animate={{ x: "160%" }}
+          transition={{ duration: 2.4, ease: "easeInOut", delay: 0.8, repeat: Infinity, repeatDelay: 4 }}
+          className="pointer-events-none absolute inset-y-0 left-0 w-1/3 -skew-x-12 bg-gradient-to-r from-transparent via-white/25 to-transparent"
+        />
+        {/* Live badge */}
+        <div className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full bg-black/55 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-white backdrop-blur">
+          <span className="size-1.5 animate-pulse rounded-full bg-[hsl(158_60%_55%)]" />
+          Live analytics
         </div>
       </motion.div>
 
