@@ -8,6 +8,9 @@ import {
   Briefcase, GraduationCap, ArrowLeft, Sparkles,
   TrendingUp, Users, Globe2, Zap, BarChart3, Activity,
 } from "lucide-react";
+import dashboardHero from "@/assets/auth-dashboard-hero.jpg";
+import workspaceImg from "@/assets/auth-workspace.jpg";
+import trainingImg from "@/assets/auth-training.jpg";
 
 const ADMIN_USERNAME = "admin";
 const ADMIN_PASSWORD = "666085";
@@ -15,7 +18,7 @@ const ADMIN_PASSWORD = "666085";
 type Role = "admin" | "employee" | "training";
 
 const ROLES: {
-  id: Role; title: string; subtitle: string; desc: string; icon: any; tone: string; stat: string; statLabel: string;
+  id: Role; title: string; subtitle: string; desc: string; icon: any; tone: string; stat: string; statLabel: string; image: string;
 }[] = [
   {
     id: "admin",
@@ -26,6 +29,7 @@ const ROLES: {
     tone: "from-[hsl(230_55%_18%)] via-[hsl(232_55%_28%)] to-[hsl(235_60%_42%)]",
     stat: "100%",
     statLabel: "Access",
+    image: dashboardHero,
   },
   {
     id: "employee",
@@ -36,6 +40,7 @@ const ROLES: {
     tone: "from-[hsl(235_75%_72%)] via-[hsl(228_75%_78%)] to-[hsl(220_70%_82%)]",
     stat: "12k+",
     statLabel: "Actions / mo",
+    image: workspaceImg,
   },
   {
     id: "training",
@@ -46,6 +51,7 @@ const ROLES: {
     tone: "from-[hsl(245_80%_92%)] via-[hsl(232_75%_88%)] to-[hsl(220_70%_82%)]",
     stat: "98%",
     statLabel: "Pass rate",
+    image: trainingImg,
   },
 ];
 
@@ -204,15 +210,27 @@ export default function Auth() {
                     <Sparkles className="size-3 text-accent" /> Premium · Choose your entry
                   </div>
                   <h1 className="mt-5 font-display text-5xl font-bold leading-[1.02] tracking-tight text-foreground sm:text-6xl lg:text-7xl">
-                    A calm,<br />
-                    <span className="bg-gradient-to-r from-[hsl(230_55%_18%)] via-[hsl(235_75%_55%)] to-[hsl(260_75%_60%)] bg-clip-text text-transparent">
-                      premium place
-                    </span><br />
-                    to do focused work.
+                    {["A calm,", "premium place", "to do focused work."].map((line, li) => (
+                      <span key={li} className="block overflow-hidden">
+                        <motion.span
+                          initial={{ y: "110%", opacity: 0 }}
+                          animate={{ y: "0%", opacity: 1 }}
+                          transition={{ delay: 0.15 + li * 0.12, duration: 0.85, ease: [0.22, 1, 0.36, 1] }}
+                          className={li === 1 ? "inline-block bg-gradient-to-r from-[hsl(230_55%_18%)] via-[hsl(235_75%_55%)] to-[hsl(0_75%_58%)] bg-clip-text text-transparent" : "inline-block"}
+                        >
+                          {line}
+                        </motion.span>
+                      </span>
+                    ))}
                   </h1>
-                  <p className="mt-6 max-w-md text-[15px] leading-relaxed text-muted-foreground">
+                  <motion.p
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.55, duration: 0.6 }}
+                    className="mt-6 max-w-md text-[15px] leading-relaxed text-muted-foreground"
+                  >
                     Editorial design meets enterprise power. Pick how you'd like to sign in — each space is tailored to what you do best.
-                  </p>
+                  </motion.p>
 
                   {/* Animated infographic stats */}
                   <div className="mt-10 grid max-w-xl grid-cols-2 gap-3 sm:grid-cols-4">
@@ -253,7 +271,19 @@ export default function Auth() {
                     style={{ transformStyle: "preserve-3d", perspective: 1000 }}
                     className="group relative overflow-hidden rounded-3xl border border-border bg-card p-6 text-left shadow-sm transition-shadow hover:shadow-premium"
                   >
-                    <div className={`absolute inset-x-0 top-0 h-36 bg-gradient-to-br ${r.tone} opacity-95`} />
+                    <div className="absolute inset-x-0 top-0 h-44 overflow-hidden">
+                      <motion.img
+                        src={r.image}
+                        alt={r.title}
+                        loading="lazy"
+                        className="absolute inset-0 size-full object-cover"
+                        initial={{ scale: 1.15 }}
+                        whileHover={{ scale: 1.05 }}
+                        transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+                      />
+                      <div className={`absolute inset-0 bg-gradient-to-br ${r.tone} opacity-70 mix-blend-multiply`} />
+                      <div className="absolute inset-0 bg-gradient-to-t from-card via-card/0 to-transparent" />
+                    </div>
                     {/* Decorative rings */}
                     <svg className="absolute -right-8 -top-8 size-40 opacity-25" viewBox="0 0 200 200">
                       <circle cx="100" cy="100" r="80" fill="none" stroke="white" strokeWidth="1" />
@@ -271,7 +301,7 @@ export default function Auth() {
                           <div className="text-[9px] uppercase tracking-wider text-muted-foreground">{r.statLabel}</div>
                         </div>
                       </div>
-                      <div className="mt-20">
+                      <div className="mt-28">
                         <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
                           {r.subtitle}
                         </div>
@@ -433,7 +463,6 @@ function FloatingShards() {
 
 /* ===== Infographic dashboard mock ===== */
 function InfographicPanel() {
-  const bars = [42, 68, 55, 82, 60, 90, 74];
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
@@ -441,56 +470,35 @@ function InfographicPanel() {
       transition={{ delay: 0.25, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
       className="relative mx-auto hidden w-full max-w-md lg:block"
     >
-      {/* Floating card stack */}
+      {/* Hero dashboard image with tilt + glow */}
       <motion.div
-        animate={{ y: [0, -6, 0] }}
-        transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-        className="relative overflow-hidden rounded-3xl border border-border bg-card/90 p-6 shadow-premium backdrop-blur-xl"
+        initial={{ rotateY: -8, rotateX: 6 }}
+        whileHover={{ rotateY: 0, rotateX: 0, scale: 1.02 }}
+        transition={{ type: "spring", stiffness: 80, damping: 14 }}
+        style={{ transformStyle: "preserve-3d", perspective: 1200 }}
+        className="relative overflow-hidden rounded-3xl border border-border shadow-premium"
       >
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Weekly performance</div>
-            <div className="mt-1 font-display text-2xl font-bold">+24.6%</div>
-          </div>
-          <div className="rounded-full bg-[hsl(158_60%_45%)]/15 px-2.5 py-1 text-[10px] font-semibold text-[hsl(158_60%_38%)]">
-            ▲ on track
-          </div>
-        </div>
-
-        {/* Animated bar chart */}
-        <div className="mt-6 flex h-32 items-end gap-2">
-          {bars.map((h, i) => (
-            <motion.div
-              key={i}
-              initial={{ height: 0 }}
-              animate={{ height: `${h}%` }}
-              transition={{ delay: 0.5 + i * 0.08, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-              className="flex-1 rounded-t-lg bg-gradient-to-t from-[hsl(235_75%_72%)] to-[hsl(260_75%_82%)]"
-            />
-          ))}
-        </div>
-
-        <div className="mt-4 grid grid-cols-7 gap-2 text-center text-[9px] uppercase tracking-wider text-muted-foreground">
-          {["M","T","W","T","F","S","S"].map((d, i) => <span key={i}>{d}</span>)}
-        </div>
-
-        {/* Donut */}
-        <div className="mt-6 flex items-center gap-4 rounded-2xl bg-muted/50 p-4">
-          <svg viewBox="0 0 36 36" className="size-16 -rotate-90">
-            <circle cx="18" cy="18" r="15.9" fill="none" stroke="hsl(var(--border))" strokeWidth="3" />
-            <motion.circle
-              cx="18" cy="18" r="15.9" fill="none"
-              stroke="hsl(235 75% 60%)" strokeWidth="3" strokeLinecap="round"
-              strokeDasharray="100 100"
-              initial={{ strokeDashoffset: 100 }}
-              animate={{ strokeDashoffset: 22 }}
-              transition={{ delay: 0.8, duration: 1.4, ease: [0.22, 1, 0.36, 1] }}
-            />
-          </svg>
-          <div>
-            <div className="font-display text-xl font-bold">78%</div>
-            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Goal completion</div>
-          </div>
+        <motion.img
+          src={dashboardHero}
+          alt="VisaHOBe analytics dashboard"
+          width={1024}
+          height={1024}
+          className="block size-full object-cover"
+          initial={{ scale: 1.1, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
+        />
+        {/* Sheen sweep */}
+        <motion.div
+          initial={{ x: "-120%" }}
+          animate={{ x: "160%" }}
+          transition={{ duration: 2.4, ease: "easeInOut", delay: 0.8, repeat: Infinity, repeatDelay: 4 }}
+          className="pointer-events-none absolute inset-y-0 left-0 w-1/3 -skew-x-12 bg-gradient-to-r from-transparent via-white/25 to-transparent"
+        />
+        {/* Live badge */}
+        <div className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full bg-black/55 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-white backdrop-blur">
+          <span className="size-1.5 animate-pulse rounded-full bg-[hsl(158_60%_55%)]" />
+          Live analytics
         </div>
       </motion.div>
 
