@@ -271,7 +271,19 @@ export default function Auth() {
                     style={{ transformStyle: "preserve-3d", perspective: 1000 }}
                     className="group relative overflow-hidden rounded-3xl border border-border bg-card p-6 text-left shadow-sm transition-shadow hover:shadow-premium"
                   >
-                    <div className={`absolute inset-x-0 top-0 h-36 bg-gradient-to-br ${r.tone} opacity-95`} />
+                    <div className="absolute inset-x-0 top-0 h-44 overflow-hidden">
+                      <motion.img
+                        src={r.image}
+                        alt={r.title}
+                        loading="lazy"
+                        className="absolute inset-0 size-full object-cover"
+                        initial={{ scale: 1.15 }}
+                        whileHover={{ scale: 1.05 }}
+                        transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+                      />
+                      <div className={`absolute inset-0 bg-gradient-to-br ${r.tone} opacity-70 mix-blend-multiply`} />
+                      <div className="absolute inset-0 bg-gradient-to-t from-card via-card/0 to-transparent" />
+                    </div>
                     {/* Decorative rings */}
                     <svg className="absolute -right-8 -top-8 size-40 opacity-25" viewBox="0 0 200 200">
                       <circle cx="100" cy="100" r="80" fill="none" stroke="white" strokeWidth="1" />
