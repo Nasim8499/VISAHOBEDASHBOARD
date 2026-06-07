@@ -463,7 +463,6 @@ function FloatingShards() {
 
 /* ===== Infographic dashboard mock ===== */
 function InfographicPanel() {
-  const bars = [42, 68, 55, 82, 60, 90, 74];
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
