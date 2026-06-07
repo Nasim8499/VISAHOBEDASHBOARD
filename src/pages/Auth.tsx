@@ -301,7 +301,7 @@ export default function Auth() {
                           <div className="text-[9px] uppercase tracking-wider text-muted-foreground">{r.statLabel}</div>
                         </div>
                       </div>
-                      <div className="mt-20">
+                      <div className="mt-28">
                         <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
                           {r.subtitle}
                         </div>
