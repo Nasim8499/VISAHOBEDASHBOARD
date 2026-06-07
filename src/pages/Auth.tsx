@@ -6,7 +6,7 @@ import { motion, AnimatePresence, useScroll, useTransform, useMotionValue, useSp
 import {
   Lock, User2, ArrowRight, ShieldCheck, Shield,
   Briefcase, GraduationCap, ArrowLeft, Sparkles,
-  TrendingUp, Users, Globe2, Zap, BarChart3, Activity, Star,
+  TrendingUp, Users, Globe2, Zap, BarChart3, Activity,
 } from "lucide-react";
 import dashboardHero from "@/assets/auth-dashboard-hero.jpg";
 import workspaceImg from "@/assets/auth-workspace.jpg";
