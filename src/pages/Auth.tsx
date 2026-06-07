@@ -210,15 +210,27 @@ export default function Auth() {
                     <Sparkles className="size-3 text-accent" /> Premium · Choose your entry
                   </div>
                   <h1 className="mt-5 font-display text-5xl font-bold leading-[1.02] tracking-tight text-foreground sm:text-6xl lg:text-7xl">
-                    A calm,<br />
-                    <span className="bg-gradient-to-r from-[hsl(230_55%_18%)] via-[hsl(235_75%_55%)] to-[hsl(260_75%_60%)] bg-clip-text text-transparent">
-                      premium place
-                    </span><br />
-                    to do focused work.
+                    {["A calm,", "premium place", "to do focused work."].map((line, li) => (
+                      <span key={li} className="block overflow-hidden">
+                        <motion.span
+                          initial={{ y: "110%", opacity: 0 }}
+                          animate={{ y: "0%", opacity: 1 }}
+                          transition={{ delay: 0.15 + li * 0.12, duration: 0.85, ease: [0.22, 1, 0.36, 1] }}
+                          className={li === 1 ? "inline-block bg-gradient-to-r from-[hsl(230_55%_18%)] via-[hsl(235_75%_55%)] to-[hsl(0_75%_58%)] bg-clip-text text-transparent" : "inline-block"}
+                        >
+                          {line}
+                        </motion.span>
+                      </span>
+                    ))}
                   </h1>
-                  <p className="mt-6 max-w-md text-[15px] leading-relaxed text-muted-foreground">
+                  <motion.p
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.55, duration: 0.6 }}
+                    className="mt-6 max-w-md text-[15px] leading-relaxed text-muted-foreground"
+                  >
                     Editorial design meets enterprise power. Pick how you'd like to sign in — each space is tailored to what you do best.
-                  </p>
+                  </motion.p>
 
                   {/* Animated infographic stats */}
                   <div className="mt-10 grid max-w-xl grid-cols-2 gap-3 sm:grid-cols-4">
