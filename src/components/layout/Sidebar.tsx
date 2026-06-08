@@ -1,9 +1,7 @@
 import { NavLink } from "react-router-dom";
 import {
   LayoutDashboard, Building2, FolderKanban, ListChecks, CalendarDays,
-  CheckSquare, Palette, Wand2, Globe2, ImageIcon, LayoutTemplate, Package,
-  FileText, MessageSquare, Video, FolderOpen, Workflow, Sparkles, BarChart3,
-  Users, ScrollText, Receipt, Settings, LogOut, X, Stamp,
+  CheckSquare, BarChart3, Users, ScrollText, Receipt, Settings, LogOut, X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth, AppRole } from "@/context/AuthContext";
@@ -21,29 +19,6 @@ export const navGroups: Group[] = [
       { to: "/tasks", label: "Tasks & Workflow", icon: ListChecks, roles: ["super_admin", "employee"] },
       { to: "/calendar", label: "Calendar", icon: CalendarDays },
       { to: "/approvals", label: "Approvals", icon: CheckSquare },
-    ],
-  },
-  {
-    label: "Brand Studio",
-    items: [
-      { to: "/brand-builder", label: "Brand Builder", icon: Palette, roles: ["super_admin", "employee"] },
-      { to: "/logo-maker", label: "Logo Maker", icon: Wand2, roles: ["super_admin", "employee"] },
-      { to: "/website-builder", label: "Website Builder", icon: Globe2, roles: ["super_admin", "employee"] },
-      { to: "/post-designer", label: "Post Designer", icon: ImageIcon, roles: ["super_admin", "employee"] },
-      { to: "/templates", label: "Templates", icon: LayoutTemplate, roles: ["super_admin", "employee"] },
-      { to: "/brand-kit", label: "Brand Kit", icon: Package },
-    ],
-  },
-  {
-    label: "Operations",
-    items: [
-      { to: "/documents", label: "Documents", icon: FileText },
-      { to: "/visa-documents", label: "Visa Documents", icon: Stamp },
-      { to: "/chat", label: "Live Chat", icon: MessageSquare },
-      { to: "/meetings", label: "Meetings", icon: Video },
-      { to: "/files", label: "File Manager", icon: FolderOpen },
-      { to: "/automation", label: "Automation", icon: Workflow, roles: ["super_admin", "employee"] },
-      { to: "/ai", label: "AI Assistant", icon: Sparkles, roles: ["super_admin", "employee"] },
     ],
   },
   {
@@ -122,8 +97,6 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
           );
         })}
       </nav>
-
-
 
       <div className="mx-3 mb-4 rounded-2xl border border-white/15 bg-white/10 p-3 backdrop-blur-md">
         <div className="flex items-center gap-3">
