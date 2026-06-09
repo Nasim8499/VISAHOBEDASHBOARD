@@ -26,6 +26,7 @@ import Approvals from "./pages/Approvals";
 import ClientApprovals from "./pages/ClientApprovals";
 import ClientPortal from "./pages/ClientPortal";
 import AIAssistant from "./pages/AIAssistant";
+import AIAgents from "./pages/AIAgents";
 import Automation from "./pages/Automation";
 import Reports from "./pages/Reports";
 import Team from "./pages/Team";
