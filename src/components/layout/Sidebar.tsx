@@ -107,32 +107,28 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
           );
         })}
 
-        <div className="mb-5">
-          <div className="flex items-center justify-between px-3 pb-1.5">
-            <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/60">AI Agents</span>
-            <Bot className="size-3 text-white/50" />
-          </div>
-          <div className="grid grid-cols-2 gap-2 px-1">
-            {agents.map((a) => (
-              <NavLink
-                key={a.id}
-                to={`/ai-agents?agent=${a.id}`}
-                onClick={onClose}
-                className={({ isActive }) =>
-                  cn(
-                    "group relative overflow-hidden rounded-xl border border-white/10 p-2 text-[11px] font-medium text-white/90 transition-all hover:-translate-y-0.5 hover:border-white/30",
-                    isActive && "ring-1 ring-white/40"
-                  )
-                }
-              >
-                <div className={cn("absolute inset-0 bg-gradient-to-br opacity-90 group-hover:opacity-100", a.gradient)} />
-                <div className="relative flex items-center gap-1.5">
-                  <a.icon className="size-3.5" />
-                  <span className="truncate">{a.name}</span>
-                </div>
-              </NavLink>
-            ))}
-          </div>
+        <div className="mb-5 px-1">
+          <NavLink
+            to="/ai-agents"
+            onClick={onClose}
+            className={({ isActive }) =>
+              cn(
+                "group relative flex items-center gap-3 overflow-hidden rounded-2xl border border-white/15 bg-gradient-to-r from-[#003B73] via-[#177BBB] to-[#E63946] p-3 text-white shadow-lg shadow-black/20 transition-all duration-300",
+                isActive
+                  ? "ring-2 ring-white/40 shadow-[0_0_20px_rgba(23,123,187,0.35)] scale-[1.02]"
+                  : "hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(23,123,187,0.3)] hover:border-white/30"
+              )
+            }
+          >
+            <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-white/15 backdrop-blur-sm ring-1 ring-white/20">
+              <Bot className="size-5 text-white" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="text-sm font-bold tracking-tight text-white">VisaHOBe Agent</div>
+              <div className="text-[10px] font-medium text-white/80 truncate">AI-powered visa assistant</div>
+            </div>
+            <Sparkles className="size-4 shrink-0 text-white/60 animate-pulse" />
+          </NavLink>
         </div>
       </nav>
 
