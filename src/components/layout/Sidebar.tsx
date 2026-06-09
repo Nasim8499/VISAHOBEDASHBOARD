@@ -106,7 +106,36 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
             </div>
           );
         })}
+
+        <div className="mb-5">
+          <div className="flex items-center justify-between px-3 pb-1.5">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/60">AI Agents</span>
+            <Bot className="size-3 text-white/50" />
+          </div>
+          <div className="grid grid-cols-2 gap-2 px-1">
+            {agents.map((a) => (
+              <NavLink
+                key={a.id}
+                to={`/ai-agents?agent=${a.id}`}
+                onClick={onClose}
+                className={({ isActive }) =>
+                  cn(
+                    "group relative overflow-hidden rounded-xl border border-white/10 p-2 text-[11px] font-medium text-white/90 transition-all hover:-translate-y-0.5 hover:border-white/30",
+                    isActive && "ring-1 ring-white/40"
+                  )
+                }
+              >
+                <div className={cn("absolute inset-0 bg-gradient-to-br opacity-90 group-hover:opacity-100", a.gradient)} />
+                <div className="relative flex items-center gap-1.5">
+                  <a.icon className="size-3.5" />
+                  <span className="truncate">{a.name}</span>
+                </div>
+              </NavLink>
+            ))}
+          </div>
+        </div>
       </nav>
+
 
       <div className="mx-3 mb-4 rounded-2xl border border-white/15 bg-white/10 p-3 backdrop-blur-md">
         <div className="flex items-center gap-3">
