@@ -2,7 +2,6 @@ import { NavLink } from "react-router-dom";
 import {
   LayoutDashboard, Building2, FolderKanban, ListChecks, CalendarDays,
   CheckSquare, BarChart3, Users, ScrollText, Receipt, Settings, LogOut, X,
-  Bot, Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth, AppRole } from "@/context/AuthContext";
@@ -97,32 +96,7 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
             </div>
           );
         })}
-
-        <div className="mb-5 px-1">
-          <NavLink
-            to="/ai-agents"
-            onClick={onClose}
-            className={({ isActive }) =>
-              cn(
-                "group relative flex items-center gap-3 overflow-hidden rounded-2xl border border-white/15 bg-gradient-to-r from-[#003B73] via-[#177BBB] to-[#E63946] p-3 text-white shadow-lg shadow-black/20 transition-all duration-300",
-                isActive
-                  ? "ring-2 ring-white/40 shadow-[0_0_20px_rgba(23,123,187,0.35)] scale-[1.02]"
-                  : "hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(23,123,187,0.3)] hover:border-white/30"
-              )
-            }
-          >
-            <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-white/15 backdrop-blur-sm ring-1 ring-white/20">
-              <Bot className="size-5 text-white" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="text-sm font-bold tracking-tight text-white">VisaHOBe Agent</div>
-              <div className="text-[10px] font-medium text-white/80 truncate">AI-powered visa assistant</div>
-            </div>
-            <Sparkles className="size-4 shrink-0 text-white/60 animate-pulse" />
-          </NavLink>
-        </div>
       </nav>
-
 
       <div className="mx-3 mb-4 rounded-2xl border border-white/15 bg-white/10 p-3 backdrop-blur-md">
         <div className="flex items-center gap-3">

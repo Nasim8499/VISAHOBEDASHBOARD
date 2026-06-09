@@ -26,7 +26,6 @@ import Approvals from "./pages/Approvals";
 import ClientApprovals from "./pages/ClientApprovals";
 import ClientPortal from "./pages/ClientPortal";
 import AIAssistant from "./pages/AIAssistant";
-import AIAgents from "./pages/AIAgents";
 import Automation from "./pages/Automation";
 import Reports from "./pages/Reports";
 import Team from "./pages/Team";
@@ -90,7 +89,6 @@ function AnimatedRoutes() {
           <Route path="/meetings" element={<Meetings />} />
           <Route path="/automation" element={<ProtectedRoute allow={["super_admin", "employee"]}><Automation /></ProtectedRoute>} />
           <Route path="/ai" element={<ProtectedRoute allow={["super_admin", "employee"]}><AIAssistant /></ProtectedRoute>} />
-          <Route path="/ai-agents" element={<ProtectedRoute><AIAgents /></ProtectedRoute>} />
           <Route path="/reports" element={<ProtectedRoute allow={["super_admin"]}><Reports /></ProtectedRoute>} />
           <Route path="/team" element={<ProtectedRoute allow={["super_admin"]}><Team /></ProtectedRoute>} />
           <Route path="/activity" element={<ProtectedRoute allow={["super_admin", "employee"]}><ActivityLogs /></ProtectedRoute>} />
