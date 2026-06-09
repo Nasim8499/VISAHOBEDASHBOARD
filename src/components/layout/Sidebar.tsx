@@ -2,7 +2,7 @@ import { NavLink } from "react-router-dom";
 import {
   LayoutDashboard, Building2, FolderKanban, ListChecks, CalendarDays,
   CheckSquare, BarChart3, Users, ScrollText, Receipt, Settings, LogOut, X,
-  Bot, Sparkles, Cpu, Brain, Zap, Flame, Wind,
+  Bot, Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth, AppRole } from "@/context/AuthContext";
@@ -32,15 +32,6 @@ export const navGroups: Group[] = [
       { to: "/settings", label: "Settings", icon: Settings },
     ],
   },
-];
-
-const agents = [
-  { id: "openai",  name: "OpenAI",  icon: Sparkles, gradient: "from-[#003B73] to-[#177BBB]" },
-  { id: "qwen",    name: "Qwen",    icon: Cpu,      gradient: "from-[#E63946] to-[#F1573D]" },
-  { id: "gemini",  name: "Gemini",  icon: Brain,    gradient: "from-[#177BBB] to-[#003B73]" },
-  { id: "grok",    name: "Grok",    icon: Zap,      gradient: "from-[#F1573D] to-[#E63946]" },
-  { id: "minimax", name: "MiniMax", icon: Flame,    gradient: "from-[#003B73] to-[#E63946]" },
-  { id: "kimi",    name: "Kimi",    icon: Wind,     gradient: "from-[#177BBB] to-[#F1573D]" },
 ];
 
 export function Sidebar({ onClose }: { onClose?: () => void }) {
