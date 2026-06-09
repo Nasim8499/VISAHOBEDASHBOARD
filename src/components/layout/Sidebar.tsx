@@ -2,6 +2,7 @@ import { NavLink } from "react-router-dom";
 import {
   LayoutDashboard, Building2, FolderKanban, ListChecks, CalendarDays,
   CheckSquare, BarChart3, Users, ScrollText, Receipt, Settings, LogOut, X,
+  Bot, Sparkles, Cpu, Brain, Zap, Flame, Wind,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth, AppRole } from "@/context/AuthContext";
