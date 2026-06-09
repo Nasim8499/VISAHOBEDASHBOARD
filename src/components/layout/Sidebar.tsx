@@ -2,6 +2,7 @@ import { NavLink } from "react-router-dom";
 import {
   LayoutDashboard, Building2, FolderKanban, ListChecks, CalendarDays,
   CheckSquare, BarChart3, Users, ScrollText, Receipt, Settings, LogOut, X,
+  Bot, Sparkles, Cpu, Brain, Zap, Flame, Wind,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth, AppRole } from "@/context/AuthContext";
@@ -31,6 +32,15 @@ export const navGroups: Group[] = [
       { to: "/settings", label: "Settings", icon: Settings },
     ],
   },
+];
+
+const agents = [
+  { id: "openai",  name: "OpenAI",  icon: Sparkles, gradient: "from-[#003B73] to-[#177BBB]" },
+  { id: "qwen",    name: "Qwen",    icon: Cpu,      gradient: "from-[#E63946] to-[#F1573D]" },
+  { id: "gemini",  name: "Gemini",  icon: Brain,    gradient: "from-[#177BBB] to-[#003B73]" },
+  { id: "grok",    name: "Grok",    icon: Zap,      gradient: "from-[#F1573D] to-[#E63946]" },
+  { id: "minimax", name: "MiniMax", icon: Flame,    gradient: "from-[#003B73] to-[#E63946]" },
+  { id: "kimi",    name: "Kimi",    icon: Wind,     gradient: "from-[#177BBB] to-[#F1573D]" },
 ];
 
 export function Sidebar({ onClose }: { onClose?: () => void }) {
@@ -96,7 +106,36 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
             </div>
           );
         })}
+
+        <div className="mb-5">
+          <div className="flex items-center justify-between px-3 pb-1.5">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/60">AI Agents</span>
+            <Bot className="size-3 text-white/50" />
+          </div>
+          <div className="grid grid-cols-2 gap-2 px-1">
+            {agents.map((a) => (
+              <NavLink
+                key={a.id}
+                to={`/ai-agents?agent=${a.id}`}
+                onClick={onClose}
+                className={({ isActive }) =>
+                  cn(
+                    "group relative overflow-hidden rounded-xl border border-white/10 p-2 text-[11px] font-medium text-white/90 transition-all hover:-translate-y-0.5 hover:border-white/30",
+                    isActive && "ring-1 ring-white/40"
+                  )
+                }
+              >
+                <div className={cn("absolute inset-0 bg-gradient-to-br opacity-90 group-hover:opacity-100", a.gradient)} />
+                <div className="relative flex items-center gap-1.5">
+                  <a.icon className="size-3.5" />
+                  <span className="truncate">{a.name}</span>
+                </div>
+              </NavLink>
+            ))}
+          </div>
+        </div>
       </nav>
+
 
       <div className="mx-3 mb-4 rounded-2xl border border-white/15 bg-white/10 p-3 backdrop-blur-md">
         <div className="flex items-center gap-3">
