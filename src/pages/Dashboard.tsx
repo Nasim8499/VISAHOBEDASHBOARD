@@ -21,15 +21,7 @@ import {
   Wand2,
   FileText,
   ChevronRight,
-  Calendar,
   Rocket,
-  Palette,
-  Check,
-  Eye,
-  Send,
-  AlertTriangle,
-  CalendarClock,
-  RotateCcw,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
