@@ -536,32 +536,48 @@ export default function Dashboard() {
                 <span className="font-semibold text-foreground">{workspace.progress}%</span>
               </div>
               <ProgressBar value={workspace.progress} />
-              <div className="mt-4 flex flex-wrap gap-2">
-                <Link
-                  to={`/workspace/${workspace.id}`}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground hover:opacity-90"
-                >
-                  Open Workspace <ChevronRight className="size-3.5" />
-                </Link>
-                <button
-                  onClick={() => navigate("/chat")}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:bg-muted"
-                >
-                  <MessageSquare className="size-3.5" /> Chat with client
-                </button>
-                <button
-                  onClick={() => navigate("/calendar")}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:bg-muted"
-                >
-                  <Video className="size-3.5" /> Schedule meeting
-                </button>
-                <button
-                  onClick={() => navigate("/billing")}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:bg-muted"
-                >
-                  <FileText className="size-3.5" /> Generate invoice
-                </button>
-              </div>
+              <motion.div
+                className="mt-4 flex flex-wrap gap-2"
+                initial="hidden"
+                animate="show"
+                variants={{
+                  hidden: {},
+                  show: { transition: { staggerChildren: 0.06, delayChildren: 0.1 } },
+                }}
+              >
+                {[
+                  { type: "link", to: `/workspace/${workspace.id}`, label: "Open Workspace", icon: ChevronRight, primary: true },
+                  { type: "button", onClick: () => navigate("/ai-assistant"), label: "AI Agent", icon: Sparkles, gradient: true },
+                  { type: "button", onClick: () => navigate("/chat"), label: "Chat with client", icon: MessageSquare },
+                  { type: "button", onClick: () => navigate("/calendar"), label: "Schedule meeting", icon: Video },
+                  { type: "button", onClick: () => navigate("/billing"), label: "Generate invoice", icon: FileText },
+                ].map((b: any) => {
+                  const cls = b.primary
+                    ? "inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground shadow-sm"
+                    : b.gradient
+                    ? "inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-accent to-primary px-3 py-2 text-xs font-semibold text-white shadow-elegant"
+                    : "inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2 text-xs font-semibold";
+                  return (
+                    <motion.div
+                      key={b.label}
+                      variants={{ hidden: { opacity: 0, y: 8 }, show: { opacity: 1, y: 0 } }}
+                      whileHover={{ y: -2, scale: 1.04 }}
+                      whileTap={{ scale: 0.96 }}
+                      transition={{ type: "spring", stiffness: 380, damping: 22 }}
+                    >
+                      {b.type === "link" ? (
+                        <Link to={b.to} className={cls}>
+                          {b.label} <b.icon className="size-3.5" />
+                        </Link>
+                      ) : (
+                        <button onClick={b.onClick} className={cls}>
+                          <b.icon className={`size-3.5 ${b.gradient ? "animate-pulse" : ""}`} /> {b.label}
+                        </button>
+                      )}
+                    </motion.div>
+                  );
+                })}
+              </motion.div>
             </div>
           </div>
 
