@@ -2,6 +2,7 @@ import { NavLink } from "react-router-dom";
 import {
   LayoutDashboard, Building2, FolderKanban, ListChecks, CalendarDays,
   CheckSquare, BarChart3, Users, ScrollText, Receipt, Settings, LogOut, X,
+  Globe,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth, AppRole } from "@/context/AuthContext";
@@ -13,6 +14,7 @@ export const navGroups: Group[] = [
   {
     label: "Workspace",
     items: [
+      { to: "/visa-documents", label: "Visa Agent", icon: Globe, roles: ["super_admin", "employee"] },
       { to: "/", label: "Dashboard", icon: LayoutDashboard, roles: ["super_admin", "employee"] },
       { to: "/clients", label: "Client Businesses", icon: Building2, roles: ["super_admin", "employee"] },
       { to: "/projects", label: "Projects", icon: FolderKanban, roles: ["super_admin", "employee"] },
